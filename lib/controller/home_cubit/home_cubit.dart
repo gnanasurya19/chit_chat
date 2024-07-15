@@ -12,7 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(HomeReadyState(user: UserModel(), userList: const []));
+  HomeCubit() : super(HomeReadyState(user: UserModel(), userList: const [])) {
+    getLocalInfo();
+  }
+
+  getLocalInfo() async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString('receiverId', '');
+  }
 
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseRepository firebaseRepository = FirebaseRepository();
@@ -107,6 +114,11 @@ class HomeCubit extends Cubit<HomeState> {
       emit(HomeReadyState(userList: userList, user: userModel));
       bindlatestData();
     });
+
+    if (userList.isNotEmpty) {
+      SharedPreferences sp = await SharedPreferences.getInstance();
+      sp.setBool('oldUser', false);
+    }
   }
 
   Future<void> bindlatestData() async {
@@ -145,8 +157,8 @@ class HomeCubit extends Cubit<HomeState> {
                 return 0;
               }
             });
+            emit(HomeReadyState(userList: userList, user: userModel));
           }
-          emit(HomeReadyState(userList: userList, user: userModel));
         });
       }
     });
@@ -161,7 +173,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   updateProfile(XFile? value) {
-    firebaseRepository.uploadFile(value!).then((value) async {
+    firebaseRepository.uploadFile(value!, 'profile').then((value) async {
       userModel.profileURL = value;
       firebaseRepository
           .updateUser(firebaseAuth.currentUser!.uid, {"profileURL": value});

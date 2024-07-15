@@ -5,6 +5,7 @@ import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
+import 'package:chit_chat/view/widget/chat_text_field.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:chit_chat/view/widget/empty_chat.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
-import 'package:popover/popover.dart';
 import '../widget/file_upload_dialog.dart';
 
 class ChatPage extends StatefulWidget {
@@ -263,135 +263,5 @@ class _ChatPageState extends State<ChatPage> {
             listScrollController.position.maxScrollExtent);
       });
     }
-  }
-}
-
-class ChatTextField extends StatelessWidget {
-  const ChatTextField({
-    super.key,
-    required this.messageController,
-    required this.widget,
-  });
-
-  final TextEditingController messageController;
-  final ChatPage widget;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            textCapitalization: TextCapitalization.sentences,
-            onSubmitted: (value) {
-              context.read<ChatCubit>().sendMessage(
-                  messageController.text.trim(), widget.userData, 'text');
-              messageController.clear();
-            },
-            controller: messageController,
-            cursorColor: AppColor.blue,
-            style: const TextStyle(fontSize: AppFontSize.sm),
-            decoration: InputDecoration(
-              prefixIcon: IconButton(
-                icon: const Icon(
-                  Icons.filter,
-                  size: 25,
-                ),
-                onPressed: () {
-                  showPopover(
-                    backgroundColor: Theme.of(context).colorScheme.onTertiary,
-                    context: context,
-                    bodyBuilder: (context) => const AssetsPopover(),
-                  );
-                },
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 0),
-              focusColor: AppColor.green,
-              hintText: "Type here",
-              hintStyle: const TextStyle(fontSize: AppFontSize.sm),
-              contentPadding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-              fillColor: Theme.of(context).colorScheme.inverseSurface,
-              filled: true,
-              enabled: true,
-              enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColor.greyline),
-                  borderRadius: BorderRadius.circular(50)),
-              focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColor.greyline),
-                  borderRadius: BorderRadius.circular(50)),
-            ),
-          ),
-        ),
-        ElevatedButton(
-            style: ButtonStyle(
-                backgroundColor: const WidgetStatePropertyAll(AppColor.blue),
-                overlayColor:
-                    WidgetStatePropertyAll(AppColor.white.withOpacity(0.2)),
-                padding: const WidgetStatePropertyAll(EdgeInsets.all(12)),
-                shape: const WidgetStatePropertyAll(
-                    CircleBorder(eccentricity: 0))),
-            onPressed: () {
-              context
-                  .read<ChatCubit>()
-                  .sendMessage(messageController.text, widget.userData, 'text');
-              messageController.clear();
-            },
-            child: const Icon(
-              Icons.send_sharp,
-              color: AppColor.white,
-            )),
-      ],
-    );
-  }
-}
-
-class AssetsPopover extends StatelessWidget {
-  const AssetsPopover({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        InkWell(
-          onTap: () => context.read<ChatCubit>().openGallery(),
-          child: Container(
-            width: MediaQuery.sizeOf(context).width * 0.4,
-            padding: const EdgeInsets.all(10),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.image),
-                Gap(10),
-                Text(
-                  'pickImage',
-                ),
-              ],
-            ),
-          ),
-        ),
-        InkWell(
-          // onTap: () =>
-          //     context.read<ChatCubit>().openVideoGallery(),
-          child: Container(
-            width: MediaQuery.sizeOf(context).width * 0.4,
-            padding: const EdgeInsets.all(10),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.video_collection),
-                Gap(10),
-                Text(
-                  'Video',
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

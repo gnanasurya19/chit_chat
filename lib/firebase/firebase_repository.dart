@@ -31,8 +31,8 @@ class FirebaseRepository {
     }
   }
 
-  Future<String> uploadFile(XFile file) async {
-    final ref = firebaseStorage.ref('users/profile').child(file.name);
+  Future<String> uploadFile(XFile file, String path) async {
+    final ref = firebaseStorage.ref('users/$path').child(file.name);
     await ref.putFile(File(file.path));
     final url = await ref.getDownloadURL();
     return url;

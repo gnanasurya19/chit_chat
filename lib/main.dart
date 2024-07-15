@@ -13,7 +13,6 @@ import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -22,7 +21,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await PuchNotification().initialize();
   runApp(const MainApp());
 }
@@ -95,5 +93,3 @@ class MainAppState extends State<MainApp> {
     );
   }
 }
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}

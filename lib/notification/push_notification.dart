@@ -16,15 +16,32 @@ class PuchNotification {
   initialize() async {
     await firebaseMessaging.requestPermission();
     await localNotification.initialize(
+      onDidReceiveNotificationResponse: onClickLocalNotification,
       const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/launcher_icon')),
+        android: AndroidInitializationSettings(
+          '@mipmap/launcher_icon',
+        ),
+      ),
     );
     FirebaseMessaging.onMessage.listen(onArriveForegroundMsg);
 
-    FirebaseMessaging.onMessageOpenedApp.listen(onClickFirebaseBackgroundMsg);
+    FirebaseMessaging.onMessageOpenedApp.listen(onClickFirebaseMessage);
+  }
+
+  void onClickLocalNotification(NotificationResponse details) {
+    if (navigationKey.currentState != null) {
+      final data = jsonDecode(details.payload!);
+      final UserData userData = UserData.fromJson(data);
+      Navigator.push(
+          navigationKey.currentContext!,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(userData: userData),
+          ));
+    }
   }
 }
 
+int id = 0;
 Future onArriveForegroundMsg(RemoteMessage message) async {
   SharedPreferences sp = await SharedPreferences.getInstance();
   String receiverId = sp.getString('receiverId') ?? '';
@@ -32,32 +49,57 @@ Future onArriveForegroundMsg(RemoteMessage message) async {
   final UserData userData = UserData.fromJson(data);
 
   if (receiverId != userData.uid) {
-    await FlutterLocalNotificationsPlugin()
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-            'high_importance_channel', 'High Importance Notifications'));
-
     FlutterLocalNotificationsPlugin().show(
-      1,
+      id++,
       message.notification!.title,
       message.notification!.body,
+      payload: message.data['user'],
       const NotificationDetails(
         iOS: DarwinNotificationDetails(),
         android: AndroidNotificationDetails(
-          "high_importance_channel",
-          "High Importance Notifications",
+          "grouped channel id",
+          "grouped channel name",
           importance: Importance.max,
-          priority: Priority.high,
+          priority: Priority.max,
         ),
       ),
     );
   }
 }
 
-Future onClickFirebaseBackgroundMsg(RemoteMessage message) async {
-  print(
-      'kzjdnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdddddddddddddddddddddddddddddddd');
+Future onForegruondMsg(RemoteMessage message) async {
+  SharedPreferences sp = await SharedPreferences.getInstance();
+  String receiverId = sp.getString('receiverId') ?? '';
+  final data = jsonDecode(message.data['user']);
+  final UserData userData = UserData.fromJson(data);
+
+  if (receiverId != userData.uid) {
+    String groupKey = 'com.example.chit_chat.${userData.userName}';
+    String groupChannelId = userData.uid!;
+    String groupChannelName = 'Grouped_${userData.userName}';
+    const String groupChannelDescription =
+        'This channel is used for grouped notifications.';
+
+    final AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      groupChannelId,
+      groupChannelName,
+      channelDescription: groupChannelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+      groupKey: groupKey,
+    );
+
+    await FlutterLocalNotificationsPlugin().show(
+      message.hashCode,
+      message.notification?.title,
+      message.notification?.body,
+      NotificationDetails(android: androidNotificationDetails),
+    );
+  }
+}
+
+Future onClickFirebaseMessage(RemoteMessage message) async {
   if (navigationKey.currentState != null) {
     final data = jsonDecode(message.data['user']);
     final UserData userData = UserData.fromJson(data);

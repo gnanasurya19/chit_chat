@@ -27,7 +27,7 @@ class ChatCubit extends Cubit<ChatState> {
   String chatRoomID = '';
   String receiverID = '';
 
-  onInit(String receiverID) async {
+  Future onInit(String receiverID) async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', receiverID);
     this.receiverID = receiverID;
@@ -149,7 +149,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   Future uploadFileToFirebase(String filepath) async {
     emit(UploadFile(filepath, fileStatus: FileStatus.uploading));
-    firebaseRepository.uploadFile(XFile(filepath)).then((value) {
+    firebaseRepository.uploadFile(XFile(filepath), 'chat_media').then((value) {
       emit(FileUploaded(fileUrl: value));
     });
   }
