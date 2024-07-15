@@ -20,6 +20,7 @@ class PuchNotification {
           android: AndroidInitializationSettings('@mipmap/launcher_icon')),
     );
     FirebaseMessaging.onMessage.listen(onArriveForegroundMsg);
+
     FirebaseMessaging.onMessageOpenedApp.listen(onClickFirebaseBackgroundMsg);
   }
 }
@@ -29,16 +30,23 @@ Future onArriveForegroundMsg(RemoteMessage message) async {
   String receiverId = sp.getString('receiverId') ?? '';
   final data = jsonDecode(message.data['user']);
   final UserData userData = UserData.fromJson(data);
+
   if (receiverId != userData.uid) {
+    await FlutterLocalNotificationsPlugin()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+            'high_importance_channel', 'High Importance Notifications'));
+
     FlutterLocalNotificationsPlugin().show(
       1,
       message.notification!.title,
       message.notification!.body,
-      NotificationDetails(
-        iOS: const DarwinNotificationDetails(),
+      const NotificationDetails(
+        iOS: DarwinNotificationDetails(),
         android: AndroidNotificationDetails(
-          message.messageId!,
-          message.notification!.body!,
+          "high_importance_channel",
+          "High Importance Notifications",
           importance: Importance.max,
           priority: Priority.high,
         ),
@@ -48,6 +56,8 @@ Future onArriveForegroundMsg(RemoteMessage message) async {
 }
 
 Future onClickFirebaseBackgroundMsg(RemoteMessage message) async {
+  print(
+      'kzjdnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjdddddddddddddddddddddddddddddddd');
   if (navigationKey.currentState != null) {
     final data = jsonDecode(message.data['user']);
     final UserData userData = UserData.fromJson(data);

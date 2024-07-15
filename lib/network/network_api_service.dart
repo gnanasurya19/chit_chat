@@ -41,7 +41,7 @@ class NetworkApiService {
         }
       };
       const String senderId = '789734382133';
-      final response = await client.post(
+      final http.Response response = await client.post(
         Uri.parse(
             'https://fcm.googleapis.com/v1/projects/$senderId/messages:send'),
         headers: {

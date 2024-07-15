@@ -294,57 +294,14 @@ class ChatTextField extends StatelessWidget {
             decoration: InputDecoration(
               prefixIcon: IconButton(
                 icon: const Icon(
-                  Icons.image,
+                  Icons.filter,
                   size: 25,
                 ),
                 onPressed: () {
                   showPopover(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context).colorScheme.onTertiary,
                     context: context,
-                    bodyBuilder: (context) => Container(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          InkWell(
-                            onTap: () =>
-                                context.read<ChatCubit>().openGallery(),
-                            child: Container(
-                              width: MediaQuery.sizeOf(context).width * 0.4,
-                              padding: const EdgeInsets.all(10),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.image),
-                                  Gap(10),
-                                  Text(
-                                    'pickImage',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            // onTap: () =>
-                            //     context.read<ChatCubit>().openVideoGallery(),
-                            child: Container(
-                              width: MediaQuery.sizeOf(context).width * 0.4,
-                              padding: const EdgeInsets.all(10),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.video_collection),
-                                  Gap(10),
-                                  Text(
-                                    'Video',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    bodyBuilder: (context) => const AssetsPopover(),
                   );
                 },
               ),
@@ -383,6 +340,57 @@ class ChatTextField extends StatelessWidget {
               Icons.send_sharp,
               color: AppColor.white,
             )),
+      ],
+    );
+  }
+}
+
+class AssetsPopover extends StatelessWidget {
+  const AssetsPopover({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () => context.read<ChatCubit>().openGallery(),
+          child: Container(
+            width: MediaQuery.sizeOf(context).width * 0.4,
+            padding: const EdgeInsets.all(10),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.image),
+                Gap(10),
+                Text(
+                  'pickImage',
+                ),
+              ],
+            ),
+          ),
+        ),
+        InkWell(
+          // onTap: () =>
+          //     context.read<ChatCubit>().openVideoGallery(),
+          child: Container(
+            width: MediaQuery.sizeOf(context).width * 0.4,
+            padding: const EdgeInsets.all(10),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.video_collection),
+                Gap(10),
+                Text(
+                  'Video',
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

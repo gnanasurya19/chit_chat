@@ -13,26 +13,22 @@ class FirebaseRepository {
 
   Future sendMessage(
       String chatRoomID, MessageModel newMessage, List<String> chatIds) async {
-    util.checkNetwork().then((value) async {
-      try {
-        final response = await firebaseFirestore
-            .collection('chatrooms')
-            .doc(chatRoomID)
-            .collection('message')
-            .add(newMessage.toJson());
+    try {
+      firebaseFirestore
+          .collection('chatrooms')
+          .doc(chatRoomID)
+          .collection('message')
+          .add(newMessage.toJson());
 
-        DocumentReference documentRef =
-            firebaseFirestore.collection('chatrooms').doc(chatRoomID);
+      DocumentReference documentRef =
+          firebaseFirestore.collection('chatrooms').doc(chatRoomID);
 
-        documentRef.set({"roomid": chatIds});
-
-        return response;
-      } catch (e) {
-        if (kDebugMode) {
-          print(e);
-        }
+      documentRef.set({"roomid": chatIds});
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
       }
-    });
+    }
   }
 
   Future<String> uploadFile(XFile file) async {

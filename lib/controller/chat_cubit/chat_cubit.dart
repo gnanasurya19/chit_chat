@@ -120,7 +120,7 @@ class ChatCubit extends Cubit<ChatState> {
     //posting to firebase
     firebaseRepository.sendMessage(chatRoomID, newMessage, chatIds);
 
-    await apiService.sendMessage(receiver, newMessage);
+    apiService.sendMessage(receiver, newMessage);
   }
 
   late StreamSubscription chatStream;
