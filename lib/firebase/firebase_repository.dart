@@ -3,6 +3,7 @@ import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/utils/util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 class FirebaseRepository {
@@ -10,34 +11,35 @@ class FirebaseRepository {
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseStorage firebaseStorage = FirebaseStorage.instance;
 
-  Future sendMessage(String chatRoomID, MessageModel newMessage) async {
+  Future sendMessage(
+      String chatRoomID, MessageModel newMessage, List<String> chatIds) async {
     util.checkNetwork().then((value) async {
       try {
         final response = await firebaseFirestore
-            .collection('chat_rooms')
+            .collection('chatrooms')
             .doc(chatRoomID)
             .collection('message')
             .add(newMessage.toJson());
 
         DocumentReference documentRef =
-            firebaseFirestore.collection('chat_rooms').doc(chatRoomID);
+            firebaseFirestore.collection('chatrooms').doc(chatRoomID);
 
-        await documentRef.update({"chatstatus": "active"});
+        documentRef.set({"roomid": chatIds});
 
         return response;
       } catch (e) {
-        print(e);
+        if (kDebugMode) {
+          print(e);
+        }
       }
     });
   }
 
-  Future<String> uploadProfile(XFile file) async {
-    // await util.checkNetwork().then((value) async {
+  Future<String> uploadFile(XFile file) async {
     final ref = firebaseStorage.ref('users/profile').child(file.name);
     await ref.putFile(File(file.path));
     final url = await ref.getDownloadURL();
     return url;
-    // });
   }
 
   Future updateUser(String userId, Map<String, String> json) async {

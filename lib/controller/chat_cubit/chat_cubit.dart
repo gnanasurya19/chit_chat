@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
@@ -6,9 +8,10 @@ import 'package:chit_chat/utils/util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meta/meta.dart';
-
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 part 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
@@ -24,7 +27,9 @@ class ChatCubit extends Cubit<ChatState> {
   String chatRoomID = '';
   String receiverID = '';
 
-  onInit(String receiverID) {
+  onInit(String receiverID) async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString('receiverId', receiverID);
     this.receiverID = receiverID;
     final String senderID = firebaseAuth.currentUser!.uid;
 
@@ -35,8 +40,8 @@ class ChatCubit extends Cubit<ChatState> {
 
     //get chat message from firebase
 
-    firebaseFirestore
-        .collection('chat_rooms')
+    chatStream = firebaseFirestore
+        .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
         .orderBy('timestamp')
@@ -48,34 +53,42 @@ class ChatCubit extends Cubit<ChatState> {
         messageList.add(message);
       }
       emit(ChatReady(messageList: messageList));
-    });
+      emit(ChatDataPopulated());
 
-    for (var message in messageList) {
-      if (message.receiverID == firebaseAuth.currentUser!.uid &&
-          message.status == 'unread') {
-        updateChatStatus(message.id!);
+      for (var message in messageList) {
+        if (message.receiverID == firebaseAuth.currentUser!.uid &&
+            message.status == 'unread') {
+          updateChatStatus(message);
+        }
       }
-    }
+    });
   }
 
-  updateChatStatus(String id) {
+  updateChatStatus(MessageModel message) {
     DocumentReference messageRef = firebaseFirestore
-        .collection('chat_rooms')
+        .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
-        .doc(id);
+        .doc(message.id);
 
     messageRef.update({"status": "read", "batch": 0});
+    message.status = 'read';
+    emit(ChatReady(messageList: messageList));
   }
 
-  Future sendMessage(String message, UserData receiver) async {
+  Future sendMessage(String message, UserData receiver, String msgType) async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setBool('oldUser', true);
+
     if (message.isEmpty) {
+      emit(EmptyMessage());
       throw false;
     }
+
     final String senderID = firebaseAuth.currentUser!.uid;
 
     //creates unique id for two user
-    final List chatIds = [senderID, receiver.uid];
+    final List<String> chatIds = [senderID, receiver.uid!];
     chatIds.sort();
     final String chatRoomID = chatIds.join('');
 
@@ -101,18 +114,43 @@ class ChatCubit extends Cubit<ChatState> {
       batch: batchCount + 1,
       status: 'unread',
       timestamp: Timestamp.now(),
+      messageType: msgType,
     );
 
     //posting to firebase
-    firebaseRepository.sendMessage(chatRoomID, newMessage).then((value) {
-      value.parent.get().then((value) {
-        if (value.docs.length == 1) {
-          onInit(receiverID);
-          emit(ChatFirstMessage());
-        }
-      });
-    });
+    firebaseRepository.sendMessage(chatRoomID, newMessage, chatIds);
 
     await apiService.sendMessage(receiver, newMessage);
+  }
+
+  late StreamSubscription chatStream;
+
+  Future stopStream() async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString('receiverId', '');
+    chatStream.cancel();
+  }
+
+  Future openGallery() async {
+    util.captureImage(ImageSource.gallery).then((value) {
+      if (value != null) {
+        emit(UploadFile(value.path, fileStatus: FileStatus.preview));
+      }
+    });
+  }
+
+  openVideoGallery() {
+    util.captureVideo().then((value) {
+      if (value != null) {
+        emit(UploadFile(value.path, fileStatus: FileStatus.preview));
+      }
+    });
+  }
+
+  Future uploadFileToFirebase(String filepath) async {
+    emit(UploadFile(filepath, fileStatus: FileStatus.uploading));
+    firebaseRepository.uploadFile(XFile(filepath)).then((value) {
+      emit(FileUploaded(fileUrl: value));
+    });
   }
 }

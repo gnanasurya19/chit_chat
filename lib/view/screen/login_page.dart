@@ -10,8 +10,10 @@ import 'package:chit_chat/view/widget/animated_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 import 'package:rive/rive.dart';
+
+import '../widget/forgot_password_dialog.dart';
+import '../widget/logo.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -81,11 +83,11 @@ class _LoginPageState extends State<LoginPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.background,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: AnnotatedRegion(
             value: SystemUiOverlayStyle(
                 statusBarColor:
-                    Theme.of(context).colorScheme.background.withOpacity(0.5)),
+                    Theme.of(context).colorScheme.surface.withOpacity(0.5)),
             child: SafeArea(
                 child: SingleChildScrollView(
                     child: Container(
@@ -205,49 +207,48 @@ class _LoginPageState extends State<LoginPage> {
                                           height: 10,
                                         ),
                                         AnimateHeight(
-                                            isOpen: state.status ==
-                                                    PageStatus.notSignedIn
-                                                ? false
-                                                : true,
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.25,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                if (state.status ==
-                                                    PageStatus.signIn)
-                                                  TextFieldAnimation(
-                                                      focus: emailfocus,
-                                                      controller:
-                                                          emailController,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .tertiaryContainer,
-                                                      text: 'Email'),
-                                                if (state.status ==
-                                                    PageStatus.signIn)
-                                                  TextFieldAnimation(
-                                                      focus: passwordfocus,
-                                                      controller:
-                                                          passwordController,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .tertiaryContainer,
-                                                      isPassWordVisible:
-                                                          isPasswordVisible,
-                                                      onSufClick: () {
-                                                        setState(() {
-                                                          isPasswordVisible =
-                                                              !isPasswordVisible;
-                                                        });
-                                                        passwordfocusListener();
-                                                      },
-                                                      isPassword: true,
-                                                      text: 'Password'),
-                                              ],
-                                            )),
+                                          isOpen: state.status ==
+                                                  PageStatus.notSignedIn
+                                              ? false
+                                              : true,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.25,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (state.status ==
+                                                  PageStatus.signIn) ...[
+                                                TextFieldAnimation(
+                                                    focus: emailfocus,
+                                                    controller: emailController,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .tertiaryContainer,
+                                                    text: 'Email'),
+                                                TextFieldAnimation(
+                                                    focus: passwordfocus,
+                                                    controller:
+                                                        passwordController,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .tertiaryContainer,
+                                                    isPassWordVisible:
+                                                        isPasswordVisible,
+                                                    onSufClick: () {
+                                                      setState(() {
+                                                        isPasswordVisible =
+                                                            !isPasswordVisible;
+                                                      });
+                                                      passwordfocusListener();
+                                                    },
+                                                    isPassword: true,
+                                                    text: 'Password'),
+                                              ]
+                                            ],
+                                          ),
+                                        ),
                                         Stack(
                                           clipBehavior: Clip.none,
                                           alignment: Alignment.centerLeft,
@@ -287,10 +288,10 @@ class _LoginPageState extends State<LoginPage> {
                                                 child: TextButton(
                                                   style: ButtonStyle(
                                                       surfaceTintColor:
-                                                          const MaterialStatePropertyAll(
+                                                          const WidgetStatePropertyAll(
                                                               AppColor.blue),
                                                       foregroundColor:
-                                                          MaterialStatePropertyAll(
+                                                          WidgetStatePropertyAll(
                                                         Theme.of(context)
                                                             .colorScheme
                                                             .tertiaryContainer,
@@ -328,26 +329,26 @@ class _LoginPageState extends State<LoginPage> {
                                                   ElevatedButton(
                                                     style: ButtonStyle(
                                                         overlayColor:
-                                                            MaterialStatePropertyAll(
+                                                            WidgetStatePropertyAll(
                                                                 AppColor.black
                                                                     .withOpacity(
                                                                         0.05)),
                                                         foregroundColor:
-                                                            const MaterialStatePropertyAll(
+                                                            const WidgetStatePropertyAll(
                                                                 AppColor.black),
-                                                        side: const MaterialStatePropertyAll(
+                                                        side: const WidgetStatePropertyAll(
                                                             BorderSide(
                                                                 color: AppColor
                                                                     .greyText)),
-                                                        padding: const MaterialStatePropertyAll(
+                                                        padding: const WidgetStatePropertyAll(
                                                             EdgeInsets.all(15)),
                                                         elevation:
-                                                            const MaterialStatePropertyAll(
+                                                            const WidgetStatePropertyAll(
                                                                 0),
                                                         backgroundColor:
-                                                            const MaterialStatePropertyAll(AppColor.white)),
+                                                            const WidgetStatePropertyAll(AppColor.white)),
                                                     onPressed: () {
-                                                      setState(() {
+                                                      FocusManager.instance.primaryFocus?.unfocus();
                                                         authCotroller.doSignIn(
                                                             state.status,
                                                             UserModel(
@@ -357,7 +358,7 @@ class _LoginPageState extends State<LoginPage> {
                                                                 password:
                                                                     passwordController
                                                                         .text));
-                                                      });
+
                                                     },
                                                     child: Text(
                                                       "SIGN IN",
@@ -525,109 +526,5 @@ class _LoginPageState extends State<LoginPage> {
             child: Text('Reset password email sent!.Please check your email'),
           ),
         ));
-  }
-}
-
-class Logo extends StatelessWidget {
-  const Logo({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Theme.of(context).colorScheme.onTertiary,
-          boxShadow: [
-            BoxShadow(
-                blurRadius: 2,
-                offset: const Offset(0, 0),
-                color: Theme.of(context)
-                    .colorScheme
-                    .tertiaryContainer
-                    .withOpacity(0.2)),
-          ]),
-      height: MediaQuery.of(context).size.height * 0.1,
-      padding: const EdgeInsets.all(10.0),
-      child: Lottie.asset(
-        'assets/lottie/message_lottie.json',
-        fit: BoxFit.contain,
-        repeat: false,
-      ),
-    );
-  }
-}
-
-class ForgotPasswordDialog extends StatefulWidget {
-  final TextEditingController emailController;
-  const ForgotPasswordDialog({
-    super.key,
-    required this.emailController,
-  });
-
-  @override
-  State<ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
-}
-
-class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
-  @override
-  void dispose() {
-    widget.emailController.clear();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    AuthCubit authController = BlocProvider.of<AuthCubit>(context);
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-      surfaceTintColor: AppColor.white,
-      backgroundColor: Theme.of(context).colorScheme.onTertiary,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Enter your email we will send you a password reset link',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            TextFormField(
-              decoration: InputDecoration(
-                  hintText: 'Please enter email',
-                  filled: true,
-                  fillColor: AppColor.blue.withOpacity(0.05),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-                  enabled: true,
-                  enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: AppColor.greyline)),
-                  focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: AppColor.greyline))),
-              controller: widget.emailController,
-            ),
-            const SizedBox(
-              height: 25,
-            ),
-            ElevatedButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                      const MaterialStatePropertyAll(AppColor.white),
-                  backgroundColor: MaterialStatePropertyAll(AppColor.darkBlue),
-                  shape: MaterialStatePropertyAll(ContinuousRectangleBorder(
-                      borderRadius: BorderRadius.circular(10))),
-                ),
-                onPressed: () {
-                  authController.forgotPassword(widget.emailController.text);
-                },
-                child: const Text("Reset password"))
-          ],
-        ),
-      ),
-    );
   }
 }

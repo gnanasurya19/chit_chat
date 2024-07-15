@@ -2,7 +2,7 @@ import 'package:chit_chat/model/user_data.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/material.dart';
 part 'search_state.dart';
 
 class SearchCubit extends Cubit<SearchState> {

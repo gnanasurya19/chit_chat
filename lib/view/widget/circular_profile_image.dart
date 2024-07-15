@@ -6,14 +6,21 @@ class CircularProfileImage extends StatelessWidget {
   final bool isNetworkImage;
   const CircularProfileImage({
     super.key,
-    required this.image,
+    this.image,
     required this.isNetworkImage,
   });
 
   @override
   Widget build(BuildContext context) {
     return isNetworkImage
-        ? CachedNetworkImage(imageUrl: image!, fit: BoxFit.cover)
+        ? CachedNetworkImage(
+            imageUrl: image!,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Image.asset(
+              'assets/images/profile.png',
+              fit: BoxFit.cover,
+            ),
+          )
         : Image.asset(
             'assets/images/profile.png',
             fit: BoxFit.cover,

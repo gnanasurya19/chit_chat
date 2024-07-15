@@ -85,8 +85,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 if (state is AuthToast) {
                                   util.showSnackbar(
                                       context, state.text, state.type);
-                                } else if (state is AuthAlert) {
-                                  util.doAlert(context, state.text, state.type);
                                 } else if (state is AuthUserRegisterSuccess) {
                                   Navigator.pop(context);
                                   util.showSnackbar(
@@ -185,12 +183,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                           isLogin: false,
                                           onClick: () {
                                             authController.dosignUP(UserModel(
-                                                email: emailController.text,
-                                                password:
-                                                    passwordController.text,
-                                                name: nameController.text));
+                                              email: emailController.text,
+                                              password: passwordController.text,
+                                              name: nameController.text,
+                                            ));
                                           },
-                                          onInit: (value) {},
                                         ),
                                       ),
                                       TextButton.icon(

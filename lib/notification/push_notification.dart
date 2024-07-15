@@ -6,6 +6,7 @@ import 'package:chit_chat/view/screen/chat_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PuchNotification {
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
@@ -24,14 +25,26 @@ class PuchNotification {
 }
 
 Future onArriveForegroundMsg(RemoteMessage message) async {
-  FlutterLocalNotificationsPlugin().show(
+  SharedPreferences sp = await SharedPreferences.getInstance();
+  String receiverId = sp.getString('receiverId') ?? '';
+  final data = jsonDecode(message.data['user']);
+  final UserData userData = UserData.fromJson(data);
+  if (receiverId != userData.uid) {
+    FlutterLocalNotificationsPlugin().show(
       1,
       message.notification!.title,
       message.notification!.body,
       NotificationDetails(
-          iOS: const DarwinNotificationDetails(),
-          android: AndroidNotificationDetails(
-              message.messageId!, message.notification!.body!)));
+        iOS: const DarwinNotificationDetails(),
+        android: AndroidNotificationDetails(
+          message.messageId!,
+          message.notification!.body!,
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+    );
+  }
 }
 
 Future onClickFirebaseBackgroundMsg(RemoteMessage message) async {

@@ -8,9 +8,9 @@ class AnimatedButton extends StatefulWidget {
     required this.visible,
     required this.isLogin,
     required this.onClick,
-    required this.onInit,
+    this.onInit,
   });
-  final Function(double) onInit;
+  final Function(double)? onInit;
   final Function() onClick;
   final bool visible;
   final bool isLogin;
@@ -30,7 +30,9 @@ class _AnimatedButtonState extends State<AnimatedButton>
     super.initState();
     animation = Tween(begin: 1, end: 0).animate(animationController);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      widget.onInit(buttonKey.currentContext!.size!.width);
+      if (widget.onInit != null) {
+        widget.onInit!(buttonKey.currentContext!.size!.width);
+      }
     });
   }
 
@@ -45,14 +47,14 @@ class _AnimatedButtonState extends State<AnimatedButton>
           ElevatedButton(
             key: buttonKey,
             style: ButtonStyle(
-                side: MaterialStatePropertyAll(BorderSide(
+                side: WidgetStatePropertyAll(BorderSide(
                     color:
                         widget.isLogin ? Colors.transparent : AppColor.white)),
-                padding: const MaterialStatePropertyAll(EdgeInsets.all(15)),
-                backgroundColor: const MaterialStatePropertyAll(AppColor.blue),
-                foregroundColor: const MaterialStatePropertyAll(AppColor.white),
+                padding: const WidgetStatePropertyAll(EdgeInsets.all(15)),
+                backgroundColor: const WidgetStatePropertyAll(AppColor.blue),
+                foregroundColor: const WidgetStatePropertyAll(AppColor.white),
                 overlayColor:
-                    MaterialStatePropertyAll(AppColor.white.withOpacity(0.3))),
+                    WidgetStatePropertyAll(AppColor.white.withOpacity(0.3))),
             onPressed: () {
               widget.onClick();
             },

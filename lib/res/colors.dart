@@ -21,13 +21,18 @@ class AppColor {
 
 class MyAppTheme {
   static ThemeData lightTheme = ThemeData(
+    textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColor.blue,
+        selectionColor: AppColor.blue.withOpacity(0.5),
+        selectionHandleColor: AppColor.blue),
+    brightness: Brightness.light,
     fontFamily: Roboto.regular,
     colorScheme: ColorScheme.light(
       inversePrimary: AppColor.blue,
       inverseSurface: AppColor.white,
       tertiaryContainer: AppColor.black,
       onTertiary: AppColor.white,
-      background: AppColor.loginBg,
+      surface: AppColor.loginBg,
       primary: AppColor.blue,
       primaryContainer: AppColor.blue,
       secondary: AppColor.darkGreyText,
@@ -35,13 +40,18 @@ class MyAppTheme {
     ),
   );
   static ThemeData darkTheme = ThemeData(
+      textSelectionTheme: TextSelectionThemeData(
+          cursorColor: AppColor.blue,
+          selectionColor: AppColor.blue.withOpacity(0.5),
+          selectionHandleColor: AppColor.blue),
+      brightness: Brightness.dark,
       fontFamily: Roboto.regular,
       colorScheme: ColorScheme.dark(
         inversePrimary: AppColor.blueGrey,
         inverseSurface: AppColor.darkblueGrey,
         tertiaryContainer: AppColor.white,
         onTertiary: AppColor.blackGrey,
-        background: AppColor.darkLoginBg,
+        surface: AppColor.darkLoginBg,
         primary: AppColor.darkLoginBg,
         primaryContainer: AppColor.darkBlue,
         secondary: AppColor.white,

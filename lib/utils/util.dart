@@ -123,10 +123,10 @@ class Util {
                           Navigator.pop(context);
                         },
                         style: ButtonStyle(
-                            padding: const MaterialStatePropertyAll(
+                            padding: const WidgetStatePropertyAll(
                                 EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 5)),
-                            side: MaterialStatePropertyAll(BorderSide(
+                            side: WidgetStatePropertyAll(BorderSide(
                                 color: type == 'success'
                                     ? AppColor.green
                                     : type == 'info'
@@ -174,10 +174,23 @@ class Util {
         }));
   }
 
-  Future<XFile?> captureImage() async {
+  Future<XFile?> captureImage(
+    ImageSource source,
+  ) async {
     final imagedata = await ImagePicker().pickImage(
-      source: ImageSource.camera,
+      source: source,
       preferredCameraDevice: CameraDevice.front,
+    );
+    if (imagedata != null) {
+      return imagedata;
+    }
+    throw false;
+  }
+
+  Future<XFile?> captureVideo() async {
+    final imagedata = await ImagePicker().pickVideo(
+      source: ImageSource.camera,
+      preferredCameraDevice: CameraDevice.rear,
     );
     if (imagedata != null) {
       return imagedata;

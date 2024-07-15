@@ -3,6 +3,7 @@ import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/fonts.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 
 class UserCard extends StatelessWidget {
   final UserData user;
@@ -29,7 +30,7 @@ class UserCard extends StatelessWidget {
             child: CircularProfileImage(
                 image: user.profileURL,
                 isNetworkImage: user.profileURL != null)),
-        onTap: onTap == null ? null : () => onTap!(user),
+        onTap: () => onTap!(user),
         contentPadding: const EdgeInsets.all(15),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -52,17 +53,40 @@ class UserCard extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    user.lastMessage ?? '',
-                    softWrap: true,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                  if (user.lastMessage!.contains('http'))
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.image,
+                          size: 20,
+                          color: AppColor.greyText,
+                        ),
+                        const Gap(5),
+                        Text(
+                          'Image',
+                          style: TextStyle(
+                            color: AppColor.greyText,
+                            fontFamily: user.batch != null || user.batch != 0
+                                ? Roboto.regular
+                                : Roboto.bold,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      user.lastMessage ?? '',
+                      softWrap: true,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
                         color: AppColor.greyText,
                         fontFamily: user.batch != null || user.batch != 0
                             ? Roboto.regular
-                            : Roboto.bold),
-                  ),
+                            : Roboto.bold,
+                      ),
+                    ),
                   if (user.batch != null && user.batch != 0)
                     Container(
                       padding: const EdgeInsets.all(8),

@@ -25,13 +25,16 @@ class NetworkApiService {
           'token': userData.fCM,
           'notification': {
             'title': firebaseAuth.currentUser!.displayName,
-            'body': message.message,
+            'body': message.messageType == 'image'
+                ? 'sent an image'
+                : message.message,
           },
           'data': {
             'title': firebaseAuth.currentUser!.displayName,
             'body': message.message,
             "user": jsonEncode(UserData(
               uid: firebaseAuth.currentUser!.uid,
+              userEmail: firebaseAuth.currentUser!.email,
               userName: firebaseAuth.currentUser!.displayName,
             ).toJson())
           }

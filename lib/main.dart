@@ -1,47 +1,24 @@
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
+import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/notification/push_notification.dart';
 import 'package:chit_chat/page_transition_animation.dart';
 import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/view/screen/animation_practice.dart';
 import 'package:chit_chat/view/screen/auth_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
 import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
-import 'package:chit_chat/view/screen/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  FlutterLocalNotificationsPlugin().show(
-      1,
-      message.data['title'],
-      message.data['body'],
-      NotificationDetails(
-          iOS: const DarwinNotificationDetails(),
-          android: AndroidNotificationDetails(
-              groupKey: message.data['title'],
-              actions: [
-                const AndroidNotificationAction(
-                  '0',
-                  'Dismiss',
-                  showsUserInterface: true,
-                )
-              ],
-              message.messageId!,
-              message.notification!.body!)));
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -55,20 +32,12 @@ class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
   @override
-  State<MainApp> createState() => _MainAppState();
-  // ignore: library_private_types_in_public_api
-  static _MainAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<_MainAppState>();
+  State<MainApp> createState() => MainAppState();
+  static MainAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<MainAppState>();
 }
 
-class _MainAppState extends State<MainApp> {
-  ThemeMode _themeMode = ThemeMode.light;
-  void changeTheme(ThemeMode themeMode) {
-    setState(() {
-      _themeMode = themeMode;
-    });
-  }
-
+class MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -84,35 +53,66 @@ class _MainAppState extends State<MainApp> {
         ),
         BlocProvider(
           create: (context) => SearchCubit(),
-        )
+        ),
+        BlocProvider(
+          create: (context) => ThemeCubit(),
+        ),
       ],
-      child: MaterialApp(
-        navigatorKey: navigationKey,
-        debugShowCheckedModeBanner: false,
-        darkTheme: MyAppTheme.darkTheme.copyWith(
-            pageTransitionsTheme: PageTransitionsTheme(builders: {
-          TargetPlatform.android: OpacityPageTransition(),
-          TargetPlatform.iOS: OpacityPageTransition(),
-          TargetPlatform.windows: OpacityPageTransition(),
-        })),
-        theme: MyAppTheme.lightTheme.copyWith(
-            pageTransitionsTheme: PageTransitionsTheme(builders: {
-          TargetPlatform.android: OpacityPageTransition(),
-          TargetPlatform.iOS: OpacityPageTransition(),
-          TargetPlatform.windows: OpacityPageTransition(),
-        })),
-        themeMode: _themeMode,
-        initialRoute: 'auth',
-        routes: {
-          "login": (context) => const LoginPage(),
-          "auth": (context) => const AuthPage(),
-          "register": (context) => const RegisterPage(),
-          "home": (context) => const HomePage(),
-          "profile": (context) => const Profile(),
-          "splash-screen": (context) => const SplashScreen(),
-          "animation": (context) => const AnimationPractice(),
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, state) {
+          if (state is ThemeInitial) {
+            return MaterialApp(
+              navigatorKey: navigationKey,
+              debugShowCheckedModeBanner: false,
+              darkTheme: MyAppTheme.darkTheme.copyWith(
+                  pageTransitionsTheme: PageTransitionsTheme(builders: {
+                TargetPlatform.android: OpacityPageTransition(),
+                TargetPlatform.iOS: OpacityPageTransition(),
+                TargetPlatform.windows: OpacityPageTransition(),
+              })),
+              theme: MyAppTheme.lightTheme.copyWith(
+                  pageTransitionsTheme: PageTransitionsTheme(builders: {
+                TargetPlatform.android: OpacityPageTransition(),
+                TargetPlatform.iOS: OpacityPageTransition(),
+                TargetPlatform.windows: OpacityPageTransition(),
+              })),
+              themeMode: state.themeMode,
+              initialRoute: 'auth',
+              routes: {
+                "login": (context) => const LoginPage(),
+                "auth": (context) => const AuthPage(),
+                "register": (context) => const RegisterPage(),
+                "home": (context) => const HomePage(),
+                "profile": (context) => const Profile(),
+              },
+            );
+          } else {
+            return const SizedBox();
+          }
         },
       ),
     );
   }
 }
+
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   FlutterLocalNotificationsPlugin().show(
+//     1,
+//     message.data['title'],
+//     message.data['body'],
+//     NotificationDetails(
+//       iOS: const DarwinNotificationDetails(),
+//       android: AndroidNotificationDetails(
+//           groupKey: message.data['title'],
+//           actions: [
+//             const AndroidNotificationAction(
+//               '0',
+//               'Dismiss',
+//               showsUserInterface: true,
+//             )
+//           ],
+//           message.messageId!,
+//           message.notification!.body!),
+//     ),
+//   );
+// }

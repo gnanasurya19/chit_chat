@@ -12,17 +12,21 @@ class MessageModel {
   Timestamp? timestamp;
   String? date;
   String? time;
+  String? messageType;
 
-  MessageModel(
-      {this.senderID,
-      this.receiverID,
-      this.senderEmail,
-      this.message,
-      this.timestamp,
-      this.status,
-      this.batch,
-      this.time,
-      this.date});
+  MessageModel({
+    this.senderID,
+    this.receiverID,
+    this.senderEmail,
+    this.message,
+    this.timestamp,
+    this.status,
+    this.batch,
+    this.time,
+    this.date,
+    this.messageType,
+    this.id,
+  });
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
     id = docID;
@@ -30,6 +34,7 @@ class MessageModel {
     receiverID = json['receiverID'];
     senderEmail = json['senderEmail'];
     message = json['message'];
+    messageType = json['messageType'];
     if (json['status'] != null) {
       status = json['status'];
     } else {
@@ -73,6 +78,7 @@ class MessageModel {
     data['timestamp'] = timestamp;
     data['status'] = status;
     data['batch'] = batch;
+    data['messageType'] = messageType;
     return data;
   }
 }

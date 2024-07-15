@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meta/meta.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 part 'auth_state.dart';
 
@@ -72,10 +71,8 @@ class AuthCubit extends Cubit<AuthState> {
             showFirebaseError(e);
           } catch (e) {
             emit(AuthCancelLoading());
-            print(e);
           }
         }).catchError((e) {
-          emit(AuthCancelLoading());
           emit(AuthAlert(
               type: 'network',
               text: 'No internet\nPlease connect to internet'));
@@ -126,8 +123,11 @@ class AuthCubit extends Cubit<AuthState> {
                 userModel: UserModel(email: '', password: '')));
           });
         } on FirebaseAuthException catch (e) {
+          emit(AuthCancelLoading());
           showFirebaseError(e);
         }
+      }).catchError((e) {
+        emit(AuthAlert(type: 'network', text: 'Please connect to internet'));
       });
     }
   }
@@ -175,10 +175,5 @@ class AuthCubit extends Cubit<AuthState> {
         buttonLoader: true,
         status: PageStatus.notSignedIn,
         userModel: UserModel(email: '', password: '')));
-  }
-
-  @override
-  void onChange(Change<AuthState> change) {
-    super.onChange(change);
   }
 }

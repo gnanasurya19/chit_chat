@@ -7,6 +7,21 @@ sealed class ChatActionState extends ChatState {}
 
 final class EmptyMessage extends ChatActionState {}
 
+final class ChatDataPopulated extends ChatActionState {}
+
+final class UploadFile extends ChatActionState {
+  final String filePath;
+  final FileStatus fileStatus;
+
+  UploadFile(this.filePath, {required this.fileStatus});
+}
+
+final class FileUploaded extends ChatActionState {
+  final String fileUrl;
+
+  FileUploaded({required this.fileUrl});
+}
+
 final class ChatLoading extends ChatState {}
 
 final class ChatReady extends ChatState {
@@ -17,4 +32,7 @@ final class ChatReady extends ChatState {
 
 final class ChatError extends ChatState {}
 
-final class ChatFirstMessage extends ChatState {}
+enum FileStatus {
+  uploading,
+  preview,
+}

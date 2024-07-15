@@ -1,5 +1,5 @@
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
-import 'package:chit_chat/main.dart';
+import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
@@ -11,10 +11,7 @@ import 'circular_profile_image.dart';
 class SideMenu extends StatefulWidget {
   const SideMenu({
     super.key,
-    required this.homeController,
   });
-
-  final HomeCubit homeController;
 
   @override
   State<SideMenu> createState() => _SideMenuState();
@@ -27,7 +24,6 @@ class _SideMenuState extends State<SideMenu> {
     BlocProvider.of<HomeCubit>(context).getCurrentUserData();
   }
 
-  var appThemeMode = false;
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -64,7 +60,7 @@ class _SideMenuState extends State<SideMenu> {
                                 height: 75,
                                 child: InkWell(
                                   onTap: () {
-                                    widget.homeController.updateProfile();
+                                    context.read<HomeCubit>().editProfile();
                                   },
                                   child: CircularProfileImage(
                                     image: state.user.profileURL,
@@ -93,12 +89,7 @@ class _SideMenuState extends State<SideMenu> {
                         ),
                         InkWell(
                           onTap: () {
-                            appThemeMode = !appThemeMode;
-                            if (appThemeMode) {
-                              MainApp.of(context)!.changeTheme(ThemeMode.dark);
-                            } else {
-                              MainApp.of(context)!.changeTheme(ThemeMode.light);
-                            }
+                            context.read<ThemeCubit>().changeTheme(context);
                           },
                           child: Builder(builder: (context) {
                             if (MediaQuery.of(context).platformBrightness ==
@@ -108,7 +99,8 @@ class _SideMenuState extends State<SideMenu> {
                                     vertical: 15, horizontal: 10),
                                 child: AnimatedSwitcher(
                                   duration: const Duration(seconds: 3),
-                                  child: appThemeMode
+                                  child: context.read<ThemeCubit>().themeMode ==
+                                          ThemeMode.light
                                       ? const Icon(
                                           Icons.sunny,
                                           color: AppColor.white,
@@ -140,7 +132,7 @@ class _SideMenuState extends State<SideMenu> {
                       children: [
                         ListTile(
                           onTap: () {
-                            widget.homeController.signout();
+                            context.read<HomeCubit>().signout();
                           },
                           leading: const SVGIcon(
                             name: 'svg/signout.svg',
