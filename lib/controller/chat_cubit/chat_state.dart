@@ -7,8 +7,6 @@ sealed class ChatActionState extends ChatState {}
 
 final class EmptyMessage extends ChatActionState {}
 
-final class ChatDataPopulated extends ChatActionState {}
-
 final class UploadFile extends ChatActionState {
   final String filePath;
   final FileStatus fileStatus;
@@ -22,13 +20,15 @@ final class FileUploaded extends ChatActionState {
   FileUploaded({required this.fileUrl});
 }
 
-final class ChatLoading extends ChatState {}
-
 final class ChatReady extends ChatState {
+  final bool? loadingList;
+  final bool? loadingOldchat;
   final List<MessageModel> messageList;
 
-  ChatReady({required this.messageList});
+  ChatReady({required this.messageList, this.loadingList, this.loadingOldchat});
 }
+
+final class ChatListEmpty extends ChatState {}
 
 final class ChatError extends ChatState {}
 

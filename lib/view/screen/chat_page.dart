@@ -9,7 +9,6 @@ import 'package:chit_chat/view/widget/chat_text_field.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:chit_chat/view/widget/empty_chat.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
@@ -29,14 +28,15 @@ class _ChatPageState extends State<ChatPage> {
   late ChatCubit _chatRoomsCubit;
   @override
   void initState() {
-    BlocProvider.of<ChatCubit>(context).onInit(widget.userData.uid!);
-
     super.initState();
+    listScrollController.addListener(listListener);
   }
 
-  listListener() {
-    if (listScrollController.position.pixels == 0) {
-      // BlocProvider.of<ChatCubit>(context).addPreviewsData();
+  void listListener() {
+    if (listScrollController.position.atEdge &&
+        listScrollController.position.pixels >
+            listScrollController.position.maxScrollExtent - 100) {
+      BlocProvider.of<ChatCubit>(context).loadMore();
     }
   }
 
@@ -101,114 +101,114 @@ class _ChatPageState extends State<ChatPage> {
                 buildWhen: (previous, current) => current is! ChatActionState,
                 builder: (context, state) {
                   if (state is ChatReady) {
-                    if (state.messageList.isNotEmpty) {
-                      //chat messages
-                      return ListView.builder(
-                        controller: listScrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
-                        itemCount: state.messageList.length,
-                        itemBuilder: (context, index) {
-                          final MessageModel message = state.messageList[index];
-                          return Column(
-                            children: [
-                              //date
-                              Builder(builder: (context) {
-                                if (index > 0 &&
-                                    message.date ==
-                                        state.messageList[index - 1].date) {
-                                  return const SizedBox();
-                                } else {
-                                  return Text('${message.date}');
-                                }
-                              }),
-                              //message bubble
-                              Align(
-                                alignment:
-                                    widget.userData.uid == message.senderID
-                                        ? Alignment.centerLeft
-                                        : Alignment.centerRight,
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                      maxWidth:
-                                          MediaQuery.sizeOf(context).width *
-                                              0.55),
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .inverseSurface,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        widget.userData.uid == message.senderID
-                                            ? CrossAxisAlignment.start
-                                            : CrossAxisAlignment.end,
-                                    children: [
-                                      if (message.messageType == 'text')
-                                        SelectableText(
-                                          '${message.message}',
-                                          style: const TextStyle(
-                                              fontSize: AppFontSize.xs),
-                                        ),
-                                      if (message.messageType == 'image') ...[
-                                        SizedBox(
-                                          height: MediaQuery.sizeOf(context)
-                                                  .height *
-                                              0.35,
-                                          child: CachedNetworkImage(
-                                            imageUrl: message.message!,
-                                          ),
-                                        ),
-                                        const Gap(5)
-                                      ],
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            DateFormat('hh:mm a').format(
-                                                message.timestamp!.toDate()),
-                                            style: const TextStyle(
-                                                fontSize: AppFontSize.xxs,
-                                                color: AppColor.greyText),
-                                          ),
-                                          const Gap(3),
-                                          if (widget.userData.uid !=
-                                              message.senderID)
-                                            if (message.status == 'unread')
-                                              const SVGIcon(
-                                                name: "svg/check.svg",
-                                                size: AppFontSize.xxs + 1,
-                                                color: AppColor.greyText,
-                                              )
-                                            else ...[
-                                              const SVGIcon(
-                                                name: "svg/read.svg",
-                                                size: AppFontSize.xxs + 1,
-                                                color: AppColor.blue,
-                                              ),
-                                            ]
-                                        ],
+                    return ListView.builder(
+                      reverse: true,
+                      controller: listScrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      itemCount: state.messageList.length,
+                      itemBuilder: (context, index) {
+                        final MessageModel message = state.messageList[index];
+                        return Column(
+                          children: [
+                            //date
+                            Builder(builder: (context) {
+                              if (index < state.messageList.length - 1 &&
+                                  message.date ==
+                                      state.messageList[index + 1].date) {
+                                return const SizedBox();
+                              } else {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 14.0),
+                                  child: Text('${message.date}'),
+                                );
+                              }
+                            }),
+                            //message bubble
+                            Align(
+                              alignment: widget.userData.uid == message.senderID
+                                  ? Alignment.centerLeft
+                                  : Alignment.centerRight,
+                              child: Container(
+                                constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.sizeOf(context).width *
+                                        0.55),
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .inverseSurface,
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      widget.userData.uid == message.senderID
+                                          ? CrossAxisAlignment.start
+                                          : CrossAxisAlignment.end,
+                                  children: [
+                                    if (message.messageType == 'text')
+                                      SelectableText(
+                                        '${message.message}',
+                                        style: const TextStyle(
+                                            fontSize: AppFontSize.xs),
                                       ),
+                                    if (message.messageType == 'image') ...[
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.sizeOf(context).height *
+                                                0.35,
+                                        child: CachedNetworkImage(
+                                          imageUrl: message.message!,
+                                        ),
+                                      ),
+                                      const Gap(5)
                                     ],
-                                  ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          DateFormat('hh:mm a').format(
+                                              message.timestamp!.toDate()),
+                                          style: const TextStyle(
+                                              fontSize: AppFontSize.xxs,
+                                              color: AppColor.greyText),
+                                        ),
+                                        const Gap(3),
+                                        if (widget.userData.uid !=
+                                            message.senderID)
+                                          if (message.status == 'unread')
+                                            const SVGIcon(
+                                              name: "svg/check.svg",
+                                              size: AppFontSize.xxs + 1,
+                                              color: AppColor.greyText,
+                                            )
+                                          else ...[
+                                            const SVGIcon(
+                                              name: "svg/read.svg",
+                                              size: AppFontSize.xxs + 1,
+                                              color: AppColor.blue,
+                                            ),
+                                          ]
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          );
-                        },
-                      );
-                    } else {
-                      return EmptyChat(
-                        onPress: () async {
-                          context
-                              .read<ChatCubit>()
-                              .sendMessage('Hi', widget.userData, 'text');
-                        },
-                      );
-                    }
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else if (state is ChatListEmpty) {
+                    return EmptyChat(
+                      onPress: () async {
+                        context
+                            .read<ChatCubit>()
+                            .sendMessage('Hi', widget.userData, 'text');
+                      },
+                    );
                   } else {
                     return const SizedBox();
                   }
@@ -255,13 +255,6 @@ class _ChatPageState extends State<ChatPage> {
       context
           .read<ChatCubit>()
           .sendMessage(state.fileUrl, widget.userData, 'image');
-    } else if (state is ChatDataPopulated) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        listScrollController.animateTo(
-            duration: Durations.extralong4,
-            curve: Curves.bounceInOut,
-            listScrollController.position.maxScrollExtent);
-      });
     }
   }
 }

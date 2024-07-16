@@ -1,3 +1,4 @@
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
@@ -78,6 +79,8 @@ class _UserSearchState extends State<UserSearch> {
                       itemBuilder: (context, index) => UserCard(
                         user: state.userList[index],
                         onTap: (user) {
+                          BlocProvider.of<ChatCubit>(context)
+                              .onInit(state.userList[index].uid!);
                           Navigator.pop(context);
                           Navigator.push(context, PageRouteBuilder(
                             pageBuilder:

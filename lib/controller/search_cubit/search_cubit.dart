@@ -1,6 +1,5 @@
 import 'package:chit_chat/model/user_data.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 part 'search_state.dart';
@@ -18,17 +17,6 @@ class SearchCubit extends Cubit<SearchState> {
   }
 
   List<UserData> newUserList = [];
-  getUserList() {
-    firebaseFirestore.collection('users').snapshots().listen((event) {
-      newUserList = [];
-      for (var element in event.docs) {
-        if (element.data()['uid'] != FirebaseAuth.instance.currentUser!.uid) {
-          newUserList.add(UserData.fromJson(element.data()));
-        }
-      }
-      emit(SearchTest(userList: newUserList));
-    });
-  }
 
   onSearch(String email) async {
     userList = [];
@@ -38,6 +26,7 @@ class SearchCubit extends Cubit<SearchState> {
             (element.userEmail!.toLowerCase().contains(email.toLowerCase()) ||
                 element.userName!.toLowerCase().contains(email.toLowerCase())))
         .toList();
+
     await firebaseFirestore
         .collection('users')
         .where('userEmail', isEqualTo: email)

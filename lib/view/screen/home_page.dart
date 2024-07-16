@@ -1,4 +1,5 @@
 import 'package:animations/animations.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/custom_widget/loading_widget.dart';
@@ -73,7 +74,11 @@ class _HomePageState extends State<HomePage> {
                         ChatPage(userData: state.userList[index]),
                     closedBuilder: (context, action) => UserCard(
                       user: state.userList[index],
-                      onTap: (userData) => action.call(),
+                      onTap: (userData) {
+                        BlocProvider.of<ChatCubit>(context)
+                            .onInit(state.userList[index].uid!);
+                        action.call();
+                      },
                     ),
                   );
                 },

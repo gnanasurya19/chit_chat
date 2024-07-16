@@ -55,8 +55,9 @@ class ChatTextField extends StatelessWidget {
               filled: true,
               enabled: true,
               enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColor.greyline),
-                  borderRadius: BorderRadius.circular(50)),
+                borderSide: const BorderSide(color: AppColor.greyline),
+                borderRadius: BorderRadius.circular(50),
+              ),
               focusedBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: AppColor.greyline),
                   borderRadius: BorderRadius.circular(50)),

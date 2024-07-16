@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
@@ -15,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 part 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
-  ChatCubit() : super(ChatLoading());
+  ChatCubit() : super(ChatReady(messageList: const []));
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseRepository firebaseRepository = FirebaseRepository();
@@ -26,6 +25,7 @@ class ChatCubit extends Cubit<ChatState> {
   Util util = Util();
   String chatRoomID = '';
   String receiverID = '';
+  DocumentSnapshot? lastDocument;
 
   Future onInit(String receiverID) async {
     SharedPreferences sp = await SharedPreferences.getInstance();
@@ -40,27 +40,90 @@ class ChatCubit extends Cubit<ChatState> {
 
     //get chat message from firebase
 
+    await firebaseFirestore
+        .collection('chatrooms')
+        .doc(chatRoomID)
+        .collection('message')
+        .orderBy('timestamp', descending: true)
+        .limit(20)
+        .get()
+        .then((element) {
+      if (element.docs.isEmpty) {
+        emit(ChatListEmpty());
+      } else {
+        lastDocument = element.docs.last;
+        messageList = [];
+        for (var e in element.docs) {
+          final MessageModel message = MessageModel.fromJson(e.data(), e.id);
+          messageList.add(message);
+        }
+        emit(ChatReady(messageList: messageList));
+
+        for (var message in messageList) {
+          if (message.receiverID == firebaseAuth.currentUser!.uid &&
+              message.status == 'unread') {
+            updateChatStatus(message);
+          }
+        }
+      }
+      listenNewmsg();
+    });
+  }
+
+  listenNewmsg() {
     chatStream = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
-        .orderBy('timestamp')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
         .snapshots()
         .listen((element) {
-      messageList = [];
+      if (element.docs.isNotEmpty) {
+        final newMessageDoc = element.docs.first;
+        final MessageModel newMessage =
+            MessageModel.fromJson(newMessageDoc.data(), newMessageDoc.id);
+
+        if (messageList.isEmpty || newMessage.id != messageList.first.id) {
+          messageList.insert(0, newMessage);
+        }
+
+        if (newMessage.receiverID == firebaseAuth.currentUser!.uid &&
+            newMessage.status == 'unread') {
+          updateChatStatus(newMessage);
+        }
+
+        if (messageList.isEmpty) {
+          emit(ChatListEmpty());
+        } else {
+          emit(ChatReady(messageList: messageList));
+        }
+      }
+    });
+  }
+
+  Future loadMore() async {
+    if (lastDocument == null) return;
+
+    firebaseFirestore
+        .collection('chatrooms')
+        .doc(chatRoomID)
+        .collection('message')
+        .orderBy('timestamp', descending: true)
+        .limit(20)
+        .startAfterDocument(lastDocument!)
+        .get()
+        .then((element) {
+      if (element.docs.isEmpty) {
+        return;
+      }
+
+      lastDocument = element.docs.last;
       for (var e in element.docs) {
         final MessageModel message = MessageModel.fromJson(e.data(), e.id);
         messageList.add(message);
       }
       emit(ChatReady(messageList: messageList));
-      emit(ChatDataPopulated());
-
-      for (var message in messageList) {
-        if (message.receiverID == firebaseAuth.currentUser!.uid &&
-            message.status == 'unread') {
-          updateChatStatus(message);
-        }
-      }
     });
   }
 
@@ -120,7 +183,9 @@ class ChatCubit extends Cubit<ChatState> {
     //posting to firebase
     firebaseRepository.sendMessage(chatRoomID, newMessage, chatIds);
 
-    apiService.sendMessage(receiver, newMessage);
+    if (receiver.fCM != null && receiver.fCM != '') {
+      apiService.sendMessage(receiver, newMessage);
+    }
   }
 
   late StreamSubscription chatStream;
