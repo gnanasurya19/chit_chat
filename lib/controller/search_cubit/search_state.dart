@@ -8,10 +8,7 @@ sealed class SearchActionState extends SearchCubit {}
 final class SearchReadyState extends SearchState {
   final List<UserData> userList;
   final List<UserData> chatList;
-  final bool? isLoading;
-
-  SearchReadyState(
-      {required this.chatList, required this.userList, this.isLoading});
+  SearchReadyState({required this.chatList, required this.userList});
 }
 
 final class SearchTest extends SearchState {

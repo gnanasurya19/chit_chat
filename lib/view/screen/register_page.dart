@@ -1,8 +1,8 @@
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/model/user_model.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/animated_button.dart';
 import 'package:chit_chat/res/custom_widget/text_field_animation.dart';
-import 'package:chit_chat/utils/util.dart';
 import 'package:flutter/material.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/fonts.dart';
@@ -22,8 +22,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isVisible = false;
-
-  Util util = Util();
 
   @override
   void initState() {

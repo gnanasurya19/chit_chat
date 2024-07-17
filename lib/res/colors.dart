@@ -17,6 +17,7 @@ class AppColor {
   static const Color loginBg = Color(0xffd6e2ea);
   static const Color darkLoginBg = Color(0xff262c3a);
   static const Color greyline = Color(0xFFCCCCCC);
+  static const Color greyBg = Color(0xFFeeeeee);
 }
 
 class MyAppTheme {

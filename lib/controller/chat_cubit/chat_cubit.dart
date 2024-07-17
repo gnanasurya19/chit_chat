@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/network/network_api_service.dart';
-import 'package:chit_chat/utils/util.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 part 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
-  ChatCubit() : super(ChatReady(messageList: const []));
+  ChatCubit() : super(ChatError());
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseRepository firebaseRepository = FirebaseRepository();
@@ -22,10 +23,10 @@ class ChatCubit extends Cubit<ChatState> {
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
   NetworkApiService apiService = NetworkApiService();
   List<MessageModel> messageList = [];
-  Util util = Util();
   String chatRoomID = '';
   String receiverID = '';
   DocumentSnapshot? lastDocument;
+  late StreamSubscription chatStream;
 
   Future onInit(String receiverID) async {
     SharedPreferences sp = await SharedPreferences.getInstance();
@@ -84,7 +85,10 @@ class ChatCubit extends Cubit<ChatState> {
         final MessageModel newMessage =
             MessageModel.fromJson(newMessageDoc.data(), newMessageDoc.id);
 
-        if (messageList.isEmpty || newMessage.id != messageList.first.id) {
+        if (messageList.isNotEmpty && newMessage.id == messageList.first.id) {
+          messageList[0] = newMessage;
+        } else if (messageList.isEmpty ||
+            newMessage.id != messageList.first.id) {
           messageList.insert(0, newMessage);
         }
 
@@ -105,6 +109,7 @@ class ChatCubit extends Cubit<ChatState> {
   Future loadMore() async {
     if (lastDocument == null) return;
 
+    emit(ChatReady(messageList: messageList, loadingOldchat: true));
     firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
@@ -115,6 +120,7 @@ class ChatCubit extends Cubit<ChatState> {
         .get()
         .then((element) {
       if (element.docs.isEmpty) {
+        emit(ChatReady(messageList: messageList, loadingOldchat: false));
         return;
       }
 
@@ -123,7 +129,7 @@ class ChatCubit extends Cubit<ChatState> {
         final MessageModel message = MessageModel.fromJson(e.data(), e.id);
         messageList.add(message);
       }
-      emit(ChatReady(messageList: messageList));
+      emit(ChatReady(messageList: messageList, loadingOldchat: false));
     });
   }
 
@@ -188,34 +194,43 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  late StreamSubscription chatStream;
-
   Future stopStream() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', '');
+    messageList = [];
+    emit(ChatReady(messageList: const []));
     chatStream.cancel();
   }
 
   Future openGallery() async {
     util.captureImage(ImageSource.gallery).then((value) {
       if (value != null) {
-        emit(UploadFile(value.path, fileStatus: FileStatus.preview));
+        emit(UploadFile(
+            mediaType: MediaType.image,
+            filePath: value.path,
+            fileStatus: FileStatus.preview));
       }
     });
   }
 
-  openVideoGallery() {
+  Future openVideoGallery() async {
     util.captureVideo().then((value) {
       if (value != null) {
-        emit(UploadFile(value.path, fileStatus: FileStatus.preview));
+        emit(UploadFile(
+            mediaType: MediaType.video,
+            filePath: value.path,
+            fileStatus: FileStatus.preview));
       }
     });
   }
 
-  Future uploadFileToFirebase(String filepath) async {
-    emit(UploadFile(filepath, fileStatus: FileStatus.uploading));
+  Future uploadFileToFirebase(String filepath, MediaType mediatype) async {
+    emit(UploadFile(
+        mediaType: mediatype,
+        filePath: filepath,
+        fileStatus: FileStatus.uploading));
     firebaseRepository.uploadFile(XFile(filepath), 'chat_media').then((value) {
-      emit(FileUploaded(fileUrl: value));
+      emit(FileUploaded(fileUrl: value, mediaType: mediatype));
     });
   }
 }

@@ -1,17 +1,18 @@
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
 import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/notification/push_notification.dart';
-import 'package:chit_chat/page_transition_animation.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/view/screen/auth_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
 import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
+import 'package:chit_chat/view/screen/view_image.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,6 +57,9 @@ class MainAppState extends State<MainApp> {
         BlocProvider(
           create: (context) => ThemeCubit(),
         ),
+        BlocProvider(
+          create: (context) => MediaCubit(),
+        ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {
@@ -63,18 +67,8 @@ class MainAppState extends State<MainApp> {
             return MaterialApp(
               navigatorKey: navigationKey,
               debugShowCheckedModeBanner: false,
-              darkTheme: MyAppTheme.darkTheme.copyWith(
-                  pageTransitionsTheme: PageTransitionsTheme(builders: {
-                TargetPlatform.android: OpacityPageTransition(),
-                TargetPlatform.iOS: OpacityPageTransition(),
-                TargetPlatform.windows: OpacityPageTransition(),
-              })),
-              theme: MyAppTheme.lightTheme.copyWith(
-                  pageTransitionsTheme: PageTransitionsTheme(builders: {
-                TargetPlatform.android: OpacityPageTransition(),
-                TargetPlatform.iOS: OpacityPageTransition(),
-                TargetPlatform.windows: OpacityPageTransition(),
-              })),
+              darkTheme: MyAppTheme.darkTheme,
+              theme: MyAppTheme.lightTheme,
               themeMode: state.themeMode,
               initialRoute: 'auth',
               routes: {
@@ -83,6 +77,7 @@ class MainAppState extends State<MainApp> {
                 "register": (context) => const RegisterPage(),
                 "home": (context) => const HomePage(),
                 "profile": (context) => const Profile(),
+                "view-image": (context) => const ViewImagePage(),
               },
             );
           } else {

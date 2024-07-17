@@ -35,8 +35,7 @@ class AssetsPopover extends StatelessWidget {
           ),
         ),
         InkWell(
-          // onTap: () =>
-          //     context.read<ChatCubit>().openVideoGallery(),
+          onTap: () => context.read<ChatCubit>().openVideoGallery(),
           child: Container(
             width: MediaQuery.sizeOf(context).width * 0.4,
             padding: const EdgeInsets.all(10),

@@ -6,6 +6,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 
 class Util {
+  PageRouteBuilder<dynamic> pageTransition(Widget name) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => name,
+      reverseTransitionDuration: const Duration(milliseconds: 300),
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
+      },
+    );
+  }
+
   showSnackbar(context, text, type) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -174,26 +188,22 @@ class Util {
         }));
   }
 
-  Future<XFile?> captureImage(
-    ImageSource source,
-  ) async {
-    final imagedata = await ImagePicker().pickImage(
-      source: source,
-      preferredCameraDevice: CameraDevice.front,
-    );
-    if (imagedata != null) {
-      return imagedata;
+  Future<XFile?> captureImage(ImageSource source) async {
+    final file = await ImagePicker()
+        .pickImage(source: source, preferredCameraDevice: CameraDevice.front);
+    if (file != null) {
+      return file;
     }
     throw false;
   }
 
   Future<XFile?> captureVideo() async {
-    final imagedata = await ImagePicker().pickVideo(
+    final file = await ImagePicker().pickVideo(
       source: ImageSource.camera,
       preferredCameraDevice: CameraDevice.rear,
     );
-    if (imagedata != null) {
-      return imagedata;
+    if (file != null) {
+      return file;
     }
     throw false;
   }

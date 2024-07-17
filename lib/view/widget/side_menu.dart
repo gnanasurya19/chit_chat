@@ -70,7 +70,8 @@ class _SideMenuState extends State<SideMenu> {
                                 ),
                               ),
                               Text(
-                                state.user.name ?? '',
+                                state.user.name!.split('').first.toUpperCase() +
+                                    state.user.name!.substring(1),
                                 style: const TextStyle(
                                     letterSpacing: 0.7,
                                     fontFamily: Roboto.bold,

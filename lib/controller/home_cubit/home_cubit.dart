@@ -2,7 +2,7 @@ import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/model/user_model.dart';
-import 'package:chit_chat/utils/util.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,7 +25,6 @@ class HomeCubit extends Cubit<HomeState> {
   FirebaseRepository firebaseRepository = FirebaseRepository();
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-  Util util = Util();
   UserModel userModel = UserModel();
 
   List<UserData> userList = [];

@@ -8,16 +8,22 @@ sealed class ChatActionState extends ChatState {}
 final class EmptyMessage extends ChatActionState {}
 
 final class UploadFile extends ChatActionState {
+  final MediaType mediaType;
+
   final String filePath;
   final FileStatus fileStatus;
 
-  UploadFile(this.filePath, {required this.fileStatus});
+  UploadFile(
+      {required this.filePath,
+      required this.fileStatus,
+      required this.mediaType});
 }
 
 final class FileUploaded extends ChatActionState {
   final String fileUrl;
+  final MediaType mediaType;
 
-  FileUploaded({required this.fileUrl});
+  FileUploaded({required this.mediaType, required this.fileUrl});
 }
 
 final class ChatReady extends ChatState {

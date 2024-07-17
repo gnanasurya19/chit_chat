@@ -1,11 +1,11 @@
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/model/user_model.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/animated_button.dart';
 import 'package:chit_chat/res/custom_widget/loading_widget.dart';
 import 'package:chit_chat/res/custom_widget/text_field_animation.dart';
 import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/utils/util.dart';
 import 'package:chit_chat/view/widget/animated_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,8 +55,6 @@ class _LoginPageState extends State<LoginPage> {
   void passwordfocusListener() {
     isFocusPassword.change(passwordfocus.hasFocus && !isPasswordVisible);
   }
-
-  Util util = Util();
 
   forgotPassword() {
     util.slideInDialog(
@@ -348,17 +346,18 @@ class _LoginPageState extends State<LoginPage> {
                                                         backgroundColor:
                                                             const WidgetStatePropertyAll(AppColor.white)),
                                                     onPressed: () {
-                                                      FocusManager.instance.primaryFocus?.unfocus();
-                                                        authCotroller.doSignIn(
-                                                            state.status,
-                                                            UserModel(
-                                                                email:
-                                                                    emailController
-                                                                        .text,
-                                                                password:
-                                                                    passwordController
-                                                                        .text));
-
+                                                      FocusManager
+                                                          .instance.primaryFocus
+                                                          ?.unfocus();
+                                                      authCotroller.doSignIn(
+                                                          state.status,
+                                                          UserModel(
+                                                              email:
+                                                                  emailController
+                                                                      .text,
+                                                              password:
+                                                                  passwordController
+                                                                      .text));
                                                     },
                                                     child: Text(
                                                       "SIGN IN",

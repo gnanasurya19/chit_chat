@@ -117,6 +117,8 @@ class _UserSearchState extends State<UserSearch> {
                       itemBuilder: (context, index) => UserCard(
                         user: state.chatList[index],
                         onTap: (user) {
+                          BlocProvider.of<ChatCubit>(context)
+                              .onInit(state.chatList[index].uid!);
                           Navigator.pop(context);
                           Navigator.push(context, PageRouteBuilder(
                             pageBuilder:
@@ -135,6 +137,14 @@ class _UserSearchState extends State<UserSearch> {
                         },
                       ),
                     ),
+                    if (state.chatList.isEmpty && state.userList.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.only(top: 30),
+                        child: const Text(
+                          'No Result Found',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
                   ],
                 );
               } else {

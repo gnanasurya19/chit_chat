@@ -1,6 +1,6 @@
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/model/user_model.dart';
-import 'package:chit_chat/utils/util.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,6 @@ class AuthCubit extends Cubit<AuthState> {
 
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
-  Util util = Util();
   onInit() {
     emit(AuthViewState(
         status: PageStatus.notSignedIn,
