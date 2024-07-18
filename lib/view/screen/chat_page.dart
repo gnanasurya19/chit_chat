@@ -6,7 +6,7 @@ import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/screen/view_image.dart';
+import 'package:chit_chat/view/screen/view_media.dart';
 import 'package:chit_chat/view/widget/chat_text_field.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:chit_chat/view/widget/empty_chat.dart';
@@ -31,6 +31,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    BlocProvider.of<ChatCubit>(context).onInit(widget.userData.uid!);
     listScrollController.addListener(listListener);
   }
 
@@ -234,8 +235,9 @@ class MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.inverseSurface,
-            borderRadius: BorderRadius.circular(10)),
+          color: Theme.of(context).colorScheme.inverseSurface,
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Column(
           crossAxisAlignment: widget.userData.uid == message.senderID
               ? CrossAxisAlignment.start
@@ -253,7 +255,7 @@ class MessageBubble extends StatelessWidget {
                 child: InkWell(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => ViewImagePage(
+                      builder: (context) => ViewMediaPage(
                         message: message,
                       ),
                     ),
@@ -267,6 +269,40 @@ class MessageBubble extends StatelessWidget {
                 ),
               ),
               const Gap(5)
+            ],
+            if (message.messageType == 'video') ...[
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 5),
+                    constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * 0.35),
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                ViewMediaPage(message: message)),
+                      ),
+                      child: CachedNetworkImage(
+                        imageUrl: message.thumbnail!,
+                        placeholder: _loader,
+                        errorWidget: _error,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+
+                  //static button used as icon
+                  IconButton(
+                      style: IconButton.styleFrom(
+                          disabledForegroundColor: AppColor.white,
+                          disabledBackgroundColor:
+                              AppColor.black.withOpacity(0.4)),
+                      onPressed: null,
+                      icon: const Icon(Icons.play_arrow_rounded))
+                ],
+              ),
             ],
             Row(
               mainAxisSize: MainAxisSize.min,

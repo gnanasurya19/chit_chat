@@ -199,7 +199,7 @@ class Util {
 
   Future<XFile?> captureVideo() async {
     final file = await ImagePicker().pickVideo(
-      source: ImageSource.camera,
+      source: ImageSource.gallery,
       preferredCameraDevice: CameraDevice.rear,
     );
     if (file != null) {

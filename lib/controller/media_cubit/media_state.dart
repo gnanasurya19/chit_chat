@@ -4,10 +4,10 @@ part of 'media_cubit.dart';
 sealed class MediaState {}
 
 final class MediaInitial extends MediaState {
-  final bool isAppbarVisible;
+  final bool iscontentVisible;
   final MediaType? mediaType;
 
-  MediaInitial({required this.isAppbarVisible, this.mediaType});
+  MediaInitial({required this.iscontentVisible, this.mediaType});
 }
 
 enum MediaType {

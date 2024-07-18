@@ -13,6 +13,7 @@ class MessageModel {
   String? date;
   String? time;
   String? messageType;
+  String? thumbnail;
 
   MessageModel({
     this.senderID,
@@ -26,6 +27,7 @@ class MessageModel {
     this.date,
     this.messageType,
     this.id,
+    this.thumbnail,
   });
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
@@ -35,6 +37,7 @@ class MessageModel {
     senderEmail = json['senderEmail'];
     message = json['message'];
     messageType = json['messageType'];
+    thumbnail = json['thumbnail'];
     if (json['status'] != null) {
       status = json['status'];
     } else {
@@ -79,6 +82,7 @@ class MessageModel {
     data['status'] = status;
     data['batch'] = batch;
     data['messageType'] = messageType;
+    data['thumbnail'] = thumbnail;
     return data;
   }
 }

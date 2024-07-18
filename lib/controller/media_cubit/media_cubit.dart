@@ -8,42 +8,49 @@ import 'package:share_plus/share_plus.dart';
 part 'media_state.dart';
 
 class MediaCubit extends Cubit<MediaState> {
-  MediaCubit() : super(MediaInitial(isAppbarVisible: true));
+  MediaCubit() : super(MediaInitial(iscontentVisible: true));
+  bool isVisible = true;
 
   onInit() {
-    emit(MediaInitial(isAppbarVisible: true));
+    emit(MediaInitial(iscontentVisible: true));
   }
 
-  toggleStatusbar(MediaInitial state) {
-    if (!state.isAppbarVisible) {
-      emit(MediaInitial(isAppbarVisible: true));
+  toggleStatusbar([bool? visiblility]) {
+    isVisible = visiblility ?? isVisible;
+    if (isVisible) {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: [SystemUiOverlay.bottom],
+      );
+    } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
           overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
-    } else {
-      emit(MediaInitial(isAppbarVisible: false));
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-          overlays: [SystemUiOverlay.bottom]);
     }
+    isVisible = !isVisible;
+    emit(MediaInitial(iscontentVisible: isVisible));
   }
 
-  downloadImage(String url) async {
+  downloadMedia(String url, String mediaType) async {
     // get's the cache of the image if not available downloads from network
     final chachedFile = await DefaultCacheManager().getSingleFile(url);
     Directory documentDirectory = Directory('/storage/emulated/0/Download');
-
+    String mediaExtention = mediaType == 'image' ? ".jpeg" : 'mp4';
+    String prefix = mediaType == 'image' ? 'IMG' : 'VID';
     Uint8List bytes = await chachedFile.readAsBytes();
 
     // generate image name
     final String imageName = DateFormat('yyyyMMddhhmm').format(DateTime.now());
 
     //generate file
-    File newFile = File('${documentDirectory.path}/IMG-$imageName-CC.png');
+    File newFile =
+        File('${documentDirectory.path}/$prefix-$imageName-CC.$mediaExtention');
 
     //checking existing file
     int count = 1;
     while (await newFile.exists()) {
       String newImageName = "$imageName$count";
-      File file = File('${documentDirectory.path}/IMG-$newImageName-CC.png');
+      File file = File(
+          '${documentDirectory.path}/$prefix-$newImageName-CC.$mediaExtention');
       newFile = file;
       count++;
     }

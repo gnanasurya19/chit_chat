@@ -33,6 +33,7 @@ dependencies:
   flutter_cache_manager: ^3.3.2
   share_plus: ^9.0.0
   video_player: ^2.9.1
+  video_thumbnail: ^0.5.3
  
 
 

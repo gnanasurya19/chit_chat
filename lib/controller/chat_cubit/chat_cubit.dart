@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 part 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
@@ -26,7 +27,8 @@ class ChatCubit extends Cubit<ChatState> {
   String chatRoomID = '';
   String receiverID = '';
   DocumentSnapshot? lastDocument;
-  late StreamSubscription chatStream;
+  StreamSubscription? chatStream;
+  String? thumbnailUrl;
 
   Future onInit(String receiverID) async {
     SharedPreferences sp = await SharedPreferences.getInstance();
@@ -72,6 +74,9 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   listenNewmsg() {
+    if (chatStream != null) {
+      chatStream!.cancel();
+    }
     chatStream = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
@@ -133,14 +138,14 @@ class ChatCubit extends Cubit<ChatState> {
     });
   }
 
-  updateChatStatus(MessageModel message) {
+  Future updateChatStatus(MessageModel message) async {
     DocumentReference messageRef = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
         .doc(message.id);
 
-    messageRef.update({"status": "read", "batch": 0});
+    await messageRef.update({"status": "read", "batch": 0});
     message.status = 'read';
     emit(ChatReady(messageList: messageList));
   }
@@ -184,6 +189,7 @@ class ChatCubit extends Cubit<ChatState> {
       status: 'unread',
       timestamp: Timestamp.now(),
       messageType: msgType,
+      thumbnail: thumbnailUrl,
     );
 
     //posting to firebase
@@ -199,7 +205,7 @@ class ChatCubit extends Cubit<ChatState> {
     sp.setString('receiverId', '');
     messageList = [];
     emit(ChatReady(messageList: const []));
-    chatStream.cancel();
+    chatStream!.cancel();
   }
 
   Future openGallery() async {
@@ -225,12 +231,72 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future uploadFileToFirebase(String filepath, MediaType mediatype) async {
-    emit(UploadFile(
+    emit(
+      UploadFile(
         mediaType: mediatype,
         filePath: filepath,
-        fileStatus: FileStatus.uploading));
-    firebaseRepository.uploadFile(XFile(filepath), 'chat_media').then((value) {
-      emit(FileUploaded(fileUrl: value, mediaType: mediatype));
-    });
+        fileStatus: FileStatus.uploading,
+      ),
+    );
+
+    String fileUrl =
+        await firebaseRepository.uploadFile(XFile(filepath), 'chat_media');
+
+    if (mediatype == MediaType.video) {
+      String? thumbnailPath = await VideoThumbnail.thumbnailFile(
+        video: filepath,
+        imageFormat: ImageFormat.JPEG,
+        quality: 100,
+      );
+
+      thumbnailUrl = await firebaseRepository.uploadFile(
+          XFile(thumbnailPath!), 'chat_media');
+    }
+    emit(FileUploaded(fileUrl: fileUrl, mediaType: mediatype));
   }
 }
+
+
+// listenNewmsg() {
+//     chatStream = firebaseFirestore
+//         .collection('chatrooms')
+//         .doc(chatRoomID)
+//         .collection('message')
+//         .where('status', isEqualTo: 'unread')
+//         .orderBy('timestamp', descending: true)
+//         .snapshots()
+//         .listen((element) {
+//       if (element.docs.isNotEmpty) {
+//         Future.forEach(
+//           element.docs,
+//           (item) {
+//             final newMessageDoc = item;
+//             final MessageModel newMessage =
+//                 MessageModel.fromJson(newMessageDoc.data(), newMessageDoc.id);
+
+//             int existingMsgIndex = messageList.indexWhere(
+//               (e) => e.id == newMessage.id,
+//             );
+//             bool isExist = messageList.any((e) => e.id == newMessage.id);
+
+//             if (messageList.isNotEmpty && isExist) {
+//               messageList[existingMsgIndex] = newMessage;
+//             } else if (messageList.isEmpty || !isExist) {
+//               messageList.insert(0, newMessage);
+//             }
+
+//             if (newMessage.receiverID == firebaseAuth.currentUser!.uid &&
+//                 newMessage.status == 'unread') {
+//               updateChatStatus(newMessage);
+//             }
+
+//             if (messageList.isEmpty) {
+//               emit(ChatListEmpty());
+//             } else {
+//               emit(ChatReady(messageList: messageList));
+//             }
+//           },
+//         );
+//       }
+//     });
+//   }

@@ -3,10 +3,9 @@ import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/fonts.dart';
+import 'package:chit_chat/view/widget/video_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'video_widget.dart';
 
 class FileUploadDialog extends StatelessWidget {
   final UploadFile state;
@@ -34,17 +33,26 @@ class FileUploadDialog extends StatelessWidget {
                       'Are you sure want to send this file?',
                       style: TextStyle(fontSize: AppFontSize.sm),
                     ),
-                    if (state.mediaType != MediaType.image)
+                    if (state.mediaType == MediaType.image)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         child: Image.file(
                           File(state.filePath),
                           width: MediaQuery.sizeOf(context).width * 0.35,
                           height: MediaQuery.sizeOf(context).width * 0.35,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppColor.greyline,
+                              child: const Icon(Icons.error),
+                            );
+                          },
                         ),
                       )
-                    else if (state.mediaType != MediaType.video)
-                      const VideoWidget(),
+                    else if (state.mediaType == MediaType.video)
+                      VideoPreview(
+                        filepath: state.filePath,
+                      ),
+                    Container(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
