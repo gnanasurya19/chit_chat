@@ -4,6 +4,7 @@ import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
 import 'package:chit_chat/view/screen/view_media.dart';
@@ -24,14 +25,16 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
   late ChatCubit _chatRoomsCubit;
+
   @override
   void initState() {
     super.initState();
     BlocProvider.of<ChatCubit>(context).onInit(widget.userData.uid!);
+    WidgetsBinding.instance.addObserver(this);
     listScrollController.addListener(listListener);
   }
 
@@ -44,6 +47,16 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _chatRoomsCubit.pauseChatStream();
+    } else if (state == AppLifecycleState.resumed) {
+      _chatRoomsCubit.resumeChatStream();
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     _chatRoomsCubit = BlocProvider.of<ChatCubit>(context);
     super.didChangeDependencies();
@@ -52,6 +65,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Future<void> dispose() async {
     messageController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     _chatRoomsCubit.stopStream();
     super.dispose();
   }
@@ -179,22 +193,7 @@ class _ChatPageState extends State<ChatPage> {
 
   void listener(BuildContext context, ChatState state) {
     if (state is EmptyMessage) {
-      showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-                title: const Text(
-                  'Cannot send empty message',
-                  style: TextStyle(fontSize: AppFontSize.sm),
-                ),
-                actions: [
-                  TextButton(
-                    child: const Text('Ok'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  )
-                ],
-              ));
+      util.showSnackbar(context, 'cannot send empty msg', 'error');
     } else if (state is UploadFile) {
       if (state.fileStatus == FileStatus.preview) {
         showDialog(

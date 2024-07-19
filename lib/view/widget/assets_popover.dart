@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 
-class AssetsPopover extends StatelessWidget {
-  const AssetsPopover({
+class MediaPopover extends StatelessWidget {
+  const MediaPopover({
     super.key,
   });
 
@@ -28,7 +28,7 @@ class AssetsPopover extends StatelessWidget {
                 Icon(Icons.image),
                 Gap(10),
                 Text(
-                  'pickImage',
+                  'Pick image',
                 ),
               ],
             ),
@@ -48,7 +48,7 @@ class AssetsPopover extends StatelessWidget {
                 Icon(Icons.video_collection),
                 Gap(10),
                 Text(
-                  'Video',
+                  'Pick video',
                 ),
               ],
             ),

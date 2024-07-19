@@ -33,19 +33,7 @@ class ChatTextField extends StatelessWidget {
             cursorColor: AppColor.blue,
             style: const TextStyle(fontSize: AppFontSize.sm),
             decoration: InputDecoration(
-              prefixIcon: IconButton(
-                icon: const Icon(
-                  Icons.filter,
-                  size: 25,
-                ),
-                onPressed: () {
-                  showPopover(
-                    backgroundColor: Theme.of(context).colorScheme.onTertiary,
-                    context: context,
-                    bodyBuilder: (context) => const AssetsPopover(),
-                  );
-                },
-              ),
+              prefixIcon: const MediaOptionBtn(),
               prefixIconConstraints: const BoxConstraints(minWidth: 0),
               focusColor: AppColor.green,
               hintText: "Type here",
@@ -83,6 +71,30 @@ class ChatTextField extends StatelessWidget {
               color: AppColor.white,
             )),
       ],
+    );
+  }
+}
+
+class MediaOptionBtn extends StatelessWidget {
+  const MediaOptionBtn({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(
+        Icons.filter,
+        size: 25,
+      ),
+      onPressed: () {
+        showPopover(
+          direction: PopoverDirection.top,
+          backgroundColor: Theme.of(context).colorScheme.onTertiary,
+          context: context,
+          bodyBuilder: (context) => const MediaPopover(),
+        );
+      },
     );
   }
 }

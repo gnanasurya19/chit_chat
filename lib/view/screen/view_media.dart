@@ -1,10 +1,8 @@
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/view/widget/video_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,10 +18,19 @@ class ViewMediaPage extends StatefulWidget {
 }
 
 class _ViewMediaPageState extends State<ViewMediaPage> {
-  late VideoPlayerController vcController;
+  VideoPlayerController? vpController;
   bool isVideoPlaying = false;
-  bool isBuffering = false;
+  bool isBuffering = true;
   int videoDuration = 0;
+
+  @override
+  void dispose() {
+    if (vpController != null) {
+      vpController!.removeListener(videoListener);
+      vpController!.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -32,15 +39,15 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
       final String filepath = widget.message!.message!;
 
       if (filepath.startsWith('http')) {
-        vcController = VideoPlayerController.networkUrl(Uri.parse(filepath));
+        vpController = VideoPlayerController.networkUrl(Uri.parse(filepath));
       } else {
-        vcController = VideoPlayerController.file(File(filepath));
+        vpController = VideoPlayerController.file(File(filepath));
       }
 
-      vcController
+      vpController!
         ..initialize().then((v) {
-          videoDuration = vcController.value.duration.inMilliseconds;
-          vcController.addListener(videoListener);
+          videoDuration = vpController!.value.duration.inMilliseconds;
+          vpController!.addListener(videoListener);
         })
         ..play();
       BlocProvider.of<MediaCubit>(context).toggleStatusbar();
@@ -50,9 +57,10 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
 
   void videoListener() {
     setState(() {
-      isVideoPlaying = vcController.value.isPlaying;
-      isBuffering = vcController.value.isBuffering;
-      seekPosition = vcController.value.position.inMilliseconds / videoDuration;
+      isVideoPlaying = vpController!.value.isPlaying;
+      isBuffering = vpController!.value.isBuffering;
+      seekPosition =
+          vpController!.value.position.inMilliseconds / videoDuration;
     });
   }
 
@@ -89,8 +97,8 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                       Container(
                         constraints: const BoxConstraints.expand(),
                         child: widget.message!.messageType == 'video'
-                            ? VideoWidget(
-                                videoPlayerController: vcController,
+                            ? VideoPlayer(
+                                vpController!,
                               )
                             : PhotoView(
                                 imageProvider: CachedNetworkImageProvider(
@@ -99,7 +107,6 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                                 ),
                               ),
                       ),
-
                       //Appbar
                       Positioned(
                         top: 0,
@@ -166,15 +173,20 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                             width: MediaQuery.sizeOf(context).width,
                             child: SliderTheme(
                               data: SliderThemeData(
+                                  inactiveTrackColor: AppColor.greyline,
                                   thumbShape: SliderComponentShape.noOverlay,
                                   overlayColor: Colors.transparent),
                               child: Slider(
                                 value: seekPosition,
+                                activeColor: AppColor.blue,
                                 onChanged: (value) {
                                   setState(() {
-                                    vcController.seekTo(Duration(
-                                        milliseconds: (value * videoDuration)
-                                            .truncate()));
+                                    vpController!.seekTo(
+                                      Duration(
+                                        milliseconds:
+                                            (value * videoDuration).truncate(),
+                                      ),
+                                    );
                                   });
                                 },
                               ),
@@ -191,7 +203,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                                 backgroundColor:
                                     AppColor.black.withOpacity(0.4)),
                             onPressed: () {
-                              vcController.play();
+                              vpController!.play();
                               Future.delayed(const Duration(seconds: 3), () {
                                 BlocProvider.of<MediaCubit>(context)
                                     .toggleStatusbar(true);
@@ -209,7 +221,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                           style: IconButton.styleFrom(
                               backgroundColor: AppColor.black.withOpacity(0.4)),
                           onPressed: () {
-                            vcController.pause();
+                            vpController!.pause();
                           },
                           icon: const Icon(
                             Icons.pause,

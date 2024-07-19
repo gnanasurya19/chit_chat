@@ -50,23 +50,40 @@ class _SideMenuState extends State<SideMenu> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                decoration:
-                                    const BoxDecoration(shape: BoxShape.circle),
-                                width: 75,
-                                height: 75,
-                                child: InkWell(
-                                  onTap: () {
-                                    context.read<HomeCubit>().editProfile();
-                                  },
-                                  child: CircularProfileImage(
-                                    image: state.user.profileURL,
-                                    isNetworkImage:
-                                        state.user.profileURL != null,
-                                  ),
+                              InkWell(
+                                onTap: () {
+                                  context.read<HomeCubit>().editProfile();
+                                },
+                                child: Stack(
+                                  alignment: Alignment.bottomRight,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                                      decoration: const BoxDecoration(
+                                          shape: BoxShape.circle),
+                                      width: 75,
+                                      height: 75,
+                                      child: CircularProfileImage(
+                                        image: state.user.profileURL,
+                                        isNetworkImage:
+                                            state.user.profileURL != null,
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: const BoxDecoration(
+                                        color: AppColor.blue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(4),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: AppColor.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Text(

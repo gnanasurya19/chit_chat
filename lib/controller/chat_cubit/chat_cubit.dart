@@ -26,7 +26,7 @@ class ChatCubit extends Cubit<ChatState> {
   List<MessageModel> messageList = [];
   String chatRoomID = '';
   String receiverID = '';
-  DocumentSnapshot? lastDocument;
+  DocumentSnapshot<Map<String, dynamic>>? lastDocument;
   StreamSubscription? chatStream;
   String? thumbnailUrl;
 
@@ -51,26 +51,59 @@ class ChatCubit extends Cubit<ChatState> {
         .limit(20)
         .get()
         .then((element) {
-      if (element.docs.isEmpty) {
-        emit(ChatListEmpty());
-      } else {
-        lastDocument = element.docs.last;
-        messageList = [];
-        for (var e in element.docs) {
-          final MessageModel message = MessageModel.fromJson(e.data(), e.id);
-          messageList.add(message);
-        }
-        emit(ChatReady(messageList: messageList));
-
-        for (var message in messageList) {
-          if (message.receiverID == firebaseAuth.currentUser!.uid &&
-              message.status == 'unread') {
-            updateChatStatus(message);
-          }
-        }
-      }
+      populateList(element.docs);
       listenNewmsg();
     });
+  }
+
+  void populateList(List<QueryDocumentSnapshot<Map<String, dynamic>>> element) {
+    if (element.isEmpty) {
+      emit(ChatListEmpty());
+    } else {
+      lastDocument = element.last;
+      messageList = [];
+      for (var e in element) {
+        final MessageModel message = MessageModel.fromJson(e.data(), e.id);
+        messageList.add(message);
+      }
+      emit(ChatReady(messageList: messageList));
+      for (var message in messageList) {
+        if (message.receiverID == firebaseAuth.currentUser!.uid &&
+            message.status == 'unread') {
+          updateChatStatus(message);
+        }
+      }
+    }
+  }
+
+  pauseChatStream() {
+    chatStream!.pause();
+  }
+
+  resumeChatStream() async {
+    listenNewmsg();
+    final newSnapshots = await firebaseFirestore
+        .collection('chatrooms')
+        .doc(chatRoomID)
+        .collection('message')
+        .orderBy('timestamp')
+        .startAtDocument(lastDocument!)
+        .get();
+    final List<MessageModel> newList = [];
+    for (var e in newSnapshots.docs) {
+      final MessageModel message = MessageModel.fromJson(e.data(), e.id);
+      newList.add(message);
+    }
+
+    messageList = newList.reversed.toList();
+    emit(ChatReady(messageList: messageList));
+
+    for (var message in messageList) {
+      if (message.receiverID == firebaseAuth.currentUser!.uid &&
+          message.status == 'unread') {
+        updateChatStatus(message);
+      }
+    }
   }
 
   listenNewmsg() {
@@ -81,41 +114,18 @@ class ChatCubit extends Cubit<ChatState> {
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
+        .orderBy('timestamp')
+        .startAtDocument(lastDocument!)
         .snapshots()
         .listen((element) {
-      if (element.docs.isNotEmpty) {
-        final newMessageDoc = element.docs.first;
-        final MessageModel newMessage =
-            MessageModel.fromJson(newMessageDoc.data(), newMessageDoc.id);
-
-        if (messageList.isNotEmpty && newMessage.id == messageList.first.id) {
-          messageList[0] = newMessage;
-        } else if (messageList.isEmpty ||
-            newMessage.id != messageList.first.id) {
-          messageList.insert(0, newMessage);
-        }
-
-        if (newMessage.receiverID == firebaseAuth.currentUser!.uid &&
-            newMessage.status == 'unread') {
-          updateChatStatus(newMessage);
-        }
-
-        if (messageList.isEmpty) {
-          emit(ChatListEmpty());
-        } else {
-          emit(ChatReady(messageList: messageList));
-        }
-      }
+      populateList(element.docs.reversed.toList());
     });
   }
 
   Future loadMore() async {
     if (lastDocument == null) return;
-
     emit(ChatReady(messageList: messageList, loadingOldchat: true));
-    firebaseFirestore
+    await firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
@@ -130,12 +140,14 @@ class ChatCubit extends Cubit<ChatState> {
       }
 
       lastDocument = element.docs.last;
+
       for (var e in element.docs) {
         final MessageModel message = MessageModel.fromJson(e.data(), e.id);
         messageList.add(message);
       }
       emit(ChatReady(messageList: messageList, loadingOldchat: false));
     });
+    listenNewmsg();
   }
 
   Future updateChatStatus(MessageModel message) async {
@@ -255,48 +267,3 @@ class ChatCubit extends Cubit<ChatState> {
     emit(FileUploaded(fileUrl: fileUrl, mediaType: mediatype));
   }
 }
-
-
-// listenNewmsg() {
-//     chatStream = firebaseFirestore
-//         .collection('chatrooms')
-//         .doc(chatRoomID)
-//         .collection('message')
-//         .where('status', isEqualTo: 'unread')
-//         .orderBy('timestamp', descending: true)
-//         .snapshots()
-//         .listen((element) {
-//       if (element.docs.isNotEmpty) {
-//         Future.forEach(
-//           element.docs,
-//           (item) {
-//             final newMessageDoc = item;
-//             final MessageModel newMessage =
-//                 MessageModel.fromJson(newMessageDoc.data(), newMessageDoc.id);
-
-//             int existingMsgIndex = messageList.indexWhere(
-//               (e) => e.id == newMessage.id,
-//             );
-//             bool isExist = messageList.any((e) => e.id == newMessage.id);
-
-//             if (messageList.isNotEmpty && isExist) {
-//               messageList[existingMsgIndex] = newMessage;
-//             } else if (messageList.isEmpty || !isExist) {
-//               messageList.insert(0, newMessage);
-//             }
-
-//             if (newMessage.receiverID == firebaseAuth.currentUser!.uid &&
-//                 newMessage.status == 'unread') {
-//               updateChatStatus(newMessage);
-//             }
-
-//             if (messageList.isEmpty) {
-//               emit(ChatListEmpty());
-//             } else {
-//               emit(ChatReady(messageList: messageList));
-//             }
-//           },
-//         );
-//       }
-//     });
-//   }

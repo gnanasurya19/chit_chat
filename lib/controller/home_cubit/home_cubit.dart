@@ -28,52 +28,9 @@ class HomeCubit extends Cubit<HomeState> {
   UserModel userModel = UserModel();
 
   List<UserData> userList = [];
-
-  // getCurrentUserData() {
-  //   userModel = UserModel(
-  //       email: firebaseAuth.currentUser!.email,
-  //       name: firebaseAuth.currentUser!.displayName!,
-  //       profileURL: firebaseAuth.currentUser!.photoURL);
-
-  //   emit(HomeReadyState(userList: userList, user: userModel));
-  // }
-
-  // onInit() async {
-  //   firebaseFirestore
-  //       .collection('chat_rooms')
-  //       .snapshots()
-  //       .listen((chatrooms) async {
-  //     userList = [];
-  //     for (var chatroom in chatrooms.docs) {
-  //       if (chatroom.id.contains(currentUserId)) {
-  //         final receiverIndex = chatroom.id.indexOf(currentUserId);
-  //         String receiverID = '';
-  //         if (receiverIndex > 0) {
-  //           receiverID = chatroom.id.substring(0, receiverIndex);
-  //         } else {
-  //           receiverID = chatroom.id.substring(currentUserId.length);
-  //         }
-
-  //         await firebaseFirestore
-  //             .collection('users')
-  //             .where('uid', isEqualTo: receiverID)
-  //             .get()
-  //             .then((users) async {
-  //           final UserData user = UserData.fromJson(users.docs[0].data());
-  //           userList.add(user);
-  //         });
-  //       }
-  //     }
-  //     emit(HomeReadyState(userList: userList, user: userModel));
-  //   });
-  // }
-
   onInit() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    final bool value = sp.getBool('oldUser') ?? false;
-    if (value == true) {
-      emit(HomeChatLoading());
-    }
+    emit(HomeChatLoading());
+
     userModel = UserModel(
       email: firebaseAuth.currentUser!.email,
       name: firebaseAuth.currentUser!.displayName!,
@@ -113,11 +70,6 @@ class HomeCubit extends Cubit<HomeState> {
       emit(HomeReadyState(userList: userList, user: userModel));
       bindlatestData();
     });
-
-    if (userList.isNotEmpty) {
-      SharedPreferences sp = await SharedPreferences.getInstance();
-      sp.setBool('oldUser', false);
-    }
   }
 
   Future<void> bindlatestData() async {

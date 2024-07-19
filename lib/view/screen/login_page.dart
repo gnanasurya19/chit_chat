@@ -39,6 +39,7 @@ class _LoginPageState extends State<LoginPage> {
   final FocusNode passwordfocus = FocusNode();
   bool isPasswordVisible = false;
   double buttonPosition = 0;
+  late final AuthCubit authCotroller;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _LoginPageState extends State<LoginPage> {
     BlocProvider.of<AuthCubit>(context).onInit();
     emailfocus.addListener(emailfocusListener);
     passwordfocus.addListener(passwordfocusListener);
+    authCotroller = BlocProvider.of<AuthCubit>(context);
   }
 
   void emailfocusListener() {
@@ -77,9 +79,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authCotroller = BlocProvider.of<AuthCubit>(context);
     return PopScope(
       canPop: false,
+      onPopInvoked: (didPop) {
+        authCotroller.goBack();
+      },
       child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: AnnotatedRegion(
@@ -94,33 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                           listenWhen: (previous, current) =>
                               current is AuthActionState,
                           listener: (context, state) {
-                            if (state is AuthToast) {
-                              util.showSnackbar(
-                                  context, state.text, state.type);
-                              setState(() {
-                                isFail.change(true);
-                              });
-                            } else if (state is AuthAlert) {
-                              util.doAlert(context, state.text, state.type);
-                            } else if (state is AuthUserNotFound) {
-                              userNotFound();
-                            } else if (state is AuthPasswordResetMailSent) {
-                              Navigator.pop(context);
-                              resetMailsent(context);
-                            } else if (state is AuthUserLoginSuccess) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                'home',
-                                (route) => false,
-                              );
-                            } else if (state is AuthLoading) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => const LoadingScreen(),
-                              );
-                            } else if (state is AuthCancelLoading) {
-                              Navigator.pop(context);
-                            }
+                            _listener(state, context);
                           },
                           buildWhen: (previous, current) =>
                               current is! AuthActionState,
@@ -418,6 +396,35 @@ class _LoginPageState extends State<LoginPage> {
                         )))),
           )),
     );
+  }
+
+  void _listener(AuthState state, BuildContext context) {
+    if (state is AuthToast) {
+      util.showSnackbar(context, state.text, state.type);
+      setState(() {
+        isFail.change(true);
+      });
+    } else if (state is AuthAlert) {
+      util.doAlert(context, state.text, state.type);
+    } else if (state is AuthUserNotFound) {
+      userNotFound();
+    } else if (state is AuthPasswordResetMailSent) {
+      Navigator.pop(context);
+      resetMailsent(context);
+    } else if (state is AuthUserLoginSuccess) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        'home',
+        (route) => false,
+      );
+    } else if (state is AuthLoading) {
+      showDialog(
+        context: context,
+        builder: (context) => const LoadingScreen(),
+      );
+    } else if (state is AuthCancelLoading) {
+      Navigator.pop(context);
+    }
   }
 
   userNotFound() {

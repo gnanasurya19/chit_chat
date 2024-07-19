@@ -45,7 +45,7 @@ int id = 0;
 Future onArriveForegroundMsg(RemoteMessage message) async {
   SharedPreferences sp = await SharedPreferences.getInstance();
   String receiverId = sp.getString('receiverId') ?? '';
-  final data = jsonDecode(message.data['user']);
+  final Map<String, dynamic> data = jsonDecode(message.data['user']);
   final UserData userData = UserData.fromJson(data);
 
   if (receiverId != userData.uid) {
