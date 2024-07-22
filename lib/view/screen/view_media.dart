@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,9 +33,11 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
     super.dispose();
   }
 
+  late MediaCubit controller;
   @override
   void initState() {
-    BlocProvider.of<MediaCubit>(context).onInit();
+    controller = BlocProvider.of<MediaCubit>(context);
+    controller.onInit();
     if (widget.message!.messageType == 'video') {
       final String filepath = widget.message!.message!;
 
@@ -66,7 +69,6 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
 
   double seekPosition = 0;
 
-  final controller = MediaCubit();
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
@@ -74,7 +76,15 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
           SystemUiOverlayStyle(statusBarColor: AppColor.black.withOpacity(0.2)),
       child: Scaffold(
         backgroundColor: AppColor.black,
-        body: BlocBuilder<MediaCubit, MediaState>(
+        body: BlocConsumer<MediaCubit, MediaState>(
+          buildWhen: (previous, current) => current is! MediaActionState,
+          listenWhen: (previous, current) => current is MediaActionState,
+          listener: (context, state) {
+            if (state is MediaDownloaded) {
+              util.showSnackbar(
+                  context, '${state.mediaType} Downloaded', 'success');
+            }
+          },
           builder: (context, state) {
             if (state is MediaInitial) {
               return GestureDetector(

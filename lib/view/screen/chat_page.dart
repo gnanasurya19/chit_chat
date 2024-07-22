@@ -277,7 +277,8 @@ class MessageBubble extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 5),
                     constraints: BoxConstraints(
                         maxHeight: MediaQuery.sizeOf(context).height * 0.35),
-                    child: InkWell(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                             builder: (context) =>

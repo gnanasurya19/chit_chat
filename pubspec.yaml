@@ -11,7 +11,7 @@ dependencies:
   connectivity_plus: ^6.0.2
   firebase_auth: ^5.1.1
   firebase_core: ^3.1.1
-  firebase_messaging: 15.0.2
+  firebase_messaging: ^15.0.2
   flutter:
     sdk: flutter
   flutter_bloc: ^8.1.6
@@ -41,7 +41,6 @@ dependencies:
 flutter_native_splash:
   web: false
   image: assets/icon/splash_icon.png
-  # background_image: assets/images/bg-login.jpg
   color: "#d6e2ea"
   android: true
 
@@ -78,7 +77,7 @@ flutter:
     - family: "Roboto-Regular"
       fonts:
         - asset: fonts/Roboto/Roboto-Regular.ttf
-
+        
     - family: "Roboto-Bold"
       fonts:
         - asset: fonts/Roboto/Roboto-Bold.ttf
@@ -87,9 +86,3 @@ flutter:
       fonts:
         - asset: fonts/Roboto/Roboto-Medium.ttf
 
-    - family: "Roboto-Light"
-      fonts:
-        - asset: fonts/Roboto/Roboto-Light.ttf
-    - family: "Roboto-B"
-      fonts:
-        - asset: fonts/Roboto/Roboto-Light.ttf

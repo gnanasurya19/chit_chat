@@ -50,8 +50,4 @@ class SearchCubit extends Cubit<SearchState> {
       ));
     });
   }
-
-  // navTochat(UserData user) {
-  //   emit(SearchToChatState(user: user));
-  // }
 }

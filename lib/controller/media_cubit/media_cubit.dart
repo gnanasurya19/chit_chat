@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +31,7 @@ class MediaCubit extends Cubit<MediaState> {
     emit(MediaInitial(iscontentVisible: isVisible));
   }
 
-  downloadMedia(String url, String mediaType) async {
+  Future downloadMedia(String url, String mediaType) async {
     // get's the cache of the image if not available downloads from network
     final chachedFile = await DefaultCacheManager().getSingleFile(url);
     Directory documentDirectory = Directory('/storage/emulated/0/Download');
@@ -57,10 +58,17 @@ class MediaCubit extends Cubit<MediaState> {
 
     //stores to device
     await newFile.writeAsBytes(bytes);
+    emit(MediaDownloaded(mediaType: mediaType == 'image' ? 'Image' : 'Video'));
   }
 
   shareFile(String fileurl) async {
     final chachedFile = await DefaultCacheManager().getSingleFile(fileurl);
     Share.shareXFiles([XFile(chachedFile.path)]);
+  }
+
+  @override
+  void onChange(Change<MediaState> change) {
+    print(change.currentState);
+    super.onChange(change);
   }
 }
