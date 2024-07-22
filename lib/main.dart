@@ -8,6 +8,7 @@ import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/notification/push_notification.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/view/screen/auth_page.dart';
+import 'package:chit_chat/view/screen/email_verification_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
 import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
@@ -78,6 +79,7 @@ class MainAppState extends State<MainApp> {
                 "home": (context) => const HomePage(),
                 "profile": (context) => const Profile(),
                 "view-image": (context) => const ViewMediaPage(),
+                "email": (context) => const EmailVerificationPage(),
               },
             );
           } else {

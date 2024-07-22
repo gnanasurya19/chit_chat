@@ -70,6 +70,7 @@ class _EmptyChatState extends State<EmptyChat>
               ScaleTransition(
                 scale: animation,
                 child: LottieBuilder.asset(
+                  repeat: false,
                   'assets/lottie/greeting_animated.json',
                   width: MediaQuery.of(context).size.width * 0.4,
                 ),

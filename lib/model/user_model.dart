@@ -3,5 +3,7 @@ class UserModel {
   String? password;
   String? name;
   String? profileURL;
-  UserModel({this.name, this.email, this.password, this.profileURL});
+  bool? isVerified;
+  UserModel(
+      {this.name, this.email, this.password, this.profileURL, this.isVerified});
 }

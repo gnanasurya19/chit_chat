@@ -11,7 +11,7 @@ class AppColor {
   static const Color greyText = Color(0xFF607D8B);
   static Color darkGreyText = Colors.blueGrey[700]!;
   static const Color blue = Color(0xFF2196F3);
-  static Color darkBlue = Colors.blue.shade700;
+  static const Color darkBlue = Color(0xFF1976D2);
   static const Color pink = Color(0xFFff469c);
   static const Color green = Colors.green;
   static const Color loginBg = Color(0xffd6e2ea);
@@ -47,7 +47,7 @@ class MyAppTheme {
           selectionHandleColor: AppColor.blue),
       brightness: Brightness.dark,
       fontFamily: Roboto.regular,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         inversePrimary: AppColor.blueGrey,
         inverseSurface: AppColor.darkblueGrey,
         tertiaryContainer: AppColor.white,

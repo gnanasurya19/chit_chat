@@ -67,32 +67,6 @@ class _AnimatedButtonState extends State<AnimatedButton>
                   fontSize: AppFontSize.xs),
             ),
           ),
-          // InkWell(
-          //   borderRadius: BorderRadius.circular(30),
-          //   onTap: () {
-          //     widget.onClick();
-          //   },
-          //   child: Container(
-          //     key: buttonKey,
-          //     padding: const EdgeInsets.all(12),
-          //     decoration: BoxDecoration(
-          //       color: widget.isLogin           ? Theme.of(context).colorScheme.primaryContainer           : Colors.transparent,
-          //       border: Border.all(
-          //           color:
-          //               widget.isLogin ? Colors.transparent : AppColor.white),
-          //       borderRadius: BorderRadius.circular(30),
-          //     ),
-          //     child: Text(
-          //       "CREATE AN ACCOUNT",
-          //       textScaler:
-          //           TextScaler.linear(ScaleSize.textScaleFactor(context)),
-          //       style: const TextStyle(
-          //           color: AppColor.white,
-          //           fontFamily: Roboto.medium,
-          //           fontSize: AppFontSize.xs),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );

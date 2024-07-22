@@ -46,25 +46,32 @@ class AuthCubit extends Cubit<AuthState> {
             await firebaseAuth.signInWithEmailAndPassword(
                 email: userModel.email!, password: userModel.password!);
 
-            await firebaseMessaging.getToken().then((token) async {
-              await firebaseFirestore
-                  .collection('users')
-                  .where('uid', isEqualTo: firebaseAuth.currentUser!.uid)
-                  .get()
-                  .then((user) {
-                final UserData userData =
-                    UserData.fromJson(user.docs[0].data());
-                DocumentReference messageRef =
-                    firebaseFirestore.collection('users').doc(user.docs[0].id);
-                if (userData.fCM != token) {
-                  userData.fCM = token;
-                  messageRef.update(userData.toJson());
-                }
-              });
-            });
-
+            await firebaseMessaging.getToken().then(
+              (token) async {
+                await firebaseFirestore
+                    .collection('users')
+                    .where('uid', isEqualTo: firebaseAuth.currentUser!.uid)
+                    .get()
+                    .then((user) {
+                  final UserData userData =
+                      UserData.fromJson(user.docs[0].data());
+                  DocumentReference messageRef = firebaseFirestore
+                      .collection('users')
+                      .doc(user.docs[0].id);
+                  if (userData.fCM != token) {
+                    userData.fCM = token;
+                    messageRef.update(userData.toJson());
+                  }
+                });
+              },
+            );
             emit(AuthCancelLoading());
-            emit(AuthUserLoginSuccess());
+
+            if (firebaseAuth.currentUser!.emailVerified) {
+              emit(AuthUserLoginSuccess());
+            } else {
+              emit(AuthVerifyUserEmail());
+            }
           } on FirebaseAuthException catch (e) {
             emit(AuthCancelLoading());
             showFirebaseError(e);
@@ -98,6 +105,10 @@ class AuthCubit extends Cubit<AuthState> {
       util.checkNetwork().then((value) async {
         try {
           emit(AuthLoading());
+          if (firebaseAuth.currentUser != null) {
+            firebaseAuth.signOut();
+          }
+
           //sign up user
           await firebaseAuth
               .createUserWithEmailAndPassword(
@@ -131,8 +142,14 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  verifyEmail(String email) {
-    // firebaseAuth.;
+  verifyEmail(BuildContext context) {
+    firebaseAuth.currentUser!.sendEmailVerification().catchError((e) {
+      if (e.code == 'too-many-requests') {
+        util.doAlert(context, 'Too Many Request \nPlease try later', 'error');
+      } else {
+        showFirebaseError(e);
+      }
+    });
   }
 
   forgotPassword(String email) {

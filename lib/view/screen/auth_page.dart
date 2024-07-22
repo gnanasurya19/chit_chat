@@ -13,6 +13,7 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   late Widget loadWidget;
+
   @override
   void initState() {
     super.initState();
@@ -20,9 +21,10 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (firebaseAuth.currentUser == null) {
+    if (firebaseAuth.currentUser == null ||
+        !firebaseAuth.currentUser!.emailVerified) {
       loadWidget = const LoginPage();
-    } else {
+    } else if (firebaseAuth.currentUser != null) {
       loadWidget = const HomePage();
     }
     return loadWidget;

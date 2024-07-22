@@ -52,72 +52,25 @@ class ChatCubit extends Cubit<ChatState> {
         .get()
         .then((element) {
       populateList(element.docs);
-      listenNewmsg();
     });
-  }
-
-  void populateList(List<QueryDocumentSnapshot<Map<String, dynamic>>> element) {
-    if (element.isEmpty) {
-      emit(ChatListEmpty());
-    } else {
-      lastDocument = element.last;
-      messageList = [];
-      for (var e in element) {
-        final MessageModel message = MessageModel.fromJson(e.data(), e.id);
-        messageList.add(message);
-      }
-      emit(ChatReady(messageList: messageList));
-      for (var message in messageList) {
-        if (message.receiverID == firebaseAuth.currentUser!.uid &&
-            message.status == 'unread') {
-          updateChatStatus(message);
-        }
-      }
-    }
-  }
-
-  pauseChatStream() {
-    chatStream!.pause();
-  }
-
-  resumeChatStream() async {
     listenNewmsg();
-    final newSnapshots = await firebaseFirestore
-        .collection('chatrooms')
-        .doc(chatRoomID)
-        .collection('message')
-        .orderBy('timestamp')
-        .startAtDocument(lastDocument!)
-        .get();
-    final List<MessageModel> newList = [];
-    for (var e in newSnapshots.docs) {
-      final MessageModel message = MessageModel.fromJson(e.data(), e.id);
-      newList.add(message);
-    }
-
-    messageList = newList.reversed.toList();
-    emit(ChatReady(messageList: messageList));
-
-    for (var message in messageList) {
-      if (message.receiverID == firebaseAuth.currentUser!.uid &&
-          message.status == 'unread') {
-        updateChatStatus(message);
-      }
-    }
   }
 
   listenNewmsg() {
     if (chatStream != null) {
       chatStream!.cancel();
     }
-    chatStream = firebaseFirestore
+    Query<Map<String, dynamic>> query = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
-        .orderBy('timestamp')
-        .startAtDocument(lastDocument!)
-        .snapshots()
-        .listen((element) {
+        .orderBy('timestamp');
+
+    if (lastDocument != null) {
+      query.startAtDocument(lastDocument!);
+    }
+
+    chatStream = query.snapshots().listen((element) {
       populateList(element.docs.reversed.toList());
     });
   }
@@ -150,6 +103,26 @@ class ChatCubit extends Cubit<ChatState> {
     listenNewmsg();
   }
 
+  void populateList(List<QueryDocumentSnapshot<Map<String, dynamic>>> element) {
+    if (element.isEmpty) {
+      emit(ChatListEmpty());
+    } else {
+      lastDocument = element.last;
+      messageList = [];
+      for (var e in element) {
+        final MessageModel message = MessageModel.fromJson(e.data(), e.id);
+        messageList.add(message);
+      }
+      emit(ChatReady(messageList: messageList));
+      for (var message in messageList) {
+        if (message.receiverID == firebaseAuth.currentUser!.uid &&
+            message.status == 'unread') {
+          updateChatStatus(message);
+        }
+      }
+    }
+  }
+
   Future updateChatStatus(MessageModel message) async {
     DocumentReference messageRef = firebaseFirestore
         .collection('chatrooms')
@@ -162,10 +135,37 @@ class ChatCubit extends Cubit<ChatState> {
     emit(ChatReady(messageList: messageList));
   }
 
-  Future sendMessage(String message, UserData receiver, String msgType) async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setBool('oldUser', true);
+  pauseChatStream() {
+    chatStream!.pause();
+  }
 
+  resumeChatStream() async {
+    listenNewmsg();
+    final newSnapshots = await firebaseFirestore
+        .collection('chatrooms')
+        .doc(chatRoomID)
+        .collection('message')
+        .orderBy('timestamp')
+        .startAtDocument(lastDocument!)
+        .get();
+    final List<MessageModel> newList = [];
+    for (var e in newSnapshots.docs) {
+      final MessageModel message = MessageModel.fromJson(e.data(), e.id);
+      newList.add(message);
+    }
+
+    messageList = newList.reversed.toList();
+    emit(ChatReady(messageList: messageList));
+
+    for (var message in messageList) {
+      if (message.receiverID == firebaseAuth.currentUser!.uid &&
+          message.status == 'unread') {
+        updateChatStatus(message);
+      }
+    }
+  }
+
+  Future sendMessage(String message, UserData receiver, String msgType) async {
     if (message.isEmpty) {
       emit(EmptyMessage());
       throw false;

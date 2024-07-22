@@ -22,7 +22,8 @@ class Util {
 
   showSnackbar(context, text, type) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
         duration: const Duration(milliseconds: 1500),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColor.darkBlue,
@@ -31,7 +32,9 @@ class Util {
         content: Text(
           text,
           style: const TextStyle(fontSize: 15, color: AppColor.white),
-        )));
+        ),
+      ),
+    );
   }
 
   doAlert(context, String content, String type) {
@@ -76,10 +79,10 @@ class Util {
                     Container(
                       alignment: Alignment.center,
                       child: Lottie.asset(
-                        "assets/json/error.json",
+                        "assets/lottie/error.json",
                         repeat: false,
-                        width: 100,
-                        height: 100,
+                        width: 150,
+                        height: 150,
                         fit: BoxFit.contain,
                       ),
                     ),

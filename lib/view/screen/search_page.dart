@@ -17,6 +17,7 @@ class UserSearch extends StatefulWidget {
 }
 
 class _UserSearchState extends State<UserSearch> {
+  TextEditingController searchEditingCtl = TextEditingController();
   @override
   void initState() {
     BlocProvider.of<SearchCubit>(context).onInit(widget.chatList);
@@ -46,6 +47,7 @@ class _UserSearchState extends State<UserSearch> {
           autofocus: true,
           cursorColor: AppColor.white,
           autocorrect: true,
+          controller: searchEditingCtl,
           onChanged: (value) {
             searchProvider.onSearch(value);
           },
@@ -137,7 +139,9 @@ class _UserSearchState extends State<UserSearch> {
                         },
                       ),
                     ),
-                    if (state.chatList.isEmpty && state.userList.isEmpty)
+                    if (state.chatList.isEmpty &&
+                        state.userList.isEmpty &&
+                        searchEditingCtl.text.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.only(top: 30),
                         child: const Text(

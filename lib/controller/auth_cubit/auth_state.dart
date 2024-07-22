@@ -44,6 +44,8 @@ final class AuthPasswordResetMailSent extends AuthActionState {}
 
 final class AuthUserLoginSuccess extends AuthActionState {}
 
+final class AuthVerifyUserEmail extends AuthActionState {}
+
 final class AuthLoading extends AuthActionState {}
 
 final class AuthCancelLoading extends AuthActionState {}
