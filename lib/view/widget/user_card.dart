@@ -1,5 +1,7 @@
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:flutter/material.dart';
@@ -41,11 +43,12 @@ class UserCard extends StatelessWidget {
               style: const TextStyle(
                   fontSize: AppFontSize.md, fontFamily: Roboto.medium),
             ),
-            Text(
-              user.time ?? '',
-              style: const TextStyle(
-                  color: AppColor.greyText, fontSize: AppFontSize.xxxs),
-            )
+            if (user.lastMessage != null && user.lastMessage!.time != null)
+              Text(
+                user.lastMessage!.time ?? '',
+                style: const TextStyle(
+                    color: AppColor.greyText, fontSize: AppFontSize.xxxs),
+              )
           ],
         ),
         subtitle: user.lastMessage == null
@@ -53,10 +56,25 @@ class UserCard extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (user.lastMessage!.contains('http'))
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (user.lastMessage!.senderID == currentUserId) ...[
+                        if (user.lastMessage!.status == 'unread')
+                          const SVGIcon(
+                            name: "svg/check.svg",
+                            size: AppFontSize.xxs + 1,
+                            color: AppColor.greyText,
+                          )
+                        else
+                          const SVGIcon(
+                            name: "svg/read.svg",
+                            size: AppFontSize.xxs + 1,
+                            color: AppColor.blue,
+                          ),
+                        const Gap(5),
+                      ],
+                      if (user.lastMessage!.messageType != 'text') ...[
                         const Icon(
                           Icons.image,
                           size: 20,
@@ -64,36 +82,40 @@ class UserCard extends StatelessWidget {
                         ),
                         const Gap(5),
                         Text(
-                          'Image',
+                          '${user.lastMessage!.messageType}',
                           style: TextStyle(
                             color: AppColor.greyText,
-                            fontFamily: user.batch != null || user.batch != 0
+                            fontFamily: user.lastMessage!.batch != null ||
+                                    user.lastMessage!.batch != 0
                                 ? Roboto.regular
                                 : Roboto.bold,
                           ),
                         ),
-                      ],
-                    )
-                  else
-                    Text(
-                      user.lastMessage ?? '',
-                      softWrap: true,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColor.greyText,
-                        fontFamily: user.batch != null || user.batch != 0
-                            ? Roboto.regular
-                            : Roboto.bold,
-                      ),
-                    ),
-                  if (user.batch != null && user.batch != 0)
+                      ] else
+                        Text(
+                          user.lastMessage!.message ?? '',
+                          softWrap: true,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColor.greyText,
+                            fontFamily: user.lastMessage!.batch != null &&
+                                    user.lastMessage!.batch != 0
+                                ? Roboto.bold
+                                : Roboto.regular,
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (user.lastMessage!.batch != null &&
+                      user.lastMessage!.batch != 0 &&
+                      user.lastMessage!.senderID != currentUserId)
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: const BoxDecoration(
                           color: AppColor.blue, shape: BoxShape.circle),
                       child: Text(
-                        '${user.batch}',
+                        user.lastMessage!.batch!.toString(),
                         style: const TextStyle(
                             fontSize: AppFontSize.xxs, color: AppColor.white),
                       ),

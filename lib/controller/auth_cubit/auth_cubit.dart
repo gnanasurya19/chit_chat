@@ -50,7 +50,7 @@ class AuthCubit extends Cubit<AuthState> {
               (token) async {
                 await firebaseFirestore
                     .collection('users')
-                    .where('uid', isEqualTo: firebaseAuth.currentUser!.uid)
+                    .where('uid', isEqualTo: currentUserId)
                     .get()
                     .then((user) {
                   final UserData userData =
@@ -120,7 +120,7 @@ class AuthCubit extends Cubit<AuthState> {
             final UserData user = UserData(
               userEmail: userModel.email,
               userName: userModel.name,
-              uid: firebaseAuth.currentUser!.uid,
+              uid: currentUserId,
             );
 
             //add user to database

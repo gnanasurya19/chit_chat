@@ -40,8 +40,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   void listListener() {
     if (listScrollController.position.atEdge &&
-        listScrollController.position.pixels >
-            listScrollController.position.maxScrollExtent - 100) {
+        listScrollController.position.pixels ==
+            listScrollController.position.maxScrollExtent) {
       BlocProvider.of<ChatCubit>(context).loadMore();
     }
   }
@@ -270,20 +270,18 @@ class MessageBubble extends StatelessWidget {
               const Gap(5)
             ],
             if (message.messageType == 'video') ...[
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 5),
-                    constraints: BoxConstraints(
-                        maxHeight: MediaQuery.sizeOf(context).height * 0.35),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                ViewMediaPage(message: message)),
-                      ),
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) => ViewMediaPage(message: message)),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 5),
+                      constraints: BoxConstraints(
+                          maxHeight: MediaQuery.sizeOf(context).height * 0.35),
                       child: CachedNetworkImage(
                         imageUrl: message.thumbnail!,
                         placeholder: _loader,
@@ -291,17 +289,22 @@ class MessageBubble extends StatelessWidget {
                         fit: BoxFit.contain,
                       ),
                     ),
-                  ),
-
-                  //static button used as icon
-                  IconButton(
-                      style: IconButton.styleFrom(
-                          disabledForegroundColor: AppColor.white,
-                          disabledBackgroundColor:
-                              AppColor.black.withOpacity(0.4)),
-                      onPressed: null,
-                      icon: const Icon(Icons.play_arrow_rounded))
-                ],
+                    //static button used as icon
+                    Positioned(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColor.black.withOpacity(0.4),
+                        ),
+                        padding: const EdgeInsets.all(10),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          color: AppColor.white,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ],
             Row(

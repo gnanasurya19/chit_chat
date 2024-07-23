@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -64,11 +63,5 @@ class MediaCubit extends Cubit<MediaState> {
   shareFile(String fileurl) async {
     final chachedFile = await DefaultCacheManager().getSingleFile(fileurl);
     Share.shareXFiles([XFile(chachedFile.path)]);
-  }
-
-  @override
-  void onChange(Change<MediaState> change) {
-    print(change.currentState);
-    super.onChange(change);
   }
 }

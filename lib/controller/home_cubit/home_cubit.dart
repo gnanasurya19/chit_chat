@@ -37,8 +37,6 @@ class HomeCubit extends Cubit<HomeState> {
       profileURL: firebaseAuth.currentUser!.photoURL,
     );
 
-    String currentUserId = firebaseAuth.currentUser!.uid;
-
     firebaseFirestore
         .collection('chatrooms')
         .where('roomid', arrayContains: currentUserId)
@@ -74,8 +72,8 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> bindlatestData() async {
     await Future.forEach(userList, (element) {
-      if (firebaseAuth.currentUser!.uid != element.uid) {
-        final List ids = [firebaseAuth.currentUser!.uid, element.uid];
+      if (currentUserId != element.uid) {
+        final List ids = [currentUserId, element.uid];
         ids.sort();
         String chatRoomId = ids.join('');
 
@@ -93,17 +91,15 @@ class HomeCubit extends Cubit<HomeState> {
             for (var ele in userList) {
               if (message.receiverID == ele.uid ||
                   message.senderID == ele.uid) {
-                if (message.receiverID == firebaseAuth.currentUser!.uid) {
-                  ele.batch = message.batch;
-                }
-                ele.timestamp = message.timestamp;
-                ele.lastMessage = message.message;
-                ele.time = message.time;
+                ele.lastMessage = message;
               }
             }
+
             userList.sort((a, b) {
-              if (a.timestamp != null && b.timestamp != null) {
-                return (b.timestamp!).compareTo(a.timestamp!);
+              if (a.lastMessage!.timestamp != null &&
+                  b.lastMessage!.timestamp != null) {
+                return (b.lastMessage!.timestamp!)
+                    .compareTo(a.lastMessage!.timestamp!);
               } else {
                 return 0;
               }
@@ -126,8 +122,7 @@ class HomeCubit extends Cubit<HomeState> {
   updateProfile(XFile? value) {
     firebaseRepository.uploadFile(value!, 'profile').then((value) async {
       userModel.profileURL = value;
-      firebaseRepository
-          .updateUser(firebaseAuth.currentUser!.uid, {"profileURL": value});
+      firebaseRepository.updateUser(currentUserId, {"profileURL": value});
       await firebaseAuth.currentUser!.updatePhotoURL(value);
       emit(HomeReadyState(userList: userList, user: userModel));
     });
@@ -147,8 +142,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   signout() async {
     emit(HomeScreenLoading());
-    firebaseRepository
-        .updateUser(firebaseAuth.currentUser!.uid, {"fcm": ''}).then((value) {
+    firebaseRepository.updateUser(currentUserId, {"fcm": ''}).then((value) {
       firebaseAuth.signOut().then((value) {
         emit(HomeSignOut());
       });

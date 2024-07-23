@@ -7,6 +7,7 @@ import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/notification/push_notification.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/view/screen/auth_page.dart';
 import 'package:chit_chat/view/screen/email_verification_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
@@ -14,6 +15,7 @@ import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
 import 'package:chit_chat/view/screen/view_media.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,21 +26,15 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await PuchNotification().initialize();
+  firebaseAuth = FirebaseAuth.instance;
   runApp(const MainApp());
 }
 
 final navigationKey = GlobalKey<NavigatorState>();
 
-class MainApp extends StatefulWidget {
+class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
-  @override
-  State<MainApp> createState() => MainAppState();
-  static MainAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<MainAppState>();
-}
-
-class MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(

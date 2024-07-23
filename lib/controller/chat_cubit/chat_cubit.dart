@@ -34,7 +34,7 @@ class ChatCubit extends Cubit<ChatState> {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', receiverID);
     this.receiverID = receiverID;
-    final String senderID = firebaseAuth.currentUser!.uid;
+    final String senderID = currentUserId;
 
     //create unique id for two user
     final List chatIds = [senderID, receiverID];
@@ -67,7 +67,7 @@ class ChatCubit extends Cubit<ChatState> {
         .orderBy('timestamp');
 
     if (lastDocument != null) {
-      query.startAtDocument(lastDocument!);
+      query = query.startAtDocument(lastDocument!);
     }
 
     chatStream = query.snapshots().listen((element) {
@@ -115,8 +115,7 @@ class ChatCubit extends Cubit<ChatState> {
       }
       emit(ChatReady(messageList: messageList));
       for (var message in messageList) {
-        if (message.receiverID == firebaseAuth.currentUser!.uid &&
-            message.status == 'unread') {
+        if (message.receiverID == currentUserId && message.status == 'unread') {
           updateChatStatus(message);
         }
       }
@@ -158,8 +157,7 @@ class ChatCubit extends Cubit<ChatState> {
     emit(ChatReady(messageList: messageList));
 
     for (var message in messageList) {
-      if (message.receiverID == firebaseAuth.currentUser!.uid &&
-          message.status == 'unread') {
+      if (message.receiverID == currentUserId && message.status == 'unread') {
         updateChatStatus(message);
       }
     }
@@ -171,7 +169,7 @@ class ChatCubit extends Cubit<ChatState> {
       throw false;
     }
 
-    final String senderID = firebaseAuth.currentUser!.uid;
+    final String senderID = currentUserId;
 
     //creates unique id for two user
     final List<String> chatIds = [senderID, receiver.uid!];
@@ -182,8 +180,7 @@ class ChatCubit extends Cubit<ChatState> {
     final int batchCount = messageList
         .where((e) {
           if (e.status != null) {
-            return e.status == 'unread' &&
-                e.receiverID != firebaseAuth.currentUser!.uid;
+            return e.status == 'unread' && e.receiverID != currentUserId;
           } else {
             return false;
           }

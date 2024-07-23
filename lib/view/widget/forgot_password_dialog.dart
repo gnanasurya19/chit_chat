@@ -59,7 +59,8 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             ElevatedButton(
                 style: ButtonStyle(
                   foregroundColor: const WidgetStatePropertyAll(AppColor.white),
-                  backgroundColor: WidgetStatePropertyAll(AppColor.darkBlue),
+                  backgroundColor:
+                      const WidgetStatePropertyAll(AppColor.darkBlue),
                   shape: WidgetStatePropertyAll(ContinuousRectangleBorder(
                       borderRadius: BorderRadius.circular(10))),
                 ),

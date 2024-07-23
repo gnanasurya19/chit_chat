@@ -1,13 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chit_chat/model/message_model.dart';
 
 class UserData {
   String? userName;
   String? userEmail;
   String? uid;
-  int? batch;
-  Timestamp? timestamp;
-  String? time;
-  String? lastMessage;
+  MessageModel? lastMessage;
   String? fCM;
   String? profileURL;
 
@@ -15,10 +12,7 @@ class UserData {
       {this.userName,
       this.userEmail,
       this.uid,
-      this.batch,
       this.lastMessage,
-      this.time,
-      this.timestamp,
       this.fCM,
       this.profileURL});
 

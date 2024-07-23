@@ -49,7 +49,7 @@ class _SideMenuState extends State<SideMenu> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                            children: <Widget>[
                               InkWell(
                                 onTap: () {
                                   context.read<HomeCubit>().editProfile();
