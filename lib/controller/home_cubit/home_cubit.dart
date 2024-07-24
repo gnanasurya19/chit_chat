@@ -96,8 +96,7 @@ class HomeCubit extends Cubit<HomeState> {
             }
 
             userList.sort((a, b) {
-              if (a.lastMessage!.timestamp != null &&
-                  b.lastMessage!.timestamp != null) {
+              if (a.lastMessage != null && b.lastMessage != null) {
                 return (b.lastMessage!.timestamp!)
                     .compareTo(a.lastMessage!.timestamp!);
               } else {

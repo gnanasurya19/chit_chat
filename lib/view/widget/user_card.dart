@@ -1,9 +1,9 @@
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -59,7 +59,8 @@ class UserCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (user.lastMessage!.senderID == currentUserId) ...[
+                      if (user.lastMessage!.senderID ==
+                          FirebaseAuth.instance.currentUser!.uid) ...[
                         if (user.lastMessage!.status == 'unread')
                           const SVGIcon(
                             name: "svg/check.svg",
@@ -100,7 +101,9 @@ class UserCard extends StatelessWidget {
                           style: TextStyle(
                             color: AppColor.greyText,
                             fontFamily: user.lastMessage!.batch != null &&
-                                    user.lastMessage!.batch != 0
+                                    user.lastMessage!.batch != 0 &&
+                                    user.lastMessage!.receiverID ==
+                                        FirebaseAuth.instance.currentUser!.uid
                                 ? Roboto.bold
                                 : Roboto.regular,
                           ),
@@ -109,7 +112,8 @@ class UserCard extends StatelessWidget {
                   ),
                   if (user.lastMessage!.batch != null &&
                       user.lastMessage!.batch != 0 &&
-                      user.lastMessage!.senderID != currentUserId)
+                      user.lastMessage!.senderID !=
+                          FirebaseAuth.instance.currentUser!.uid)
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: const BoxDecoration(

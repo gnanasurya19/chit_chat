@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/res/common_instants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 
 class NetworkApiService {
+  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+
   Future sendMessage(UserData userData, MessageModel message) async {
     final jsonCredentials =
         await rootBundle.loadString('assets/chit-chat-19491-a3bf7aad3fbf.json');
@@ -32,7 +34,7 @@ class NetworkApiService {
             'title': firebaseAuth.currentUser!.displayName,
             'body': message.message,
             "user": jsonEncode(UserData(
-              uid: currentUserId,
+              uid: firebaseAuth.currentUser!.uid,
               userEmail: firebaseAuth.currentUser!.email,
               userName: firebaseAuth.currentUser!.displayName,
             ).toJson())
