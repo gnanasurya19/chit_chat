@@ -20,7 +20,6 @@ class ChatCubit extends Cubit<ChatState> {
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseRepository firebaseRepository = FirebaseRepository();
-  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
   NetworkApiService apiService = NetworkApiService();
   List<MessageModel> messageList = [];
@@ -34,7 +33,7 @@ class ChatCubit extends Cubit<ChatState> {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', receiverID);
     this.receiverID = receiverID;
-    final String senderID = firebaseAuth.currentUser!.uid;
+    final String senderID = currentUserId;
 
     //create unique id for two user
     final List chatIds = [senderID, receiverID];

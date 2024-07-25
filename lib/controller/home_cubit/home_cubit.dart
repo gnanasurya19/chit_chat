@@ -1,48 +1,42 @@
+import 'dart:async';
+
 import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/model/user_model.dart';
-import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(HomeReadyState(user: UserModel(), userList: const [])) {
+  HomeCubit() : super(HomeReadyState(userList: const [])) {
     getLocalInfo();
   }
 
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? userListStream;
   getLocalInfo() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', '');
   }
 
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  String get currentUserId => firebaseAuth.currentUser!.uid;
   FirebaseRepository firebaseRepository = FirebaseRepository();
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-  UserModel userModel = UserModel();
 
   List<UserData> userList = [];
   onInit() async {
+    firebaseAuth = FirebaseAuth.instance;
     emit(HomeChatLoading());
 
-    userModel = UserModel(
-      email: firebaseAuth.currentUser!.email,
-      name: firebaseAuth.currentUser!.displayName!,
-      profileURL: firebaseAuth.currentUser!.photoURL,
-    );
-
-    firebaseFirestore
+    userList = [];
+    userListStream = firebaseFirestore
         .collection('chatrooms')
         .where('roomid', arrayContains: currentUserId)
         .snapshots()
         .listen((chatRooms) async {
-      userList = [];
       await Future.forEach(
         chatRooms.docs,
         (roomdIds) async {
@@ -65,7 +59,7 @@ class HomeCubit extends Cubit<HomeState> {
           );
         },
       );
-      emit(HomeReadyState(userList: userList, user: userModel));
+      emit(HomeReadyState(userList: userList));
       bindlatestData();
     });
   }
@@ -103,48 +97,22 @@ class HomeCubit extends Cubit<HomeState> {
                 return 0;
               }
             });
-            emit(HomeReadyState(userList: userList, user: userModel));
+            emit(HomeReadyState(userList: userList));
           }
         });
       }
     });
   }
 
-  pickImage(ImageSource type) {
-    util.captureImage(type).then((value) {
-      if (value != null) {
-        updateProfile(value);
-      }
-    });
-  }
-
-  updateProfile(XFile? value) {
-    firebaseRepository.uploadFile(value!, 'profile').then((value) async {
-      userModel.profileURL = value;
-      firebaseRepository.updateUser(currentUserId, {"profileURL": value});
-      await firebaseAuth.currentUser!.updatePhotoURL(value);
-      emit(HomeReadyState(userList: userList, user: userModel));
-    });
-  }
-
-  editProfile() {
-    emit(HomeEditProfile());
-  }
-
   toSearch() {
     emit(HomeToSearch());
   }
 
-  getCurrentUserData() {
-    emit(HomeReadyState(userList: userList, user: userModel));
-  }
-
-  signout() async {
-    emit(HomeScreenLoading());
-    firebaseRepository.updateUser(currentUserId, {"fcm": ''}).then((value) {
-      firebaseAuth.signOut().then((value) {
-        emit(HomeSignOut());
-      });
-    });
+  @override
+  Future<void> close() {
+    if (userListStream != null) {
+      userListStream!.cancel();
+    }
+    return super.close();
   }
 }

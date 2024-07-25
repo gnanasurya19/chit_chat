@@ -2,6 +2,7 @@ import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
 import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
@@ -56,6 +57,9 @@ class MainApp extends StatelessWidget {
         BlocProvider(
           create: (context) => MediaCubit(),
         ),
+        BlocProvider(
+          create: (context) => ProfileCubit(),
+        ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {
@@ -72,7 +76,7 @@ class MainApp extends StatelessWidget {
                 "auth": (context) => const AuthPage(),
                 "register": (context) => const RegisterPage(),
                 "home": (context) => const HomePage(),
-                "profile": (context) => const Profile(),
+                "profile": (context) => const ProfilePage(),
                 "view-image": (context) => const ViewMediaPage(),
                 "email": (context) => const EmailVerificationPage(),
               },

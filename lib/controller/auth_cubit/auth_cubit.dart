@@ -19,8 +19,6 @@ class AuthCubit extends Cubit<AuthState> {
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
 
-  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
   onInit() {
@@ -45,6 +43,9 @@ class AuthCubit extends Cubit<AuthState> {
 
             await firebaseAuth.signInWithEmailAndPassword(
                 email: userModel.email!, password: userModel.password!);
+
+            //refreshing instance
+            firebaseAuth = FirebaseAuth.instance;
 
             await firebaseMessaging.getToken().then(
               (token) async {
@@ -105,6 +106,7 @@ class AuthCubit extends Cubit<AuthState> {
       util.checkNetwork().then((value) async {
         try {
           emit(AuthLoading());
+
           if (firebaseAuth.currentUser != null) {
             firebaseAuth.signOut();
           }
@@ -114,13 +116,16 @@ class AuthCubit extends Cubit<AuthState> {
               .createUserWithEmailAndPassword(
                   email: userModel.email!, password: userModel.password!)
               .then((value) async {
+            firebaseAuth = FirebaseAuth.instance;
+
             //update username
             await firebaseAuth.currentUser!.updateDisplayName(userModel.name);
 
             final UserData user = UserData(
-                userEmail: userModel.email,
-                userName: userModel.name,
-                uid: firebaseAuth.currentUser!.uid);
+              userEmail: userModel.email,
+              userName: userModel.name,
+              uid: firebaseAuth.currentUser!.uid,
+            );
 
             //add user to database
             await firebaseFirestore.collection('users').add(user.toJson());

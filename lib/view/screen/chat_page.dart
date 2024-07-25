@@ -80,7 +80,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 Navigator.pop(context);
               });
             },
-            icon: const Icon(Icons.arrow_back)),
+            icon: const SVGIcon(
+              name: 'arrow-left',
+              color: AppColor.white,
+              size: 20,
+            )),
         titleSpacing: 0,
         title: Row(
           children: [

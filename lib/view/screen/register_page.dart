@@ -132,7 +132,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                       isPassword: true,
                                       onSufClick: () {
                                         isVisible = !isVisible;
-                                        setState(() {});
                                       },
                                       color: AppColor.white,
                                       controller: passwordController,

@@ -7,8 +7,7 @@ sealed class HomeActionState extends HomeState {}
 
 final class HomeReadyState extends HomeState {
   final List<UserData> userList;
-  final UserModel user;
-  HomeReadyState({required this.userList, required this.user});
+  HomeReadyState({required this.userList});
 }
 
 final class HomeChatLoading extends HomeState {}

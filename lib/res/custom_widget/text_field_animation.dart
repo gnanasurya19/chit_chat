@@ -126,7 +126,7 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
                                     Container(
                                         alignment: Alignment.center,
                                         child: SVGIcon(
-                                          name: 'svg/eye.svg',
+                                          name: 'eye',
                                           color: widget.color,
                                           size: 16.0,
                                         )),

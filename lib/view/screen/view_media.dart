@@ -93,8 +93,10 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                   if (widget.message!.messageType == 'video') {
                     Future.delayed(const Duration(seconds: 4), () {
                       if (isVideoPlaying) {
-                        BlocProvider.of<MediaCubit>(context)
-                            .toggleStatusbar(true);
+                        if (mounted) {
+                          BlocProvider.of<MediaCubit>(context)
+                              .toggleStatusbar(true);
+                        }
                       }
                     });
                   }

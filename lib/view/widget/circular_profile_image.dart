@@ -21,9 +21,13 @@ class CircularProfileImage extends StatelessWidget {
         builder: (context) {
           return isNetworkImage
               ? CachedNetworkImage(
-                  imageUrl: image!,
+                  imageUrl: image ?? '',
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Image.asset(
+                    'assets/images/profile.png',
+                    fit: BoxFit.cover,
+                  ),
+                  errorWidget: (context, url, error) => Image.asset(
                     'assets/images/profile.png',
                     fit: BoxFit.cover,
                   ),
