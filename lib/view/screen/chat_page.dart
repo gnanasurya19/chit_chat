@@ -320,19 +320,19 @@ class MessageBubble extends StatelessWidget {
                 if (widget.userData.uid != message.senderID)
                   if (message.status == 'unread')
                     const SVGIcon(
-                      name: "svg/check.svg",
+                      name: "check",
                       size: AppFontSize.xxs + 1,
                       color: AppColor.greyText,
                     )
                   else if (message.status == 'delivered')
                     const SVGIcon(
-                      name: "svg/read.svg",
+                      name: "read",
                       size: AppFontSize.xxs + 1,
                       color: AppColor.greyText,
                     )
                   else ...[
                     const SVGIcon(
-                      name: "svg/read.svg",
+                      name: "read",
                       size: AppFontSize.xxs + 1,
                       color: AppColor.blue,
                     ),

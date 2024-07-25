@@ -63,19 +63,19 @@ class UserCard extends StatelessWidget {
                           FirebaseAuth.instance.currentUser!.uid) ...[
                         if (user.lastMessage!.status == 'unread')
                           const SVGIcon(
-                            name: "svg/check.svg",
+                            name: "check",
                             size: AppFontSize.xxs + 1,
                             color: AppColor.greyText,
                           )
                         else if (user.lastMessage!.status == 'delivered')
                           const SVGIcon(
-                            name: "svg/read.svg",
+                            name: "read",
                             size: AppFontSize.xxs + 1,
                             color: AppColor.greyText,
                           )
                         else
                           const SVGIcon(
-                            name: "svg/read.svg",
+                            name: "read",
                             size: AppFontSize.xxs + 1,
                             color: AppColor.blue,
                           ),

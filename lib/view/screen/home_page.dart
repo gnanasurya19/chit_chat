@@ -3,6 +3,7 @@ import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/custom_widget/loading_widget.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/res/fonts.dart';
 import 'package:chit_chat/view/screen/chat_page.dart';
 import 'package:chit_chat/view/screen/search_page.dart';
@@ -44,8 +45,8 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           context.read<HomeCubit>().toSearch();
         },
-        child: const Icon(
-          Icons.message_rounded,
+        child: const SVGIcon(
+          name: 'message-plus',
           color: AppColor.white,
         ),
       ),

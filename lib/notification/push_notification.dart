@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/main.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/view/screen/chat_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -122,4 +124,18 @@ Future onClickFirebaseMessage(RemoteMessage message) async {
           builder: (context) => ChatPage(userData: userData),
         ));
   }
+}
+
+Future<void> onBackgroundMsg(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  final String docId = message.data['messageDocId'];
+  final String roomId = message.data['chatRoomId'];
+  FirebaseFirestore.instance
+      .collection('chatrooms')
+      .doc(roomId)
+      .collection('message')
+      .doc(docId)
+      .update({'status': 'delivered'});
 }

@@ -14,7 +14,6 @@ import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
 import 'package:chit_chat/view/screen/view_media.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -85,18 +84,4 @@ class MainApp extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<void> onBackgroundMsg(RemoteMessage message) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  final String docId = message.data['messageDocId'];
-  final String roomId = message.data['chatRoomId'];
-  FirebaseFirestore.instance
-      .collection('chatrooms')
-      .doc(roomId)
-      .collection('message')
-      .doc(docId)
-      .update({'status': 'delivered'});
 }
