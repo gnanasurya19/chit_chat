@@ -9,23 +9,27 @@ class FirebaseRepository {
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseStorage firebaseStorage = FirebaseStorage.instance;
 
-  Future sendMessage(
+  Future<String> sendMessage(
       String chatRoomID, MessageModel newMessage, List<String> chatIds) async {
     try {
-      firebaseFirestore
-          .collection('chatrooms')
-          .doc(chatRoomID)
-          .collection('message')
-          .add(newMessage.toJson());
+      DocumentReference<Map<String, dynamic>> msgDocRef =
+          await firebaseFirestore
+              .collection('chatrooms')
+              .doc(chatRoomID)
+              .collection('message')
+              .add(newMessage.toJson());
 
       DocumentReference documentRef =
           firebaseFirestore.collection('chatrooms').doc(chatRoomID);
 
-      documentRef.set({"roomid": chatIds});
+      await documentRef.set({"roomid": chatIds});
+
+      return msgDocRef.id;
     } catch (e) {
       if (kDebugMode) {
         print(e);
       }
+      return '';
     }
   }
 

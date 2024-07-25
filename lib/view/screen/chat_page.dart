@@ -324,6 +324,12 @@ class MessageBubble extends StatelessWidget {
                       size: AppFontSize.xxs + 1,
                       color: AppColor.greyText,
                     )
+                  else if (message.status == 'delivered')
+                    const SVGIcon(
+                      name: "svg/read.svg",
+                      size: AppFontSize.xxs + 1,
+                      color: AppColor.greyText,
+                    )
                   else ...[
                     const SVGIcon(
                       name: "svg/read.svg",

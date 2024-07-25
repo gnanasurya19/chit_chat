@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:chit_chat/main.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/view/screen/chat_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -47,6 +48,18 @@ Future onArriveForegroundMsg(RemoteMessage message) async {
   String receiverId = sp.getString('receiverId') ?? '';
   final Map<String, dynamic> data = jsonDecode(message.data['user']);
   final UserData userData = UserData.fromJson(data);
+
+  final String? docId = message.data['messageDocId'];
+  final String? roomId = message.data['chatRoomId'];
+
+  if (docId != null && roomId != null) {
+    FirebaseFirestore.instance
+        .collection('chatrooms')
+        .doc(roomId)
+        .collection('message')
+        .doc(docId)
+        .update({'status': 'delivered'});
+  }
 
   if (receiverId != userData.uid) {
     FlutterLocalNotificationsPlugin().show(

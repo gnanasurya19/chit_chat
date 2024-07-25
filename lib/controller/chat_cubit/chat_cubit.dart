@@ -116,7 +116,7 @@ class ChatCubit extends Cubit<ChatState> {
       emit(ChatReady(messageList: messageList));
       for (var message in messageList) {
         if (message.receiverID == firebaseAuth.currentUser!.uid &&
-            message.status == 'unread') {
+            (message.status == 'unread' || message.status == 'delivered')) {
           updateChatStatus(message);
         }
       }
@@ -159,7 +159,7 @@ class ChatCubit extends Cubit<ChatState> {
 
     for (var message in messageList) {
       if (message.receiverID == firebaseAuth.currentUser!.uid &&
-          message.status == 'unread') {
+          (message.status == 'unread' || message.status == 'delivered')) {
         updateChatStatus(message);
       }
     }
@@ -182,7 +182,7 @@ class ChatCubit extends Cubit<ChatState> {
     final int batchCount = messageList
         .where((e) {
           if (e.status != null) {
-            return e.status == 'unread' &&
+            return (e.status == 'unread' || e.status == 'delivered') &&
                 e.receiverID != firebaseAuth.currentUser!.uid;
           } else {
             return false;
@@ -205,11 +205,13 @@ class ChatCubit extends Cubit<ChatState> {
     );
 
     //posting to firebase
-    firebaseRepository.sendMessage(chatRoomID, newMessage, chatIds);
-
-    if (receiver.fCM != null && receiver.fCM != '') {
-      apiService.sendMessage(receiver, newMessage);
-    }
+    firebaseRepository
+        .sendMessage(chatRoomID, newMessage, chatIds)
+        .then((msgId) {
+      if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
+        apiService.sendMessage(receiver, newMessage, msgId, chatRoomID);
+      }
+    });
   }
 
   Future stopStream() async {

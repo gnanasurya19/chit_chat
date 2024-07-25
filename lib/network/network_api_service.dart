@@ -9,7 +9,8 @@ import 'package:googleapis_auth/auth_io.dart' as auth;
 class NetworkApiService {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
-  Future sendMessage(UserData userData, MessageModel message) async {
+  Future sendMessage(UserData userData, MessageModel message, String msgId,
+      String chatRoomId) async {
     final jsonCredentials =
         await rootBundle.loadString('assets/chit-chat-19491-a3bf7aad3fbf.json');
     final creds = auth.ServiceAccountCredentials.fromJson(jsonCredentials);
@@ -37,7 +38,9 @@ class NetworkApiService {
               uid: firebaseAuth.currentUser!.uid,
               userEmail: firebaseAuth.currentUser!.email,
               userName: firebaseAuth.currentUser!.displayName,
-            ).toJson())
+            ).toJson()),
+            "messageDocId": msgId,
+            "chatRoomId": chatRoomId,
           }
         }
       };

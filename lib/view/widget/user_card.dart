@@ -67,6 +67,12 @@ class UserCard extends StatelessWidget {
                             size: AppFontSize.xxs + 1,
                             color: AppColor.greyText,
                           )
+                        else if (user.lastMessage!.status == 'delivered')
+                          const SVGIcon(
+                            name: "svg/read.svg",
+                            size: AppFontSize.xxs + 1,
+                            color: AppColor.greyText,
+                          )
                         else
                           const SVGIcon(
                             name: "svg/read.svg",
@@ -119,7 +125,10 @@ class UserCard extends StatelessWidget {
                       decoration: const BoxDecoration(
                           color: AppColor.blue, shape: BoxShape.circle),
                       child: Text(
-                        user.lastMessage!.batch!.toString(),
+                        (user.lastMessage!.batch! < 100
+                                ? user.lastMessage!.batch
+                                : '100+')!
+                            .toString(),
                         style: const TextStyle(
                             fontSize: AppFontSize.xxs, color: AppColor.white),
                       ),
