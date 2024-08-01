@@ -63,7 +63,7 @@ class _ProfilePageState extends State<ProfilePage> {
         builder: (context, state) {
           if (state is ProfileInitial) {
             return SingleChildScrollView(
-              child: Container(
+              child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Column(
                   children: [
@@ -126,7 +126,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               color:
                                   Theme.of(context).colorScheme.inverseSurface,
                               child: InkWell(
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.pushNamed(context, 'profile-edit');
+                                },
                                 child: Padding(
                                   padding: const EdgeInsets.all(15),
                                   child: Row(

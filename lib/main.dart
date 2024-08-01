@@ -12,6 +12,7 @@ import 'package:chit_chat/view/screen/auth_page.dart';
 import 'package:chit_chat/view/screen/email_verification_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
 import 'package:chit_chat/view/screen/login_page.dart';
+import 'package:chit_chat/view/screen/profile_edit_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
 import 'package:chit_chat/view/screen/view_media.dart';
@@ -79,6 +80,7 @@ class MainApp extends StatelessWidget {
                 "profile": (context) => const ProfilePage(),
                 "view-image": (context) => const ViewMediaPage(),
                 "email": (context) => const EmailVerificationPage(),
+                "profile-edit": (context) => const ProfileEditPage(),
               },
             );
           } else {
