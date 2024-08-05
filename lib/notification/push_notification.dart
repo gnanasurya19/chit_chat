@@ -89,7 +89,7 @@ Future onForegruondMsg(RemoteMessage message) async {
   final UserData userData = UserData.fromJson(data);
 
   if (receiverId != userData.uid) {
-    String groupKey = 'com.example.chit_chat.${userData.userName}';
+    String groupKey = 'com.myapps.chit_chat.${userData.userName}';
     String groupChannelId = userData.uid!;
     String groupChannelName = 'Grouped_${userData.userName}';
     const String groupChannelDescription =

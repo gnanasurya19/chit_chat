@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.myapps.chit_chat",
+            "sha256_cert_fingerprints": [
+                "A0:8F:CF:5C:04:0B:99:6B:A1:9A:C9:C2:5E:41:F5:F6:95:16:2B:51:DB:21:81:FF:FA:EA:A4:C7:2B:B0:2C:C3"
+            ]
+        }
+    }
+]
