@@ -10,6 +10,7 @@ import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/context_utility.dart';
 import 'package:chit_chat/view/screen/auth_page.dart';
 import 'package:chit_chat/view/screen/email_verification_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
@@ -35,6 +36,7 @@ void main() async {
   );
   await PuchNotification().initialize();
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
+  await UniLinksService.init();
   runApp(const MainApp());
 }
 

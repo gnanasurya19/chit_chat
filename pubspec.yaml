@@ -36,6 +36,7 @@ dependencies:
   video_thumbnail: ^0.5.3
   timer_count_down: ^2.2.2
   animated_toggle_switch: ^0.8.2
+  uni_links2: ^0.6.0+2
  
 
 
