@@ -24,13 +24,13 @@ class NetworkApiService {
       final notificationData = {
         'message': {
           'token': userData.fCM,
-          'notification': {
-            'title': firebaseAuth.currentUser!.displayName,
-            'body':
-                message.messageType == 'image' || message.messageType == 'video'
-                    ? 'sent an ${message.messageType}'
-                    : message.message,
-          },
+          // 'notification': {
+          //   'title': firebaseAuth.currentUser!.displayName,
+          //   'body':
+          //       message.messageType == 'image' || message.messageType == 'video'
+          //           ? 'sent an ${message.messageType}'
+          //           : message.message,
+          // },
           'data': {
             'title': firebaseAuth.currentUser!.displayName,
             'body': message.message,
@@ -41,6 +41,9 @@ class NetworkApiService {
             ).toJson()),
             "messageDocId": msgId,
             "chatRoomId": chatRoomId,
+          },
+          "android": {
+            "priority": 10,
           }
         }
       };

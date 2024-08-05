@@ -6,4 +6,9 @@ class UserModel {
   bool? isVerified;
   UserModel(
       {this.name, this.email, this.password, this.profileURL, this.isVerified});
+
+  @override
+  String toString() {
+    return '';
+  }
 }

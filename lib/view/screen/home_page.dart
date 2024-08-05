@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:animations/animations.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/custom_widget/loading_widget.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
@@ -10,6 +13,7 @@ import 'package:chit_chat/view/screen/chat_page.dart';
 import 'package:chit_chat/view/screen/search_page.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -23,11 +27,41 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool isReceivedMsg = false;
   @override
   void initState() {
     BlocProvider.of<HomeCubit>(context).onInit();
     BlocProvider.of<ProfileCubit>(context).getProfile();
+    WidgetsBinding.instance.addPersistentFrameCallback((timeStamp) async {
+      await FirebaseMessaging.instance.getInitialMessage().then((message) {
+        if (message != null && !isReceivedMsg) {
+          isReceivedMsg = true;
+          final data = jsonDecode(message.data['user']);
+          final UserData userData = UserData.fromJson(data);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatPage(userData: userData),
+              ));
+        }
+      });
+    });
     super.initState();
+  }
+
+  Future<void> inizializeMessage() async {
+    {
+      final message = await FirebaseMessaging.instance.getInitialMessage();
+      if (message != null) {
+        final data = jsonDecode(message.data['user']);
+        final UserData userData = UserData.fromJson(data);
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatPage(userData: userData),
+            ));
+      }
+    }
   }
 
   @override

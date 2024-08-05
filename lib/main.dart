@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
@@ -6,7 +8,7 @@ import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
 import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
-import 'package:chit_chat/notification/push_notification.dart';
+import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/view/screen/auth_page.dart';
 import 'package:chit_chat/view/screen/email_verification_page.dart';
@@ -16,10 +18,15 @@ import 'package:chit_chat/view/screen/profile_edit_page.dart';
 import 'package:chit_chat/view/screen/profile_page.dart';
 import 'package:chit_chat/view/screen/register_page.dart';
 import 'package:chit_chat/view/screen/view_media.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'notification/push_notification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,8 +34,107 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await PuchNotification().initialize();
-  runApp(const MainApp());
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
+  runApp(const MainApp());
+}
+
+@pragma('vm:entry-point')
+Future<void> onBackgroundMsg(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // onArriveForegroundMsg(message);
+  final String? docId = message.data['messageDocId'];
+  final String? roomId = message.data['chatRoomId'];
+  FirebaseFirestore.instance
+      .collection('chatrooms')
+      .doc(roomId)
+      .collection('message')
+      .doc(docId)
+      .update({'status': 'delivered'});
+
+  SharedPreferences sp = await SharedPreferences.getInstance();
+  String receiverId = sp.getString('receiverId') ?? '';
+  final Map<String, dynamic> data = jsonDecode(message.data['user']);
+  final UserData userData = UserData.fromJson(data);
+
+  // final String? docId = message.data['messageDocId'];
+  // final String? roomId = message.data['chatRoomId'];
+
+  if (docId != null && roomId != null) {
+    FirebaseFirestore.instance
+        .collection('chatrooms')
+        .doc(roomId)
+        .collection('message')
+        .doc(docId)
+        .update({'status': 'delivered'});
+  }
+
+  if (receiverId != userData.uid) {
+    FlutterLocalNotificationsPlugin().show(
+      message.ttl!,
+      userData.userName,
+      message.data['body'],
+      payload: message.data['user'],
+      const NotificationDetails(
+        iOS: DarwinNotificationDetails(),
+        android: AndroidNotificationDetails(
+            "grouped channel id", "grouped channel name",
+            importance: Importance.max,
+            priority: Priority.max,
+            ongoing: true,
+            actions: [
+              AndroidNotificationAction(
+                '0',
+                'okay',
+                titleColor: Colors.lightBlue,
+              )
+            ]),
+      ),
+    );
+  }
+}
+
+Future onArriveForegroundMsg(RemoteMessage message) async {
+  SharedPreferences sp = await SharedPreferences.getInstance();
+  String receiverId = sp.getString('receiverId') ?? '';
+  final Map<String, dynamic> data = jsonDecode(message.data['user']);
+  final UserData userData = UserData.fromJson(data);
+
+  final String? docId = message.data['messageDocId'];
+  final String? roomId = message.data['chatRoomId'];
+
+  if (docId != null && roomId != null) {
+    FirebaseFirestore.instance
+        .collection('chatrooms')
+        .doc(roomId)
+        .collection('message')
+        .doc(docId)
+        .update({'status': 'delivered'});
+  }
+
+  if (receiverId != userData.uid) {
+    FlutterLocalNotificationsPlugin().show(
+      message.ttl!,
+      userData.userName,
+      message.data['body'],
+      payload: message.data['user'],
+      const NotificationDetails(
+        iOS: DarwinNotificationDetails(),
+        android: AndroidNotificationDetails(
+            "grouped channel id", "grouped channel name",
+            importance: Importance.max,
+            priority: Priority.max,
+            actions: [
+              AndroidNotificationAction(
+                '0',
+                'okay',
+                titleColor: Colors.lightBlue,
+              )
+            ]),
+      ),
+    );
+  }
 }
 
 final navigationKey = GlobalKey<NavigatorState>();
