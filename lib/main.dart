@@ -74,7 +74,7 @@ Future<void> onBackgroundMsg(RemoteMessage message) async {
 
   if (receiverId != userData.uid) {
     FlutterLocalNotificationsPlugin().show(
-      message.ttl!,
+      DateTime.now().microsecondsSinceEpoch % 10000000,
       userData.userName,
       message.data['body'],
       payload: message.data['user'],
@@ -88,49 +88,7 @@ Future<void> onBackgroundMsg(RemoteMessage message) async {
             actions: [
               AndroidNotificationAction(
                 '0',
-                'okay',
-                titleColor: Colors.lightBlue,
-              )
-            ]),
-      ),
-    );
-  }
-}
-
-Future onArriveForegroundMsg(RemoteMessage message) async {
-  SharedPreferences sp = await SharedPreferences.getInstance();
-  String receiverId = sp.getString('receiverId') ?? '';
-  final Map<String, dynamic> data = jsonDecode(message.data['user']);
-  final UserData userData = UserData.fromJson(data);
-
-  final String? docId = message.data['messageDocId'];
-  final String? roomId = message.data['chatRoomId'];
-
-  if (docId != null && roomId != null) {
-    FirebaseFirestore.instance
-        .collection('chatrooms')
-        .doc(roomId)
-        .collection('message')
-        .doc(docId)
-        .update({'status': 'delivered'});
-  }
-
-  if (receiverId != userData.uid) {
-    FlutterLocalNotificationsPlugin().show(
-      message.ttl!,
-      userData.userName,
-      message.data['body'],
-      payload: message.data['user'],
-      const NotificationDetails(
-        iOS: DarwinNotificationDetails(),
-        android: AndroidNotificationDetails(
-            "grouped channel id", "grouped channel name",
-            importance: Importance.max,
-            priority: Priority.max,
-            actions: [
-              AndroidNotificationAction(
-                '0',
-                'okay',
+                'mark as read',
                 titleColor: Colors.lightBlue,
               )
             ]),

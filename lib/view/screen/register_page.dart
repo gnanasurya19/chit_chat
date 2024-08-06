@@ -114,30 +114,47 @@ class _RegisterPageState extends State<RegisterPage> {
                               SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.5,
-                                child: Column(
-                                  children: [
-                                    TextFieldAnimation(
-                                      color: AppColor.white,
-                                      controller: nameController,
-                                      text: 'Name',
-                                    ),
-                                    TextFieldAnimation(
-                                      color: AppColor.white,
-                                      controller: emailController,
-                                      issignUpEmail: true,
-                                      text: 'Email',
-                                    ),
-                                    TextFieldAnimation(
-                                      isPassWordVisible: isVisible,
-                                      isPassword: true,
-                                      onSufClick: () {
-                                        isVisible = !isVisible;
-                                      },
-                                      color: AppColor.white,
-                                      controller: passwordController,
-                                      text: 'password',
-                                    ),
-                                  ],
+                                child: TextSelectionTheme(
+                                  data: MediaQuery.of(context)
+                                              .platformBrightness ==
+                                          Brightness.dark
+                                      ? TextSelectionThemeData(
+                                          cursorColor: AppColor.blue,
+                                          selectionColor:
+                                              AppColor.blue.withOpacity(0.5),
+                                          selectionHandleColor: AppColor.blue)
+                                      : TextSelectionThemeData(
+                                          cursorColor: AppColor.white,
+                                          selectionColor:
+                                              AppColor.loginBg.withOpacity(0.5),
+                                          selectionHandleColor: AppColor.white),
+                                  child: Column(
+                                    children: [
+                                      TextFieldAnimation(
+                                        color: AppColor.white,
+                                        controller: nameController,
+                                        text: 'Name',
+                                      ),
+                                      TextFieldAnimation(
+                                        color: AppColor.white,
+                                        controller: emailController,
+                                        issignUpEmail: true,
+                                        text: 'Email',
+                                      ),
+                                      TextFieldAnimation(
+                                        isPassWordVisible: isVisible,
+                                        isPassword: true,
+                                        onSufClick: () {
+                                          setState(() {
+                                            isVisible = !isVisible;
+                                          });
+                                        },
+                                        color: AppColor.white,
+                                        controller: passwordController,
+                                        text: 'password',
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(

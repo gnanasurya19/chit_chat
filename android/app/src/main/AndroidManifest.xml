@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.myapps.chit_chat">
 	<application android:label="ChitChat" android:name="${applicationName}" android:icon="@mipmap/launcher_icon">
 		<activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask" android:theme="@style/LaunchTheme" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
 			<!--
@@ -16,7 +16,7 @@
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
 				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="https" android:host="chitchat.web.app" android:pathPrefix="/chats/" />
+				<data android:scheme="https" android:host="chit-chat-19491.web.app" />
 			</intent-filter>
 		</activity>
 		<!--
