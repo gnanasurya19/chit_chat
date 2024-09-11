@@ -1,8 +1,7 @@
 import 'dart:io';
-import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat_1/model/message_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 class FirebaseRepository {
@@ -18,7 +17,6 @@ class FirebaseRepository {
               .doc(chatRoomID)
               .collection('message')
               .add(newMessage.toJson());
-
       DocumentReference documentRef =
           firebaseFirestore.collection('chatrooms').doc(chatRoomID);
 
@@ -26,10 +24,7 @@ class FirebaseRepository {
 
       return msgDocRef.id;
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
-      return '';
+      rethrow;
     }
   }
 

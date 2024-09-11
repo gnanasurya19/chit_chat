@@ -1,6 +1,6 @@
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat/res/fonts.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:popover/popover.dart';
@@ -37,14 +37,8 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
   late AnimationController animationController = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 200));
   late Animation animation;
-  late AnimationController sufficIconController;
-  late Animation sufficIconanimation;
   @override
   void initState() {
-    sufficIconController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 250));
-    sufficIconanimation =
-        Tween<double>(begin: 22, end: 0).animate(sufficIconController);
     super.initState();
     animation = Tween<double>(begin: 0, end: 1).animate(animationController);
     animate();
@@ -61,18 +55,12 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
 
   @override
   void dispose() {
-    sufficIconController.dispose();
     animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isPassWordVisible ?? false) {
-      sufficIconController.forward();
-    } else {
-      sufficIconController.reverse();
-    }
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
@@ -88,8 +76,7 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
               children: [
                 Text(
                   widget.text,
-                  style:
-                      TextStyle(color: widget.color, fontSize: AppFontSize.xs),
+                  style: style.text.regular.copyWith(color: widget.color),
                 ),
                 TextFormField(
                   inputFormatters: [
@@ -111,44 +98,18 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
                   controller: widget.controller,
                   decoration: InputDecoration(
                     suffixIcon: (widget.isPassword ?? false)
-                        ? InkWell(
-                            onTap: () {
+                        ? IconButton(
+                            onPressed: () {
                               if (widget.onSufClick != null) {
                                 widget.onSufClick!();
                               }
                             },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Stack(
-                                  children: [
-                                    Container(
-                                        alignment: Alignment.center,
-                                        child: SVGIcon(
-                                          name: 'eye',
-                                          color: widget.color,
-                                          size: 16.0,
-                                        )),
-                                    AnimatedBuilder(
-                                      animation: sufficIconanimation,
-                                      child: Container(
-                                        color: widget.color,
-                                        height: sufficIconanimation.value,
-                                        width: 2,
-                                      ),
-                                      builder: (context, child) {
-                                        return Transform(
-                                          alignment: Alignment.topLeft,
-                                          transform: Matrix4.identity()
-                                            ..rotateZ(-3.14 * 0.25),
-                                          child: child,
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            icon: SVGIcon(
+                              name: widget.isPassWordVisible ?? false
+                                  ? 'eye'
+                                  : 'hide-eye',
+                              color: widget.color,
+                              size: style.icon.sm,
                             ),
                           )
                         : widget.issignUpEmail ?? false
@@ -178,8 +139,8 @@ class EmailNotePopoverBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
+    return IconButton(
+      onPressed: () {
         showPopover(
           context: context,
           direction: PopoverDirection.top,
@@ -188,13 +149,14 @@ class EmailNotePopoverBtn extends StatelessWidget {
           bodyBuilder: (context) => Container(
             padding: const EdgeInsets.all(20),
             child: const Text(
-                'Please note: You will need to verify your email address before logging in.'),
+                'Please note:Provide a valid email, you will need to verify your email address before logging in.'),
           ),
         );
       },
-      child: const Icon(
+      icon: Icon(
         Icons.info,
         color: AppColor.white,
+        size: style.icon.xs,
       ),
     );
   }

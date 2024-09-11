@@ -1,21 +1,19 @@
-import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat/model/user_model.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/common_instants.dart';
-import 'package:chit_chat/res/custom_widget/animated_button.dart';
-import 'package:chit_chat/res/custom_widget/loading_widget.dart';
-import 'package:chit_chat/res/custom_widget/text_field_animation.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/screen/register_page.dart';
-import 'package:chit_chat/view/widget/animated_widget.dart';
+import 'package:chit_chat_1/controller/auth_cubit/auth_cubit.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/res/custom_widget/animated_button.dart';
+import 'package:chit_chat_1/res/custom_widget/loading_widget.dart';
+import 'package:chit_chat_1/res/custom_widget/text_field_animation.dart';
+import 'package:chit_chat_1/view/screen/register_page.dart';
+import 'package:chit_chat_1/view/widget/animated_widget.dart';
+import 'package:chit_chat_1/view/widget/forgot_password_dialog.dart';
+import 'package:chit_chat_1/view/widget/logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:rive/rive.dart';
-
-import '../widget/forgot_password_dialog.dart';
-import '../widget/logo.dart';
+// import 'package:rive/rive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,14 +23,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  //bear animation
-  late StateMachineController bearAnimationController;
-  late SMIInput<bool> isFocusEmail;
-  late SMIInput<int> charLook;
-  late SMIInput<bool> isFocusPassword;
-  late SMIInput<bool> isSuccess;
-  late SMIInput<bool> isFail;
-
   //textfields
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -46,18 +36,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    BlocProvider.of<AuthCubit>(context).onInit();
-    emailfocus.addListener(emailfocusListener);
-    passwordfocus.addListener(passwordfocusListener);
+    // BlocProvider.of<AuthCubit>(context).onInit();
     authCotroller = BlocProvider.of<AuthCubit>(context);
-  }
-
-  void emailfocusListener() {
-    isFocusEmail.change(emailfocus.hasFocus);
-  }
-
-  void passwordfocusListener() {
-    isFocusPassword.change(passwordfocus.hasFocus && !isPasswordVisible);
   }
 
   forgotPassword() {
@@ -74,16 +54,13 @@ class _LoginPageState extends State<LoginPage> {
     emailController.dispose();
     passwordController.dispose();
     forgotPasswordController.dispose();
-    bearAnimationController.dispose();
-    emailfocus.removeListener(emailfocusListener);
-    passwordfocus.removeListener(passwordfocusListener);
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         authCotroller.goBack();
       },
       child: Scaffold(
@@ -116,53 +93,20 @@ class _LoginPageState extends State<LoginPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 //Rive animation
-                                SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.height * 0.2,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.2,
-                                  child: RiveAnimation.asset(
-                                      "assets/rivfiles/animated_bear.riv",
-                                      fit: BoxFit.fitHeight,
-                                      stateMachines: const ["Login Machine"],
-                                      onInit: (Artboard artboard) {
-                                    bearAnimationController =
-                                        StateMachineController.fromArtboard(
-                                            artboard, 'Login Machine')!;
-                                    artboard
-                                        .addController(bearAnimationController);
-                                    isFocusEmail = bearAnimationController
-                                        .findInput('isChecking')!;
-                                    isFocusPassword = bearAnimationController
-                                        .findInput('isHandsUp')!;
-                                    isSuccess = bearAnimationController
-                                        .findInput('trigSuccess')!;
-                                    isFail = bearAnimationController
-                                        .findInput('trigFail')!;
-                                  }),
-                                ),
-                                const Gap(15),
                                 Text(
                                   'Connect with your loved ones',
-                                  textScaler: TextScaler.linear(
-                                      ScaleSize.textScaleFactor(context)),
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiary,
-                                      fontSize: AppFontSize.sm),
+                                  style: style.text.regularSmall.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                  ),
                                 ),
                                 Text(
                                   'Let\'s Talk',
-                                  textScaler: TextScaler.linear(
-                                      ScaleSize.textScaleFactor(context)),
-                                  style: TextStyle(
-                                    fontFamily: Roboto.bold,
-                                    fontSize: 40,
-                                    height: 1,
-                                    color:
-                                        Theme.of(context).colorScheme.secondary,
-                                  ),
+                                  style: style.text.loginTitle.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                      height: 1),
                                 ),
                                 const Gap(10),
                                 AnimateHeight(
@@ -196,7 +140,6 @@ class _LoginPageState extends State<LoginPage> {
                                                 isPasswordVisible =
                                                     !isPasswordVisible;
                                               });
-                                              passwordfocusListener();
                                             },
                                             isPassword: true,
                                             text: 'Password'),
@@ -219,6 +162,8 @@ class _LoginPageState extends State<LoginPage> {
                                               ? true
                                               : false,
                                       onClick: () {
+                                        emailController.clear();
+                                        passwordController.clear();
                                         if (state.status ==
                                             PageStatus.notSignedIn) {
                                           Navigator.push(
@@ -275,7 +220,6 @@ class _LoginPageState extends State<LoginPage> {
   void _listener(AuthState state, BuildContext context) {
     if (state is AuthToast) {
       util.showSnackbar(context, state.text, state.type);
-      isFail.change(true);
     } else if (state is AuthAlert) {
       util.doAlert(context, state.text, state.type);
     } else if (state is AuthUserNotFound) {
@@ -295,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
     } else if (state is AuthVerifyUserEmail) {
       emailController.clear();
       passwordController.clear();
-      Navigator.pushNamed(context, 'email');
+      Navigator.pushNamedAndRemoveUntil(context, 'email', (route) => false);
     }
   }
 
@@ -321,29 +265,24 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 20.0, horizontal: 35),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 20.0, horizontal: 35),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'User not found',
-                          style: TextStyle(
-                              color: AppColor.blue,
-                              fontFamily: Roboto.bold,
-                              fontSize: 20),
+                          style: style.text.boldLarge.copyWith(
+                            color: AppColor.blue,
+                          ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        const Gap(10),
                         Text(
                           'The email you entered is not linked with any account.Please check your email or sign up',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: AppColor.greyText,
-                              fontSize: 14,
-                              height: 1.7),
+                          style: style.text.regular
+                              .copyWith(color: AppColor.greyText, height: 1.7),
                         ),
                       ],
                     ),
@@ -376,9 +315,10 @@ class _LoginPageState extends State<LoginPage> {
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: const Text(
+                              child: Text(
                                 'Sign Up',
                                 textAlign: TextAlign.center,
+                                style: style.text.regular,
                               ),
                             ),
                           ),
@@ -423,15 +363,10 @@ class GoBackBtn extends StatelessWidget {
       opacity: state.status == PageStatus.signIn ? 1 : 0,
       child: TextButton(
         onPressed: onTap,
-        child: Text(
-          'GO BACK',
-          textScaler: TextScaler.linear(ScaleSize.textScaleFactor(context)),
-          style: TextStyle(
-            fontSize: AppFontSize.xxs,
-            color: Theme.of(context).colorScheme.tertiaryContainer,
-            fontFamily: Roboto.medium,
-          ),
-        ),
+        child: Text('GO BACK',
+            style: style.text.regularSmall.copyWith(
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+            )),
       ),
     );
   }
@@ -470,21 +405,15 @@ class SignInBtn extends StatelessWidget {
           FocusManager.instance.primaryFocus?.unfocus();
           authCotroller.doSignIn(
             state.status,
-            UserModel(
-              email: emailController.text,
+            UserData(
+              userEmail: emailController.text,
               password: passwordController.text,
             ),
           );
         },
         child: Text(
           "SIGN IN",
-          textScaler: TextScaler.linear(
-            ScaleSize.textScaleFactor(context),
-          ),
-          style: const TextStyle(
-            fontSize: AppFontSize.xs,
-            fontFamily: Roboto.bold,
-          ),
+          style: style.text.bold,
         ),
       ),
     );
@@ -516,9 +445,7 @@ class ForgotPWBtn extends StatelessWidget {
           onPressed: state.status == PageStatus.signIn ? ontap : null,
           child: Text(
             'Forgot password?',
-            textScaler: TextScaler.linear(ScaleSize.textScaleFactor(context)),
-            style: const TextStyle(
-                fontSize: AppFontSize.xs, fontFamily: Roboto.medium),
+            style: style.text.semiBold,
           ),
         ),
       ),

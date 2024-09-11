@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:chit_chat/model/message_model.dart';
-import 'package:chit_chat/model/user_data.dart';
+import 'dart:io';
+import 'package:chit_chat_1/model/message_model.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -24,13 +27,6 @@ class NetworkApiService {
       final notificationData = {
         'message': {
           'token': userData.fCM,
-          // 'notification': {
-          //   'title': firebaseAuth.currentUser!.displayName,
-          //   'body':
-          //       message.messageType == 'image' || message.messageType == 'video'
-          //           ? 'sent an ${message.messageType}'
-          //           : message.message,
-          // },
           'data': {
             'title': firebaseAuth.currentUser!.displayName,
             'body': message.message,
@@ -57,6 +53,32 @@ class NetworkApiService {
         body: jsonEncode(notificationData),
       );
       returnResponse(response);
+    }
+  }
+
+  Future checkUpdate() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          "https://api.github.com/repos/gnanasurya19/chit_chat/releases/latest",
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          "Accept": "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28"
+        },
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw response.statusCode;
+      }
+    } on SocketException {
+      rethrow;
+    } on TimeoutException {
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
   }
 

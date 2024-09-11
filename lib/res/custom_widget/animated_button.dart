@@ -1,6 +1,6 @@
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
 import 'package:flutter/material.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
 
 class AnimatedButton extends StatefulWidget {
   const AnimatedButton({
@@ -58,14 +58,10 @@ class _AnimatedButtonState extends State<AnimatedButton>
             onPressed: () {
               widget.onClick();
             },
-            child: Text(
-              "CREATE AN ACCOUNT",
-              textScaler: TextScaler.linear(ScaleSize.textScaleFactor(context)),
-              style: const TextStyle(
+            child: Text("CREATE AN ACCOUNT",
+                style: style.text.semiBold.copyWith(
                   color: AppColor.white,
-                  fontFamily: Roboto.medium,
-                  fontSize: AppFontSize.xs),
-            ),
+                )),
           ),
         ],
       ),

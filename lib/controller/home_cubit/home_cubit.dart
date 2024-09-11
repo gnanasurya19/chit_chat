@@ -1,8 +1,7 @@
 import 'dart:async';
-
-import 'package:chit_chat/firebase/firebase_repository.dart';
-import 'package:chit_chat/model/message_model.dart';
-import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat_1/firebase/firebase_repository.dart';
+import 'package:chit_chat_1/model/message_model.dart';
+import 'package:chit_chat_1/model/user_data.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,27 +15,30 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? userListStream;
-  getLocalInfo() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setString('receiverId', '');
-  }
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? chatlistStream;
+  List<UserData> userList = [];
 
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   String get currentUserId => firebaseAuth.currentUser!.uid;
   FirebaseRepository firebaseRepository = FirebaseRepository();
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
 
-  List<UserData> userList = [];
-  onInit() async {
-    firebaseAuth = FirebaseAuth.instance;
-    emit(HomeChatLoading());
+  getLocalInfo() async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString('receiverId', '');
+  }
 
-    userList = [];
+  Future onInit([bool? isRefresh]) async {
+    if (isRefresh == null) {
+      emit(HomeChatLoading());
+      userList = [];
+    }
     userListStream = firebaseFirestore
         .collection('chatrooms')
         .where('roomid', arrayContains: currentUserId)
         .snapshots()
         .listen((chatRooms) async {
+      final List<UserData> newList = [];
       await Future.forEach(
         chatRooms.docs,
         (roomdIds) async {
@@ -53,12 +55,13 @@ class HomeCubit extends Cubit<HomeState> {
               .then(
             (value) {
               if (value.docs.isNotEmpty) {
-                userList.add(UserData.fromJson(value.docs.first.data()));
+                newList.add(UserData.fromJson(value.docs.first.data()));
               }
             },
           );
         },
       );
+      userList = newList;
       emit(HomeReadyState(userList: userList));
       bindlatestData();
     });
@@ -71,7 +74,7 @@ class HomeCubit extends Cubit<HomeState> {
         ids.sort();
         String chatRoomId = ids.join('');
 
-        firebaseFirestore
+        chatlistStream = firebaseFirestore
             .collection('chatrooms')
             .doc(chatRoomId)
             .collection('message')
@@ -108,10 +111,27 @@ class HomeCubit extends Cubit<HomeState> {
     emit(HomeToSearch());
   }
 
+  pauseStream() {
+    userListStream!.pause();
+    chatlistStream!.pause();
+  }
+
+  resumeStream() {
+    onInit(true);
+  }
+
+  void stopStream() {
+    userListStream!.cancel();
+    chatlistStream!.cancel();
+  }
+
   @override
   Future<void> close() {
     if (userListStream != null) {
       userListStream!.cancel();
+    }
+    if (chatlistStream != null) {
+      chatlistStream!.cancel();
     }
     return super.close();
   }

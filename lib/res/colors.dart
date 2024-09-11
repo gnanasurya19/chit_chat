@@ -1,4 +1,3 @@
-import 'package:chit_chat/res/fonts.dart';
 import 'package:flutter/material.dart';
 
 class AppColor {
@@ -28,7 +27,7 @@ class MyAppTheme {
         selectionColor: AppColor.blue.withOpacity(0.5),
         selectionHandleColor: AppColor.blue),
     brightness: Brightness.light,
-    fontFamily: Roboto.regular,
+    fontFamily: 'Roboto-Regular',
     colorScheme: const ColorScheme.light(
       inversePrimary: AppColor.blue,
       inverseSurface: AppColor.white,
@@ -49,7 +48,7 @@ class MyAppTheme {
         selectionColor: AppColor.blue.withOpacity(0.5),
         selectionHandleColor: AppColor.blue),
     brightness: Brightness.dark,
-    fontFamily: Roboto.regular,
+    fontFamily: 'Roboto-Regular',
     colorScheme: const ColorScheme.dark(
       inversePrimary: AppColor.blueGrey,
       inverseSurface: AppColor.darkblueGrey,

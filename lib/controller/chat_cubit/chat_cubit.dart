@@ -1,17 +1,19 @@
 import 'dart:async';
-import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat/firebase/firebase_repository.dart';
-import 'package:chit_chat/model/message_model.dart';
-import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/network/network_api_service.dart';
-import 'package:chit_chat/res/common_instants.dart';
+
+import 'package:chit_chat_1/network/network_api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+
+import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat_1/firebase/firebase_repository.dart';
+import 'package:chit_chat_1/model/message_model.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+
 part 'chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
@@ -19,7 +21,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseRepository firebaseRepository = FirebaseRepository();
-  FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+  // FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
   NetworkApiService apiService = NetworkApiService();
   List<MessageModel> messageList = [];
   String chatRoomID = '';
@@ -29,6 +31,7 @@ class ChatCubit extends Cubit<ChatState> {
   String? thumbnailUrl;
 
   Future onInit(String receiverID) async {
+    print('triggered');
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', receiverID);
     this.receiverID = receiverID;
@@ -122,6 +125,7 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future updateChatStatus(MessageModel message) async {
+    print(message.message);
     DocumentReference messageRef = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
@@ -134,11 +138,14 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   pauseChatStream() {
-    chatStream!.pause();
+    if (chatStream != null) {
+      chatStream!.pause();
+    }
   }
 
   resumeChatStream() async {
     listenNewmsg();
+    if (lastDocument == null) return;
     final newSnapshots = await firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
@@ -163,59 +170,92 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  Future sendMessage(String message, UserData receiver, String msgType) async {
-    if (message.isEmpty) {
-      emit(EmptyMessage());
-      throw false;
-    }
-
-    final String senderID = firebaseAuth.currentUser!.uid;
-
-    //creates unique id for two user
-    final List<String> chatIds = [senderID, receiver.uid!];
-    chatIds.sort();
-    final String chatRoomID = chatIds.join('');
-
-    //checking the no of unread message
-    final int batchCount = messageList
-        .where((e) {
-          if (e.status != null) {
-            return (e.status == 'unread' || e.status == 'delivered') &&
-                e.receiverID != firebaseAuth.currentUser!.uid;
-          } else {
-            return false;
-          }
-        })
-        .toList()
-        .length;
-
-    //new message to send
-    final MessageModel newMessage = MessageModel(
-      message: message,
-      receiverID: receiver.uid,
-      senderEmail: firebaseAuth.currentUser!.email!,
-      senderID: senderID,
-      batch: batchCount + 1,
-      status: 'unread',
-      timestamp: Timestamp.now(),
-      messageType: msgType,
-      thumbnail: thumbnailUrl,
+  Future uploadFileToFirebase(String filepath, MediaType mediatype) async {
+    emit(
+      UploadFile(
+        mediaType: mediatype,
+        filePath: filepath,
+        fileStatus: FileStatus.uploading,
+      ),
     );
+    String fileUrl =
+        await firebaseRepository.uploadFile(XFile(filepath), 'chat_media');
 
-    //posting to firebase
-    firebaseRepository
-        .sendMessage(chatRoomID, newMessage, chatIds)
-        .then((msgId) {
-      if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
-        apiService.sendMessage(receiver, newMessage, msgId, chatRoomID);
-      }
-    });
+    if (mediatype == MediaType.video) {
+      String? thumbnailPath = await VideoThumbnail.thumbnailFile(
+        video: filepath,
+        imageFormat: ImageFormat.JPEG,
+        quality: 100,
+      );
+
+      thumbnailUrl = await firebaseRepository.uploadFile(
+          XFile(thumbnailPath!), 'chat_media');
+    }
+    emit(FileUploaded(fileUrl: fileUrl, mediaType: mediatype));
+  }
+
+  Future sendMessage(String message, UserData receiver, String msgType) async {
+    if (message.isNotEmpty) {
+      final String senderID = firebaseAuth.currentUser!.uid;
+
+      //creates unique id for two user
+      final List<String> chatIds = [senderID, receiver.uid!];
+      chatIds.sort();
+      final String chatRoomID = chatIds.join('');
+
+      //checking the no of unread message
+      final int batchCount = messageList
+          .where((e) {
+            if (e.status != null) {
+              return (e.status == 'unread' || e.status == 'delivered') &&
+                  e.receiverID != firebaseAuth.currentUser!.uid;
+            } else {
+              return false;
+            }
+          })
+          .toList()
+          .length;
+
+      //new message to send
+      final MessageModel newMessage = MessageModel(
+        message: message,
+        receiverID: receiver.uid,
+        senderEmail: firebaseAuth.currentUser!.email!,
+        senderID: senderID,
+        batch: batchCount + 1,
+        status: 'unread',
+        timestamp: Timestamp.now(),
+        messageType: msgType,
+        thumbnail: thumbnailUrl,
+      );
+
+      //posting to firebase
+      firebaseRepository
+          .sendMessage(chatRoomID, newMessage, chatIds)
+          .then((msgId) async {
+        // accessing receiver fcm;
+        await firebaseFirestore
+            .collection('users')
+            .where('uid', isEqualTo: receiverID)
+            .limit(1)
+            .get()
+            .then((value) {
+          if (value.docs.isNotEmpty) {
+            receiver.fCM = value.docs.first.data()['fcm'];
+          }
+        });
+
+        if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
+          apiService.sendMessage(receiver, newMessage, msgId, chatRoomID);
+        }
+      });
+    }
   }
 
   Future stopStream() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', '');
-    messageList = [];
+    messageList.clear();
     emit(ChatReady(messageList: const []));
     chatStream!.cancel();
   }
@@ -240,30 +280,5 @@ class ChatCubit extends Cubit<ChatState> {
             fileStatus: FileStatus.preview));
       }
     });
-  }
-
-  Future uploadFileToFirebase(String filepath, MediaType mediatype) async {
-    emit(
-      UploadFile(
-        mediaType: mediatype,
-        filePath: filepath,
-        fileStatus: FileStatus.uploading,
-      ),
-    );
-
-    String fileUrl =
-        await firebaseRepository.uploadFile(XFile(filepath), 'chat_media');
-
-    if (mediatype == MediaType.video) {
-      String? thumbnailPath = await VideoThumbnail.thumbnailFile(
-        video: filepath,
-        imageFormat: ImageFormat.JPEG,
-        quality: 100,
-      );
-
-      thumbnailUrl = await firebaseRepository.uploadFile(
-          XFile(thumbnailPath!), 'chat_media');
-    }
-    emit(FileUploaded(fileUrl: fileUrl, mediaType: mediatype));
   }
 }

@@ -9,7 +9,7 @@ enum PageStatus { notSignedIn, signIn, signUp, signedIn }
 
 final class AuthViewState extends AuthState {
   final PageStatus status;
-  final UserModel userModel;
+  final UserData userModel;
   final bool buttonLoader;
   AuthViewState(
       {required this.buttonLoader,
@@ -22,11 +22,6 @@ final class AuthToast extends AuthActionState {
   final String text;
 
   AuthToast({required this.type, required this.text});
-
-  @override
-  String toString() {
-    return text;
-  }
 }
 
 final class AuthAlert extends AuthActionState {

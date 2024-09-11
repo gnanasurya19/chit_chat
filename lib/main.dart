@@ -1,159 +1,122 @@
-import 'dart:convert';
-
-import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
-import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
-import 'package:chit_chat/controller/theme_cubit/theme_cubit.dart';
-import 'package:chit_chat/firebase_options.dart';
-import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/context_utility.dart';
-import 'package:chit_chat/view/screen/auth_page.dart';
-import 'package:chit_chat/view/screen/email_verification_page.dart';
-import 'package:chit_chat/view/screen/home_page.dart';
-import 'package:chit_chat/view/screen/login_page.dart';
-import 'package:chit_chat/view/screen/profile_edit_page.dart';
-import 'package:chit_chat/view/screen/profile_page.dart';
-import 'package:chit_chat/view/screen/register_page.dart';
-import 'package:chit_chat/view/screen/view_media.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:chit_chat_1/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat_1/view/screen/profile_edit_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'notification/push_notification.dart';
+import 'package:chit_chat_1/controller/auth_cubit/auth_cubit.dart';
+import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat_1/controller/home_cubit/home_cubit.dart';
+import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat_1/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat_1/controller/search_cubit/search_cubit.dart';
+import 'package:chit_chat_1/firebase_options.dart';
+import 'package:chit_chat_1/notification/push_notification.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/res/style.dart';
+import 'package:chit_chat_1/view/screen/auth_page.dart';
+import 'package:chit_chat_1/view/screen/email_verification_page.dart';
+import 'package:chit_chat_1/view/screen/home_page.dart';
+import 'package:chit_chat_1/view/screen/login_page.dart';
+import 'package:chit_chat_1/view/screen/profile_page.dart';
+import 'package:chit_chat_1/view/screen/register_page.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await PuchNotification().initialize();
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
-  await UniLinksService.init();
+
   runApp(const MainApp());
-}
-
-@pragma('vm:entry-point')
-Future<void> onBackgroundMsg(RemoteMessage message) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  // onArriveForegroundMsg(message);
-  final String? docId = message.data['messageDocId'];
-  final String? roomId = message.data['chatRoomId'];
-  FirebaseFirestore.instance
-      .collection('chatrooms')
-      .doc(roomId)
-      .collection('message')
-      .doc(docId)
-      .update({'status': 'delivered'});
-
-  SharedPreferences sp = await SharedPreferences.getInstance();
-  String receiverId = sp.getString('receiverId') ?? '';
-  final Map<String, dynamic> data = jsonDecode(message.data['user']);
-  final UserData userData = UserData.fromJson(data);
-
-  // final String? docId = message.data['messageDocId'];
-  // final String? roomId = message.data['chatRoomId'];
-
-  if (docId != null && roomId != null) {
-    FirebaseFirestore.instance
-        .collection('chatrooms')
-        .doc(roomId)
-        .collection('message')
-        .doc(docId)
-        .update({'status': 'delivered'});
-  }
-
-  if (receiverId != userData.uid) {
-    FlutterLocalNotificationsPlugin().show(
-      DateTime.now().microsecondsSinceEpoch % 10000000,
-      userData.userName,
-      message.data['body'],
-      payload: message.data['user'],
-      const NotificationDetails(
-        iOS: DarwinNotificationDetails(),
-        android: AndroidNotificationDetails(
-            "grouped channel id", "grouped channel name",
-            importance: Importance.max,
-            priority: Priority.max,
-            ongoing: true,
-            actions: [
-              AndroidNotificationAction(
-                '0',
-                'mark as read',
-                titleColor: Colors.lightBlue,
-              )
-            ]),
-      ),
-    );
-  }
 }
 
 final navigationKey = GlobalKey<NavigatorState>();
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
+  static AppStyle _style = AppStyle();
+  static AppStyle get style => _style;
 
   @override
   Widget build(BuildContext context) {
+    _style = AppStyle(screenSize: MediaQuery.sizeOf(context));
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => AuthCubit(),
-        ),
-        BlocProvider(
-          create: (context) => HomeCubit(),
-        ),
-        BlocProvider(
-          create: (context) => ChatCubit(),
-        ),
-        BlocProvider(
-          create: (context) => SearchCubit(),
-        ),
-        BlocProvider(
-          create: (context) => ThemeCubit(),
-        ),
-        BlocProvider(
-          create: (context) => MediaCubit(),
-        ),
-        BlocProvider(
-          create: (context) => ProfileCubit(),
-        ),
+        BlocProvider(create: (context) => AuthCubit()),
+        BlocProvider(create: (context) => ProfileCubit()),
+        BlocProvider(create: (context) => HomeCubit()),
+        BlocProvider(create: (context) => ChatCubit()),
+        BlocProvider(create: (context) => MediaCubit()),
+        BlocProvider(create: (context) => SearchCubit()),
+        BlocProvider(create: (context) => UpdateCubit()),
       ],
-      child: BlocBuilder<ThemeCubit, ThemeState>(
-        builder: (context, state) {
-          if (state is ThemeInitial) {
-            return MaterialApp(
-              navigatorKey: navigationKey,
-              debugShowCheckedModeBanner: false,
-              darkTheme: MyAppTheme.darkTheme,
-              theme: MyAppTheme.lightTheme,
-              themeMode: state.themeMode,
-              initialRoute: 'auth',
-              routes: {
-                "login": (context) => const LoginPage(),
-                "auth": (context) => const AuthPage(),
-                "register": (context) => const RegisterPage(),
-                "home": (context) => const HomePage(),
-                "profile": (context) => const ProfilePage(),
-                "view-image": (context) => const ViewMediaPage(),
-                "email": (context) => const EmailVerificationPage(),
-                "profile-edit": (context) => const ProfileEditPage(),
-              },
-            );
-          } else {
-            return const SizedBox();
-          }
-        },
-      ),
+      child: const ThemeChanger(),
+    );
+  }
+}
+
+class ThemeChanger extends StatefulWidget {
+  const ThemeChanger({super.key});
+
+  @override
+  State<ThemeChanger> createState() => _ThemeChangerState();
+}
+
+class _ThemeChangerState extends State<ThemeChanger> {
+  late Future<bool> isDarkThemeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    isDarkThemeFuture = fetchIsDarkTheme().then(
+      (value) {
+        return value;
+      },
+    );
+  }
+
+  Future<bool> fetchIsDarkTheme() async {
+    final SharedPreferences sp = await SharedPreferences.getInstance();
+    String theme = sp.getString('thememode') ?? 'light';
+    return theme == 'dark';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: isDarkThemeFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final isDarkTheme = snapshot.data ?? false;
+          return ThemeProvider(
+            initTheme:
+                isDarkTheme ? MyAppTheme.darkTheme : MyAppTheme.lightTheme,
+            builder: (context, myTheme) {
+              return MaterialApp(
+                navigatorKey: navigationKey,
+                theme: myTheme,
+                debugShowCheckedModeBanner: false,
+                initialRoute: 'auth',
+                routes: {
+                  "login": (context) => const LoginPage(),
+                  "auth": (context) => const AuthPage(),
+                  "register": (context) => const RegisterPage(),
+                  "home": (context) => const HomePage(),
+                  "email": (context) => const EmailVerificationPage(),
+                  "profile": (context) => const ProfilePage(),
+                  "profile-edit": (context) => const ProfileEditPage(),
+                },
+              );
+            },
+          );
+        } else {
+          return const SizedBox.shrink();
+        }
+      },
     );
   }
 }

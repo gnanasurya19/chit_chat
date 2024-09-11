@@ -1,11 +1,13 @@
 import 'dart:io';
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/widget/video_preview.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/view/widget/video_preview.dart';
 
 class FileUploadDialog extends StatelessWidget {
   final UploadFile state;
@@ -29,9 +31,9 @@ class FileUploadDialog extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Are you sure want to send this file?',
-                      style: TextStyle(fontSize: AppFontSize.sm),
+                      style: style.text.regular,
                     ),
                     if (state.mediaType == MediaType.image)
                       Padding(
@@ -52,7 +54,6 @@ class FileUploadDialog extends StatelessWidget {
                       VideoPreview(
                         filepath: state.filePath,
                       ),
-                    Container(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [

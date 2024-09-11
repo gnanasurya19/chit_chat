@@ -1,8 +1,8 @@
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/screen/chat_page.dart';
-import 'package:chit_chat/view/widget/assets_popover.dart';
+import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/view/screen/chat_page.dart';
+import 'package:chit_chat_1/view/widget/media_popover.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:popover/popover.dart';
@@ -31,13 +31,13 @@ class ChatTextField extends StatelessWidget {
             },
             controller: messageController,
             cursorColor: AppColor.blue,
-            style: const TextStyle(fontSize: AppFontSize.sm),
+            style: style.text.regular,
             decoration: InputDecoration(
               prefixIcon: const MediaOptionBtn(),
               prefixIconConstraints: const BoxConstraints(minWidth: 0),
               focusColor: AppColor.green,
               hintText: "Type here",
-              hintStyle: const TextStyle(fontSize: AppFontSize.sm),
+              hintStyle: style.text.regular,
               contentPadding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
               fillColor: Theme.of(context).colorScheme.inverseSurface,
               filled: true,
@@ -61,9 +61,8 @@ class ChatTextField extends StatelessWidget {
                 shape: const WidgetStatePropertyAll(
                     CircleBorder(eccentricity: 0))),
             onPressed: () {
-              context
-                  .read<ChatCubit>()
-                  .sendMessage(messageController.text, widget.userData, 'text');
+              context.read<ChatCubit>().sendMessage(
+                  messageController.text.trim(), widget.userData, 'text');
               messageController.clear();
             },
             child: const Icon(

@@ -1,23 +1,20 @@
-import 'dart:convert';
-
 import 'package:animations/animations.dart';
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
-import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
-import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/custom_widget/loading_widget.dart';
-import 'package:chit_chat/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/screen/chat_page.dart';
-import 'package:chit_chat/view/screen/search_page.dart';
-import 'package:chit_chat/view/widget/circular_profile_image.dart';
+import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat_1/controller/home_cubit/home_cubit.dart';
+import 'package:chit_chat_1/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat_1/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat_1/view/screen/chat_page.dart';
+import 'package:chit_chat_1/view/screen/search_page.dart';
+import 'package:chit_chat_1/view/widget/circular_profile_image.dart';
+import 'package:chit_chat_1/view/widget/update_dialog.dart';
+import 'package:chit_chat_1/view/widget/user_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
-import '../widget/user_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,42 +23,44 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  bool isReceivedMsg = false;
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  late HomeCubit _homeCubit;
   @override
   void initState() {
-    BlocProvider.of<HomeCubit>(context).onInit();
-    BlocProvider.of<ProfileCubit>(context).getProfile();
-    WidgetsBinding.instance.addPersistentFrameCallback((timeStamp) async {
-      await FirebaseMessaging.instance.getInitialMessage().then((message) {
-        if (message != null && !isReceivedMsg) {
-          isReceivedMsg = true;
-          final data = jsonDecode(message.data['user']);
-          final UserData userData = UserData.fromJson(data);
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatPage(userData: userData),
-              ));
-        }
-      });
+    BlocProvider.of<HomeCubit>(context).onInit().then((v) {
+      if (mounted) {
+        BlocProvider.of<ProfileCubit>(context).getProfile().then((v) {
+          if (mounted) {
+            BlocProvider.of<UpdateCubit>(context).checkforUpdate('auto');
+          }
+        });
+      }
     });
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
   }
 
-  Future<void> inizializeMessage() async {
-    {
-      final message = await FirebaseMessaging.instance.getInitialMessage();
-      if (message != null) {
-        final data = jsonDecode(message.data['user']);
-        final UserData userData = UserData.fromJson(data);
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatPage(userData: userData),
-            ));
-      }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _homeCubit.pauseStream();
+    } else if (state == AppLifecycleState.resumed) {
+      _homeCubit.resumeStream();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    _homeCubit = BlocProvider.of<HomeCubit>(context);
+    super.didChangeDependencies();
+  }
+
+  @override
+  Future<void> dispose() async {
+    WidgetsBinding.instance.removeObserver(this);
+    _homeCubit.stopStream();
+    super.dispose();
   }
 
   @override
@@ -71,36 +70,49 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         toolbarHeight: kTextTabBarHeight + 30,
         titleSpacing: 20,
-        title: const Text('Chitchat',
-            style:
-                TextStyle(color: AppColor.darkBlue, fontFamily: Roboto.medium)),
+        title: Text(
+          'Chitchat',
+          style: style.text.regularMedium.copyWith(color: AppColor.darkBlue),
+        ),
         backgroundColor: Theme.of(context).colorScheme.surfaceDim,
         actions: [
-          BlocBuilder<ProfileCubit, ProfileState>(
-            builder: (context, state) {
-              if (state is ProfileInitial) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    Navigator.pushNamed(context, 'profile');
-                  },
-                  child: Hero(
-                    tag: 'profile',
-                    child: Container(
-                      margin: const EdgeInsets.all(10),
-                      height: 40,
-                      width: 40,
-                      child: CircularProfileImage(
-                        isNetworkImage: state.user.profileURL != null,
-                        image: state.user.profileURL,
-                      ),
-                    ),
-                  ),
-                );
-              } else {
-                return const SizedBox();
+          BlocListener<UpdateCubit, UpdateState>(
+            listener: (context, state) {
+              if (state is UpdateAvailableState) {
+                util.slideInDialog(context, const UpdateDialog(), false);
+              } else if (state is NetworkErrorState) {
+                util.doAlert(context, 'Please connect to internet', 'network');
+              } else if (state is UptoDateState) {
+                util.showSnackbar(context, 'You are up to date', 'success');
               }
             },
+            child: BlocBuilder<ProfileCubit, ProfileState>(
+              buildWhen: (previous, current) => current is! ProfileActionState,
+              builder: (context, state) {
+                if (state is ProfileInitial) {
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      Navigator.pushNamed(context, 'profile');
+                    },
+                    child: Hero(
+                      tag: 'profile',
+                      child: Container(
+                        margin: const EdgeInsets.all(10),
+                        height: 40,
+                        width: 40,
+                        child: CircularProfileImage(
+                          isNetworkImage: state.user.profileURL != null,
+                          image: state.user.profileURL,
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              },
+            ),
           )
         ],
       ),
@@ -190,53 +202,12 @@ class _HomePageState extends State<HomePage> {
 
   void listener(
       HomeState state, BuildContext context, HomeCubit homeController) {
-    if (state is HomeSignOut) {
-      Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-    } else if (state is HomeToSearch) {
+    if (state is HomeToSearch) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => UserSearch(chatList: homeController.userList),
+          builder: (context) => SearchPage(chatList: homeController.userList),
         ),
-      );
-    } else if (state is HomeEditProfile) {
-      // showDialog(
-      //   context: context,
-      //   builder: (context) {
-      //     return Dialog(
-      //       clipBehavior: Clip.antiAliasWithSaveLayer,
-      //       child: Column(
-      //         mainAxisSize: MainAxisSize.min,
-      //         children: [
-      //           ListTile(
-      //             onTap: () {
-      //               Navigator.pop(context);
-      //               BlocProvider.of<HomeCubit>(context)
-      //                   .pickImage(ImageSource.camera);
-      //             },
-      //             leading: const Icon(
-      //               Icons.camera,
-      //             ),
-      //             title: const Text('Capture Image'),
-      //           ),
-      //           ListTile(
-      //             onTap: () {
-      //               Navigator.pop(context);
-      //               BlocProvider.of<HomeCubit>(context)
-      //                   .pickImage(ImageSource.gallery);
-      //             },
-      //             leading: const Icon(Icons.image),
-      //             title: const Text('Pick from galary'),
-      //           ),
-      //         ],
-      //       ),
-      //     );
-      //   },
-      // );
-    } else if (state is HomeScreenLoading) {
-      showDialog(
-        context: context,
-        builder: (context) => const LoadingScreen(),
       );
     }
   }
@@ -263,18 +234,10 @@ class WelcomeWidget extends StatelessWidget {
             ),
             Text(
               'Welcome ${username.toUpperCase()}',
-              style: const TextStyle(
-                fontFamily: Roboto.bold,
-                fontSize: AppFontSize.xl,
-              ),
+              style: style.text.boldXLarge,
             ),
-            const Text(
-              'Click the 👇 Button below to connect with your friends...',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: AppFontSize.sm,
-              ),
-            ),
+            Text('Click the  Button below to connect with your friends...',
+                textAlign: TextAlign.center, style: style.text.regular),
           ],
         ),
       ),

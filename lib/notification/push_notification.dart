@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
-import 'package:chit_chat/main.dart';
-import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/view/screen/chat_page.dart';
+import 'package:chit_chat_1/main.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/view/screen/chat_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,21 +19,23 @@ class PuchNotification {
     await firebaseMessaging.requestPermission();
     await localNotification.initialize(
       onDidReceiveNotificationResponse: onClickLocalNotification,
+      onDidReceiveBackgroundNotificationResponse: onNotificationAction,
       const InitializationSettings(
         android: AndroidInitializationSettings(
-          '@mipmap/launcher_icon',
+          '@mipmap/ic_launcher',
         ),
       ),
     );
+
     FirebaseMessaging.onMessage.listen(onArriveForegroundMsg);
 
-    FirebaseMessaging.onMessageOpenedApp.listen(onClickFirebaseMessage);
+    // FirebaseMessaging.onMessageOpenedApp.listen(onClickFirebaseMessage);
   }
 
   void onClickLocalNotification(NotificationResponse details) {
     if (navigationKey.currentState != null) {
       final data = jsonDecode(details.payload!);
-      final UserData userData = UserData.fromJson(data);
+      final UserData userData = UserData.fromJson(jsonDecode(data['user']));
       Navigator.push(
           navigationKey.currentContext!,
           MaterialPageRoute(
@@ -44,59 +45,17 @@ class PuchNotification {
   }
 }
 
-// int id = 0;
-
-Future<Uint8List> getBytesFromAsset(String path, int width) async {
-  ByteData data = await rootBundle.load(path);
-  final codec = await instantiateImageCodec(data.buffer.asUint8List(),
-      targetWidth: width);
-  FrameInfo fi = await codec.getNextFrame();
-  return (await fi.image.toByteData(format: ImageByteFormat.png))!
-      .buffer
-      .asUint8List();
-}
-
-// Future onForegruondMsg(RemoteMessage message) async {
-//   SharedPreferences sp = await SharedPreferences.getInstance();
-//   String receiverId = sp.getString('receiverId') ?? '';
-//   final data = jsonDecode(message.data['user']);
-//   final UserData userData = UserData.fromJson(data);
-
-//   if (receiverId != userData.uid) {
-//     String groupKey = 'com.myapps.chit_chat.${userData.userName}';
-//     String groupChannelId = userData.uid!;
-//     String groupChannelName = 'Grouped_${userData.userName}';
-//     const String groupChannelDescription =
-//         'This channel is used for grouped notifications.';
-
-//     final AndroidNotificationDetails androidNotificationDetails =
-//         AndroidNotificationDetails(groupChannelId, groupChannelName,
-//             channelDescription: groupChannelDescription,
-//             importance: Importance.max,
-//             priority: Priority.high,
-//             groupKey: groupKey,
-//             actions: [const AndroidNotificationAction('0', 'Ok')]);
-
-//     await FlutterLocalNotificationsPlugin().show(
-//       message.hashCode,
-//       message.notification?.title,
-//       message.notification?.body,
-//       NotificationDetails(android: androidNotificationDetails),
-//     );
+// Future onClickFirebaseMessage(RemoteMessage message) async {
+//   if (navigationKey.currentState != null) {
+//     final data = jsonDecode(message.data['user']);
+//     final UserData userData = UserData.fromJson(data);
+//     Navigator.push(
+//         navigationKey.currentContext!,
+//         MaterialPageRoute(
+//           builder: (context) => ChatPage(userData: userData),
+//         ));
 //   }
 // }
-
-Future onClickFirebaseMessage(RemoteMessage message) async {
-  if (navigationKey.currentState != null) {
-    final data = jsonDecode(message.data['user']);
-    final UserData userData = UserData.fromJson(data);
-    Navigator.push(
-        navigationKey.currentContext!,
-        MaterialPageRoute(
-          builder: (context) => ChatPage(userData: userData),
-        ));
-  }
-}
 
 Future onArriveForegroundMsg(RemoteMessage message) async {
   SharedPreferences sp = await SharedPreferences.getInstance();
@@ -121,7 +80,7 @@ Future onArriveForegroundMsg(RemoteMessage message) async {
       DateTime.now().microsecondsSinceEpoch % 10000000,
       userData.userName,
       message.data['body'],
-      payload: message.data['user'],
+      payload: jsonEncode(message.data),
       const NotificationDetails(
         iOS: DarwinNotificationDetails(),
         android: AndroidNotificationDetails(
@@ -133,6 +92,7 @@ Future onArriveForegroundMsg(RemoteMessage message) async {
                 '0',
                 'mark as read',
                 titleColor: Colors.lightBlue,
+                cancelNotification: true,
               )
             ]),
       ),

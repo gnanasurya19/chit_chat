@@ -1,4 +1,4 @@
-import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat_1/model/message_model.dart';
 
 class UserData {
   String? userName;
@@ -8,13 +8,19 @@ class UserData {
   String? fCM;
   String? profileURL;
 
+  String? password;
+
+  String? phoneNumber;
+
   UserData(
       {this.userName,
       this.userEmail,
       this.uid,
       this.lastMessage,
       this.fCM,
-      this.profileURL});
+      this.profileURL,
+      this.password,
+      this.phoneNumber});
 
   UserData.fromJson(Map<String, dynamic> json) {
     userName = json['userName'];
@@ -22,6 +28,7 @@ class UserData {
     uid = json['uid'];
     fCM = json['fcm'];
     profileURL = json['profileURL'];
+    phoneNumber = json['mobileNumber'];
   }
 
   Map<String, dynamic> toJson() {
@@ -31,6 +38,7 @@ class UserData {
     data['uid'] = uid;
     data['fcm'] = fCM;
     data['profileURL'] = profileURL;
+    data['mobileNumber'] = phoneNumber;
     return data;
   }
 }

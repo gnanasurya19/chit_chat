@@ -1,22 +1,22 @@
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
-import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/screen/chat_page.dart';
-import 'package:chit_chat/view/widget/user_card.dart';
+import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat_1/controller/search_cubit/search_cubit.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/view/screen/chat_page.dart';
+import 'package:chit_chat_1/view/widget/user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class UserSearch extends StatefulWidget {
+class SearchPage extends StatefulWidget {
   final List<UserData> chatList;
-  const UserSearch({super.key, required this.chatList});
+  const SearchPage({super.key, required this.chatList});
 
   @override
-  State<UserSearch> createState() => _UserSearchState();
+  State<SearchPage> createState() => _SearchPageState();
 }
 
-class _UserSearchState extends State<UserSearch> {
+class _SearchPageState extends State<SearchPage> {
   TextEditingController searchEditingCtl = TextEditingController();
   @override
   void initState() {
@@ -31,16 +31,6 @@ class _UserSearchState extends State<UserSearch> {
       backgroundColor: Theme.of(context).colorScheme.inverseSurface,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        leadingWidth: MediaQuery.of(context).size.width * 0.1,
-        leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppColor.white,
-            )),
-        automaticallyImplyLeading: false,
         titleSpacing: 0,
         title: TextField(
           style: const TextStyle(color: AppColor.white),
@@ -61,9 +51,9 @@ class _UserSearchState extends State<UserSearch> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               '*You have to enter your receiver email address completly(who is not in your chat list) to get result. This is to protect the receivers email from intruders',
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  fontSize: AppFontSize.xxs),
+              style: style.text.regularXS.copyWith(
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
             ),
           ),
           BlocConsumer<SearchCubit, SearchState>(
@@ -105,11 +95,11 @@ class _UserSearchState extends State<UserSearch> {
                       Container(
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: const Text(
+                        child: Text(
                           'Your chat list',
-                          style: TextStyle(
-                              color: AppColor.greyText,
-                              fontFamily: Roboto.medium),
+                          style: style.text.semiBold.copyWith(
+                            color: AppColor.greyText,
+                          ),
                         ),
                       ),
                     ListView.builder(

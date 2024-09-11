@@ -1,8 +1,11 @@
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
+// import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 
 class Util {
@@ -26,19 +29,22 @@ class Util {
       SnackBar(
         duration: const Duration(milliseconds: 1500),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColor.darkBlue,
+        backgroundColor: type == 'success' ? AppColor.green : AppColor.white,
         shape:
             ContinuousRectangleBorder(borderRadius: BorderRadius.circular(10)),
         content: Text(
           text,
-          style: const TextStyle(fontSize: 15, color: AppColor.white),
+          style: TextStyle(
+              fontSize: style.scale * 15,
+              color: type == 'success' ? AppColor.white : AppColor.black),
         ),
       ),
     );
   }
 
   doAlert(context, String content, String type) {
-    Navigator.of(context).push(PageRouteBuilder(
+    Navigator.of(context).push(
+      PageRouteBuilder(
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, -0.1);
           const end = Offset.zero;
@@ -69,9 +75,9 @@ class Util {
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close_rounded,
-                            size: 25,
+                            size: style.icon.rg,
                           ))
                     ],
                   ),
@@ -87,17 +93,14 @@ class Util {
                       ),
                     ),
                   if (type == 'info')
-                    Transform.rotate(
-                      angle: 3.14,
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: Lottie.asset(
-                          "assets/json/info.json",
-                          repeat: false,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.contain,
-                        ),
+                    Container(
+                      alignment: Alignment.center,
+                      child: Lottie.asset(
+                        "assets/lottie/error.json",
+                        repeat: false,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   if (type == 'success')
@@ -127,10 +130,8 @@ class Util {
                     child: Text(
                       content,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontFamily: Roboto.bold,
-                          color: AppColor.black,
-                          fontSize: 16),
+                      style:
+                          style.text.boldMedium.copyWith(color: AppColor.black),
                     ),
                   ),
                   Padding(
@@ -147,7 +148,7 @@ class Util {
                                 color: type == 'success'
                                     ? AppColor.green
                                     : type == 'info'
-                                        ? AppColor.green
+                                        ? AppColor.blue
                                         : type == 'network'
                                             ? AppColor.blue
                                             : const Color(0xfff98178)))),
@@ -163,10 +164,12 @@ class Util {
               ),
             ),
           );
-        }));
+        },
+      ),
+    );
   }
 
-  slideInDialog(context, Widget widget) {
+  slideInDialog(context, Widget widget, [bool? isDismissible]) {
     Navigator.of(context).push(PageRouteBuilder(
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, -0.1);
@@ -178,7 +181,7 @@ class Util {
           return SlideTransition(position: offsetAnimation, child: child);
         },
         opaque: false,
-        barrierDismissible: true,
+        barrierDismissible: isDismissible ?? true,
         pageBuilder: (BuildContext context, _, __) {
           return widget;
         }));

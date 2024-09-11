@@ -1,11 +1,10 @@
-import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat/model/user_model.dart';
-import 'package:chit_chat/res/common_instants.dart';
-import 'package:chit_chat/res/custom_widget/animated_button.dart';
-import 'package:chit_chat/res/custom_widget/text_field_animation.dart';
+import 'package:chit_chat_1/controller/auth_cubit/auth_cubit.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/res/custom_widget/animated_button.dart';
+import 'package:chit_chat_1/res/custom_widget/text_field_animation.dart';
 import 'package:flutter/material.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -104,57 +103,39 @@ class _RegisterPageState extends State<RegisterPage> {
                             children: [
                               Text(
                                 'Hey there, curious one!',
-                                textScaler: TextScaler.linear(
-                                    ScaleSize.textScaleFactor(context)),
-                                style: const TextStyle(
-                                    color: AppColor.white,
-                                    fontSize: AppFontSize.lg,
-                                    fontFamily: Roboto.bold),
+                                style: style.text.boldLarge.copyWith(
+                                  color: AppColor.white,
+                                ),
                               ),
                               SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.5,
-                                child: TextSelectionTheme(
-                                  data: MediaQuery.of(context)
-                                              .platformBrightness ==
-                                          Brightness.dark
-                                      ? TextSelectionThemeData(
-                                          cursorColor: AppColor.blue,
-                                          selectionColor:
-                                              AppColor.blue.withOpacity(0.5),
-                                          selectionHandleColor: AppColor.blue)
-                                      : TextSelectionThemeData(
-                                          cursorColor: AppColor.white,
-                                          selectionColor:
-                                              AppColor.loginBg.withOpacity(0.5),
-                                          selectionHandleColor: AppColor.white),
-                                  child: Column(
-                                    children: [
-                                      TextFieldAnimation(
-                                        color: AppColor.white,
-                                        controller: nameController,
-                                        text: 'Name',
-                                      ),
-                                      TextFieldAnimation(
-                                        color: AppColor.white,
-                                        controller: emailController,
-                                        issignUpEmail: true,
-                                        text: 'Email',
-                                      ),
-                                      TextFieldAnimation(
-                                        isPassWordVisible: isVisible,
-                                        isPassword: true,
-                                        onSufClick: () {
-                                          setState(() {
-                                            isVisible = !isVisible;
-                                          });
-                                        },
-                                        color: AppColor.white,
-                                        controller: passwordController,
-                                        text: 'password',
-                                      ),
-                                    ],
-                                  ),
+                                child: Column(
+                                  children: [
+                                    TextFieldAnimation(
+                                      color: AppColor.white,
+                                      controller: nameController,
+                                      text: 'Name',
+                                    ),
+                                    TextFieldAnimation(
+                                      color: AppColor.white,
+                                      controller: emailController,
+                                      issignUpEmail: true,
+                                      text: 'Email',
+                                    ),
+                                    TextFieldAnimation(
+                                      isPassWordVisible: isVisible,
+                                      isPassword: true,
+                                      onSufClick: () {
+                                        setState(() {
+                                          isVisible = !isVisible;
+                                        });
+                                      },
+                                      color: AppColor.white,
+                                      controller: passwordController,
+                                      text: 'password',
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(
@@ -169,32 +150,29 @@ class _RegisterPageState extends State<RegisterPage> {
                                   isLogin: false,
                                   onClick: () {
                                     authController.dosignUP(
-                                      UserModel(
-                                        email: emailController.text,
+                                      UserData(
+                                        userEmail: emailController.text,
                                         password: passwordController.text,
-                                        name: nameController.text,
+                                        userName: nameController.text,
                                       ),
                                     );
                                   },
                                 ),
                               ),
                               TextButton.icon(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.arrow_back,
                                   color: AppColor.white,
-                                  size: 16,
+                                  size: style.icon.xs,
                                 ),
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
                                 label: Text(
-                                  'SignUp',
-                                  textScaler: TextScaler.linear(
-                                      ScaleSize.textScaleFactor(context)),
-                                  style: const TextStyle(
-                                      fontSize: AppFontSize.xs,
-                                      color: AppColor.white,
-                                      fontFamily: Roboto.medium),
+                                  'Back',
+                                  style: style.text.semiBold.copyWith(
+                                    color: AppColor.white,
+                                  ),
                                 ),
                               ),
                             ],

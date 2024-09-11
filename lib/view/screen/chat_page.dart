@@ -1,21 +1,23 @@
+// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat/model/message_model.dart';
-import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/common_instants.dart';
-import 'package:chit_chat/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/view/screen/view_media.dart';
-import 'package:chit_chat/view/widget/chat_text_field.dart';
-import 'package:chit_chat/view/widget/circular_profile_image.dart';
-import 'package:chit_chat/view/widget/empty_chat.dart';
+import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat_1/model/message_model.dart';
+import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat_1/view/widget/chat_text_field.dart';
+import 'package:chit_chat_1/view/widget/circular_profile_image.dart';
+import 'package:chit_chat_1/view/widget/empty_chat.dart';
+import 'package:chit_chat_1/view/widget/file_upload_dialog.dart';
+import 'package:chit_chat_1/view/widget/view_media.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
-import '../widget/file_upload_dialog.dart';
+import 'package:intl/intl.dart';
+// import '../widget/file_upload_dialog.dart';
 
 class ChatPage extends StatefulWidget {
   final UserData userData;
@@ -75,6 +77,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+            splashRadius: 40,
             onPressed: () async {
               await BlocProvider.of<ChatCubit>(context).stopStream().then((e) {
                 Navigator.pop(context);
@@ -103,8 +106,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             Text(
                 widget.userData.userName!.replaceRange(0, 1,
                     widget.userData.userName!.split('').first.toUpperCase()),
-                style: const TextStyle(
-                    color: AppColor.white, fontFamily: Roboto.medium)),
+                style: style.text.boldMedium.copyWith(
+                  color: AppColor.white,
+                )),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -249,7 +253,7 @@ class MessageBubble extends StatelessWidget {
             if (message.messageType == 'text')
               SelectableText(
                 '${message.message}',
-                style: const TextStyle(fontSize: AppFontSize.xs),
+                style: style.text.regular,
               ),
             if (message.messageType == 'image') ...[
               Container(
@@ -317,27 +321,26 @@ class MessageBubble extends StatelessWidget {
               children: [
                 Text(
                   DateFormat('hh:mm a').format(message.timestamp!.toDate()),
-                  style: const TextStyle(
-                      fontSize: AppFontSize.xxs, color: AppColor.greyText),
+                  style: style.text.regular,
                 ),
                 const Gap(3),
                 if (widget.userData.uid != message.senderID)
                   if (message.status == 'unread')
-                    const SVGIcon(
+                    SVGIcon(
                       name: "check",
-                      size: AppFontSize.xxs + 1,
+                      size: style.icon.xxs,
                       color: AppColor.greyText,
                     )
                   else if (message.status == 'delivered')
-                    const SVGIcon(
+                    SVGIcon(
                       name: "read",
-                      size: AppFontSize.xxs + 1,
+                      size: style.icon.xxs,
                       color: AppColor.greyText,
                     )
                   else ...[
-                    const SVGIcon(
+                    SVGIcon(
                       name: "read",
-                      size: AppFontSize.xxs + 1,
+                      size: style.icon.xxs,
                       color: AppColor.blue,
                     ),
                   ]

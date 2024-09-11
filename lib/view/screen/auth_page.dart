@@ -1,5 +1,6 @@
-import 'package:chit_chat/view/screen/home_page.dart';
-import 'package:chit_chat/view/screen/login_page.dart';
+import 'package:chit_chat_1/view/screen/email_verification_page.dart';
+import 'package:chit_chat_1/view/screen/home_page.dart';
+import 'package:chit_chat_1/view/screen/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -13,20 +14,22 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   late Widget loadWidget;
-
   @override
   void initState() {
+    // BlocProvider.of<UpdateCubit>(context).checkforUpdate('auto');
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (firebaseAuth.currentUser == null ||
-        !firebaseAuth.currentUser!.emailVerified) {
+    if (firebaseAuth.currentUser == null) {
       loadWidget = const LoginPage();
+    } else if (!firebaseAuth.currentUser!.emailVerified) {
+      loadWidget = const EmailVerificationPage();
     } else if (firebaseAuth.currentUser != null) {
       loadWidget = const HomePage();
     }
+
     return loadWidget;
   }
 }
