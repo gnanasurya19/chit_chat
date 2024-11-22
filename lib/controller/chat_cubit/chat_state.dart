@@ -10,7 +10,7 @@ final class EmptyMessage extends ChatActionState {}
 final class UploadFile extends ChatActionState {
   final MediaType mediaType;
 
-  final String filePath;
+  final List<String> filePath;
   final FileStatus fileStatus;
 
   UploadFile(
@@ -20,7 +20,7 @@ final class UploadFile extends ChatActionState {
 }
 
 final class FileUploaded extends ChatActionState {
-  final String fileUrl;
+  final List<String> fileUrl;
   final MediaType mediaType;
 
   FileUploaded({required this.mediaType, required this.fileUrl});

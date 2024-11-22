@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:chit_chat/network/network_api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -168,28 +169,31 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  Future uploadFileToFirebase(String filepath, MediaType mediatype) async {
+  Future uploadFileToFirebase(
+      List<String> filepaths, MediaType mediatype) async {
     emit(
       UploadFile(
         mediaType: mediatype,
-        filePath: filepath,
+        filePath: filepaths,
         fileStatus: FileStatus.uploading,
       ),
     );
-    String fileUrl =
-        await firebaseRepository.uploadFile(XFile(filepath), 'chat_media');
-
-    if (mediatype == MediaType.video) {
-      String? thumbnailPath = await VideoThumbnail.thumbnailFile(
-        video: filepath,
-        imageFormat: ImageFormat.JPEG,
-        quality: 100,
-      );
-
-      thumbnailUrl = await firebaseRepository.uploadFile(
-          XFile(thumbnailPath!), 'chat_media');
-    }
-    emit(FileUploaded(fileUrl: fileUrl, mediaType: mediatype));
+    List<String> fileUrls = [];
+    await Future.forEach(filepaths, (path) async {
+      final String url =
+          await firebaseRepository.uploadFile(XFile(path), 'chat_media');
+      fileUrls.add(url);
+      if (mediatype == MediaType.video) {
+        String? thumbnailPath = await VideoThumbnail.thumbnailFile(
+          video: path,
+          imageFormat: ImageFormat.JPEG,
+          quality: 100,
+        );
+        thumbnailUrl = await firebaseRepository.uploadFile(
+            XFile(thumbnailPath!), 'chat_media');
+      }
+    });
+    emit(FileUploaded(fileUrl: fileUrls, mediaType: mediatype));
   }
 
   Future sendMessage(String message, UserData receiver, String msgType) async {
@@ -250,6 +254,13 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  Future sendMultipleMessage(
+      List<String> messages, UserData receiver, String msgType) async {
+    Future.forEach(messages, (message) async {
+      await sendMessage(message, receiver, msgType);
+    });
+  }
+
   Future stopStream() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', '');
@@ -259,11 +270,11 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future openGallery() async {
-    util.captureImage(ImageSource.gallery).then((value) {
+    util.captureMultiImage().then((value) {
       if (value != null) {
         emit(UploadFile(
             mediaType: MediaType.image,
-            filePath: value.path,
+            filePath: value.map((e) => e.path).toList(),
             fileStatus: FileStatus.preview));
       }
     });
@@ -274,7 +285,7 @@ class ChatCubit extends Cubit<ChatState> {
       if (value != null) {
         emit(UploadFile(
             mediaType: MediaType.video,
-            filePath: value.path,
+            filePath: [value.path],
             fileStatus: FileStatus.preview));
       }
     });

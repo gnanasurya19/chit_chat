@@ -35,25 +35,9 @@ class FileUploadDialog extends StatelessWidget {
                       'Are you sure want to send this file?',
                       style: style.text.regular,
                     ),
-                    if (state.mediaType == MediaType.image)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        child: Image.file(
-                          File(state.filePath),
-                          width: MediaQuery.sizeOf(context).width * 0.35,
-                          height: MediaQuery.sizeOf(context).width * 0.35,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppColor.greyline,
-                              child: const Icon(Icons.error),
-                            );
-                          },
-                        ),
-                      )
-                    else if (state.mediaType == MediaType.video)
-                      VideoPreview(
-                        filepath: state.filePath,
-                      ),
+                    ImageCollageWidget(
+                        mediaType: state.mediaType, medialist: state.filePath),
+                    // buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -107,6 +91,51 @@ class FileUploadDialog extends StatelessWidget {
           return const SizedBox();
         }
       },
+    );
+  }
+}
+
+class ImageCollageWidget extends StatelessWidget {
+  const ImageCollageWidget(
+      {super.key, required this.mediaType, required this.medialist});
+  final MediaType mediaType;
+  final List<String> medialist;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: style.insets.lg),
+      height: MediaQuery.sizeOf(context).width * 0.45,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: medialist.length,
+        itemBuilder: (context, index) => Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Container(
+              margin: EdgeInsets.only(right: style.insets.sm),
+              width: MediaQuery.sizeOf(context).width * 0.35,
+              height: MediaQuery.sizeOf(context).width * 0.45,
+              child: mediaType == MediaType.image
+                  ? Image.file(
+                      File(medialist[index]),
+                      fit: BoxFit.cover,
+                    )
+                  : VideoPreview(filepath: medialist[index]),
+            ),
+            Positioned(
+              right: 4,
+              child: IconButton(
+                  style: IconButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      backgroundColor: AppColor.black.withOpacity(0.3),
+                      foregroundColor: AppColor.white),
+                  onPressed: () {},
+                  icon: Icon(Icons.delete, size: style.icon.xs)),
+            )
+          ],
+        ),
+      ),
     );
   }
 }

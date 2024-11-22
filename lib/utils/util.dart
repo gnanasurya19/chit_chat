@@ -202,6 +202,15 @@ class Util {
     throw false;
   }
 
+  Future<List<XFile>?> captureMultiImage() async {
+    final file =
+        await ImagePicker().pickMultiImage(imageQuality: 80, limit: 10);
+    if (file.isNotEmpty) {
+      return file;
+    }
+    throw false;
+  }
+
   Future<XFile?> captureVideo() async {
     final file = await ImagePicker().pickVideo(
       source: ImageSource.gallery,

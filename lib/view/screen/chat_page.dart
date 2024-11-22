@@ -231,7 +231,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       }
     } else if (state is FileUploaded) {
       Navigator.pop(context);
-      context.read<ChatCubit>().sendMessage(state.fileUrl, widget.userData,
+      context.read<ChatCubit>().sendMultipleMessage(
+          state.fileUrl,
+          widget.userData,
           state.mediaType == MediaType.image ? 'image' : 'video');
     }
   }
