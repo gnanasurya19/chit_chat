@@ -1,5 +1,5 @@
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:lottie/lottie.dart';

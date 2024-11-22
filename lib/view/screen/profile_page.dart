@@ -1,12 +1,12 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
-import 'package:chit_chat_1/controller/profile_cubit/profile_cubit.dart';
-import 'package:chit_chat_1/controller/update_cubit/update_cubit.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/custom_widget/loading_widget.dart';
-import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat_1/view/widget/circular_profile_image.dart';
+import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/loading_widget.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -27,7 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
     {
       'icon': "user",
       'title': 'Edit Profile',
-      'subTitle': 'Change profile picture,name,number',
+      'subTitle': 'Change profile picture,name,phone number',
     },
     {
       'icon': "lock",

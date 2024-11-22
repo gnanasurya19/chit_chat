@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/view/widget/video_preview.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/view/widget/video_preview.dart';
 
 class FileUploadDialog extends StatelessWidget {
   final UploadFile state;

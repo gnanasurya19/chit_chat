@@ -1,29 +1,29 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:chit_chat_1/controller/update_cubit/update_cubit.dart';
-import 'package:chit_chat_1/view/screen/profile_edit_page.dart';
+import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat/view/screen/profile_edit_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:chit_chat_1/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat_1/controller/home_cubit/home_cubit.dart';
-import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat_1/controller/profile_cubit/profile_cubit.dart';
-import 'package:chit_chat_1/controller/search_cubit/search_cubit.dart';
-import 'package:chit_chat_1/firebase_options.dart';
-import 'package:chit_chat_1/notification/push_notification.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/style.dart';
-import 'package:chit_chat_1/view/screen/auth_page.dart';
-import 'package:chit_chat_1/view/screen/email_verification_page.dart';
-import 'package:chit_chat_1/view/screen/home_page.dart';
-import 'package:chit_chat_1/view/screen/login_page.dart';
-import 'package:chit_chat_1/view/screen/profile_page.dart';
-import 'package:chit_chat_1/view/screen/register_page.dart';
+import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
+import 'package:chit_chat/firebase_options.dart';
+import 'package:chit_chat/notification/push_notification.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/style.dart';
+import 'package:chit_chat/view/screen/auth_page.dart';
+import 'package:chit_chat/view/screen/email_verification_page.dart';
+import 'package:chit_chat/view/screen/home_page.dart';
+import 'package:chit_chat/view/screen/login_page.dart';
+import 'package:chit_chat/view/screen/profile_page.dart';
+import 'package:chit_chat/view/screen/register_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,6 +97,7 @@ class _ThemeChangerState extends State<ThemeChanger> {
                 isDarkTheme ? MyAppTheme.darkTheme : MyAppTheme.lightTheme,
             builder: (context, myTheme) {
               return MaterialApp(
+                title: 'ChitChat',
                 navigatorKey: navigationKey,
                 theme: myTheme,
                 debugShowCheckedModeBanner: false,

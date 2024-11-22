@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 part 'media_state.dart';
 
 class MediaCubit extends Cubit<MediaState> {
@@ -60,7 +61,7 @@ class MediaCubit extends Cubit<MediaState> {
   }
 
   shareFile(String fileurl) async {
-    // final chachedFile = await DefaultCacheManager().getSingleFile(fileurl);
-    // Share.shareXFiles([XFile(chachedFile.path)]);
+    final chachedFile = await DefaultCacheManager().getSingleFile(fileurl);
+    Share.shareXFiles([XFile(chachedFile.path)]);
   }
 }

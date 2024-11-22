@@ -1,10 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat_1/model/message_model.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

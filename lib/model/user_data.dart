@@ -1,4 +1,4 @@
-import 'package:chit_chat_1/model/message_model.dart';
+import 'package:chit_chat/model/message_model.dart';
 
 class UserData {
   String? userName;

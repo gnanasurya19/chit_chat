@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:chit_chat_1/firebase_options.dart';
-import 'package:chit_chat_1/network/network_api_service.dart';
+import 'package:chit_chat/firebase_options.dart';
+import 'package:chit_chat/network/network_api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,10 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:chit_chat_1/main.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/style.dart';
-import 'package:chit_chat_1/utils/util.dart';
+import 'package:chit_chat/main.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/style.dart';
+import 'package:chit_chat/utils/util.dart';
 
 Util util = Util();
 AppStyle get style => MainApp.style;

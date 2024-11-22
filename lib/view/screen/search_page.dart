@@ -1,10 +1,10 @@
-import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat_1/controller/search_cubit/search_cubit.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/view/screen/chat_page.dart';
-import 'package:chit_chat_1/view/widget/user_card.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/view/screen/chat_page.dart';
+import 'package:chit_chat/view/widget/user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,6 +32,7 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         titleSpacing: 0,
+        iconTheme: const IconThemeData(color: AppColor.white),
         title: TextField(
           style: const TextStyle(color: AppColor.white),
           autofocus: true,

@@ -1,9 +1,14 @@
 // import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 // import 'package:image_picker/image_picker.dart';
 // import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
@@ -34,6 +39,7 @@ class Util {
             ContinuousRectangleBorder(borderRadius: BorderRadius.circular(10)),
         content: Text(
           text,
+          textAlign: TextAlign.center,
           style: TextStyle(
               fontSize: style.scale * 15,
               color: type == 'success' ? AppColor.white : AppColor.black),
@@ -214,5 +220,35 @@ class Util {
     } else {
       return true;
     }
+  }
+
+  Future downloadMedia(String url, String mediaType, context) async {
+    // get's the cache of the image if not available downloads from network
+    final chachedFile = await DefaultCacheManager().getSingleFile(url);
+    Directory documentDirectory = Directory('/storage/emulated/0/Download');
+    String mediaExtention = mediaType == 'image' ? ".jpeg" : 'mp4';
+    String prefix = mediaType == 'image' ? 'IMG' : 'VID';
+    Uint8List bytes = await chachedFile.readAsBytes();
+
+    // generate image name
+    final String imageName = DateFormat('yyyyMMddhhmm').format(DateTime.now());
+
+    //generate file
+    File newFile =
+        File('${documentDirectory.path}/$prefix-$imageName-CC.$mediaExtention');
+
+    //checking existing file
+    int count = 1;
+    while (await newFile.exists()) {
+      String newImageName = "$imageName$count";
+      File file = File(
+          '${documentDirectory.path}/$prefix-$newImageName-CC.$mediaExtention');
+      newFile = file;
+      count++;
+    }
+
+    //stores to device
+    await newFile.writeAsBytes(bytes);
+    showSnackbar(context, 'Image Downloaded', 'info');
   }
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:chit_chat_1/main.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/view/screen/chat_page.dart';
+import 'package:chit_chat/main.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/view/screen/chat_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';

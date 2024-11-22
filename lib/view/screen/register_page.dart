@@ -1,9 +1,9 @@
-import 'package:chit_chat_1/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/custom_widget/animated_button.dart';
-import 'package:chit_chat_1/res/custom_widget/text_field_animation.dart';
+import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/animated_button.dart';
+import 'package:chit_chat/res/custom_widget/text_field_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

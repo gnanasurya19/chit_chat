@@ -19,6 +19,13 @@ final class ProfileInitial extends ProfileState {
   });
 }
 
+final class AddDataToFeild extends ProfileActionState {
+  final String? name;
+  final String? phoneNo;
+
+  AddDataToFeild({this.name, this.phoneNo});
+}
+
 final class SignOut extends ProfileActionState {}
 
 final class ChangePasswordState extends ProfileActionState {}

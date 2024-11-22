@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +46,6 @@ class UpdateCubit extends Cubit<UpdateState> {
         await oninit();
       }
       if (downloadUrl != '' && currentVersion != latestVersion) {
-        print('working');
         emit(UpdateAvailableState());
         emit(DownloadState(
           progress: 0,
@@ -105,6 +104,5 @@ class UpdateCubit extends Cubit<UpdateState> {
   @override
   void onChange(Change<UpdateState> change) {
     super.onChange(change);
-    print(change.currentState);
   }
 }

@@ -1,16 +1,16 @@
 import 'package:animations/animations.dart';
-import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat_1/controller/home_cubit/home_cubit.dart';
-import 'package:chit_chat_1/controller/profile_cubit/profile_cubit.dart';
-import 'package:chit_chat_1/controller/update_cubit/update_cubit.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat_1/view/screen/chat_page.dart';
-import 'package:chit_chat_1/view/screen/search_page.dart';
-import 'package:chit_chat_1/view/widget/circular_profile_image.dart';
-import 'package:chit_chat_1/view/widget/update_dialog.dart';
-import 'package:chit_chat_1/view/widget/user_card.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
+import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat/view/screen/chat_page.dart';
+import 'package:chit_chat/view/screen/search_page.dart';
+import 'package:chit_chat/view/widget/circular_profile_image.dart';
+import 'package:chit_chat/view/widget/update_dialog.dart';
+import 'package:chit_chat/view/widget/user_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,8 +71,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         toolbarHeight: kTextTabBarHeight + 30,
         titleSpacing: 20,
         title: Text(
-          'Chitchat',
-          style: style.text.regularMedium.copyWith(color: AppColor.darkBlue),
+          'ChitChat',
+          style: style.text.regularLarge.copyWith(color: AppColor.darkBlue),
         ),
         backgroundColor: Theme.of(context).colorScheme.surfaceDim,
         actions: [

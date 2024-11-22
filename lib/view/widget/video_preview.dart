@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:chit_chat_1/res/colors.dart';
+import 'package:chit_chat/res/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 

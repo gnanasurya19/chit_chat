@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:chit_chat_1/firebase/firebase_repository.dart';
-import 'package:chit_chat_1/model/message_model.dart';
-import 'package:chit_chat_1/model/user_data.dart';
+import 'package:chit_chat/firebase/firebase_repository.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/model/user_data.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,7 +62,7 @@ class HomeCubit extends Cubit<HomeState> {
         },
       );
       userList = newList;
-      emit(HomeReadyState(userList: userList));
+      // emit(HomeReadyState(userList: userList));
       bindlatestData();
     });
   }

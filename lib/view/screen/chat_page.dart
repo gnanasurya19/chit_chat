@@ -1,17 +1,19 @@
 // import 'package:cached_network_image/cached_network_image.dart';
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chit_chat_1/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat_1/model/message_model.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat_1/view/widget/chat_text_field.dart';
-import 'package:chit_chat_1/view/widget/circular_profile_image.dart';
-import 'package:chit_chat_1/view/widget/empty_chat.dart';
-import 'package:chit_chat_1/view/widget/file_upload_dialog.dart';
-import 'package:chit_chat_1/view/widget/view_media.dart';
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat/view/widget/chat_text_field.dart';
+import 'package:chit_chat/view/widget/circular_profile_image.dart';
+import 'package:chit_chat/view/widget/empty_chat.dart';
+import 'package:chit_chat/view/widget/file_upload_dialog.dart';
+import 'package:chit_chat/view/widget/view_media.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:intl/intl.dart';
@@ -97,9 +99,24 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 height: 30,
                 clipBehavior: Clip.antiAliasWithSaveLayer,
                 decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: CircularProfileImage(
-                  image: widget.userData.profileURL,
-                  isNetworkImage: true,
+                child: GestureDetector(
+                  onTap: () {
+                    if (widget.userData.profileURL != null) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => ViewMediaPage(
+                            message: MessageModel(
+                                message: widget.userData.profileURL,
+                                messageType: 'image'),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: CircularProfileImage(
+                    image: widget.userData.profileURL,
+                    isNetworkImage: true,
+                  ),
                 ),
               ),
             const Gap(10),
@@ -148,7 +165,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                   } else {
                                     return Padding(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 14.0),
+                                          vertical: 8.0),
                                       child: Text('${message.date}'),
                                     );
                                   }
@@ -238,9 +255,9 @@ class MessageBubble extends StatelessWidget {
           : Alignment.centerRight,
       child: Container(
         constraints:
-            BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.55),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(10),
+            BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.7),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.inverseSurface,
           borderRadius: BorderRadius.circular(10),
@@ -321,26 +338,26 @@ class MessageBubble extends StatelessWidget {
               children: [
                 Text(
                   DateFormat('hh:mm a').format(message.timestamp!.toDate()),
-                  style: style.text.regular,
+                  style: style.text.regularSmall,
                 ),
                 const Gap(3),
                 if (widget.userData.uid != message.senderID)
                   if (message.status == 'unread')
                     SVGIcon(
                       name: "check",
-                      size: style.icon.xxs,
+                      size: style.icon.xs,
                       color: AppColor.greyText,
                     )
                   else if (message.status == 'delivered')
                     SVGIcon(
                       name: "read",
-                      size: style.icon.xxs,
+                      size: style.icon.xs,
                       color: AppColor.greyText,
                     )
                   else ...[
                     SVGIcon(
                       name: "read",
-                      size: style.icon.xxs,
+                      size: style.icon.xs,
                       color: AppColor.blue,
                     ),
                   ]

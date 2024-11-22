@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:chit_chat_1/network/network_api_service.dart';
+import 'package:chit_chat/network/network_api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,11 +8,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
-import 'package:chit_chat_1/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat_1/firebase/firebase_repository.dart';
-import 'package:chit_chat_1/model/message_model.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
+import 'package:chit_chat/firebase/firebase_repository.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/common_instants.dart';
 
 part 'chat_state.dart';
 
@@ -31,7 +31,6 @@ class ChatCubit extends Cubit<ChatState> {
   String? thumbnailUrl;
 
   Future onInit(String receiverID) async {
-    print('triggered');
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', receiverID);
     this.receiverID = receiverID;
@@ -125,7 +124,6 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future updateChatStatus(MessageModel message) async {
-    print(message.message);
     DocumentReference messageRef = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)

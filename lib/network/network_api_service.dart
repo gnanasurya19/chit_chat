@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:chit_chat_1/model/message_model.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;

@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:chit_chat_1/controller/profile_cubit/profile_cubit.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat_1/view/widget/circular_profile_image.dart';
+import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat/view/widget/circular_profile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,11 +22,18 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   late ProfileCubit profileCubit;
+  bool isEdited = false;
+  late String name;
+  late String mobileNO;
 
   @override
   void initState() {
     profileCubit = BlocProvider.of<ProfileCubit>(context);
-    profileCubit.editProfile();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) {
+        profileCubit.editProfile();
+      },
+    );
     super.initState();
   }
 
@@ -84,16 +91,26 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         ),
       ),
       backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-      body: BlocBuilder<ProfileCubit, ProfileState>(
+      body: BlocConsumer<ProfileCubit, ProfileState>(
+        listener: (context, state) {
+          if (state is AddDataToFeild) {
+            if (state.name?.isNotEmpty == true) {
+              nameController.text = name = state.name ?? '';
+            }
+            if (state.name?.isNotEmpty == true) {
+              phoneController.text = mobileNO = state.phoneNo ?? '';
+            }
+          }
+        },
         buildWhen: (previous, current) => current is! ProfileActionState,
         builder: (context, state) {
           if (state is ProfileInitial) {
-            if (nameController.text.isEmpty) {
-              nameController.text = state.user.userName ?? '';
-            }
-            if (phoneController.text.isEmpty) {
-              phoneController.text = state.user.phoneNumber ?? '';
-            }
+            // if (state.user.userName?.isNotEmpty == true) {
+            //   nameController.text = name = state.user.userName ?? '';
+            // }
+            // if (state.user.phoneNumber?.isNotEmpty == true) {
+            //   phoneController.text = mobileNO = state.user.phoneNumber ?? '';
+            // }
             var inputDecoration = InputDecoration(
               filled: true,
               contentPadding: const EdgeInsets.only(left: 10),
@@ -114,35 +131,35 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     Center(
                       child: Hero(
                         tag: 'profile',
-                        child: Stack(
-                          children: [
-                            SizedBox(
-                              height: 120,
-                              width: 120,
-                              child: state.editedprofile == null
-                                  ? CircularProfileImage(
-                                      isNetworkImage:
-                                          state.user.profileURL != null,
-                                      image: state.user.profileURL,
-                                    )
-                                  : Container(
-                                      clipBehavior: Clip.hardEdge,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
+                        child: GestureDetector(
+                          onTap: () {
+                            editImage();
+                          },
+                          child: Stack(
+                            children: [
+                              SizedBox(
+                                height: 120,
+                                width: 120,
+                                child: state.editedprofile == null
+                                    ? CircularProfileImage(
+                                        isNetworkImage:
+                                            state.user.profileURL != null,
+                                        image: state.user.profileURL,
+                                      )
+                                    : Container(
+                                        clipBehavior: Clip.hardEdge,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Image.file(
+                                          File(state.editedprofile!),
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
-                                      child: Image.file(
-                                        File(state.editedprofile!),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  editImage();
-                                },
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
                                 child: Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
@@ -155,8 +172,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -171,6 +188,15 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       child: TextFormField(
                         controller: nameController,
                         decoration: inputDecoration,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value != name) {
+                              isEdited = true;
+                            } else {
+                              isEdited = false;
+                            }
+                          });
+                        },
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
                               RegExp(r'[a-zA-Z ]'))
@@ -187,6 +213,15 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       child: TextFormField(
                         controller: phoneController,
                         decoration: inputDecoration,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value != mobileNO) {
+                              isEdited = true;
+                            } else {
+                              isEdited = false;
+                            }
+                          });
+                        },
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
@@ -213,10 +248,16 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             TextButton(
               style: TextButton.styleFrom(
                   backgroundColor: AppColor.greyText,
+                  disabledBackgroundColor: AppColor.black.withOpacity(0.1),
                   foregroundColor: AppColor.white),
-              onPressed: () {
-                profileCubit.resetProfileField();
-              },
+              onPressed: isEdited
+                  ? () {
+                      profileCubit.resetProfileField();
+                      setState(() {
+                        isEdited = false;
+                      });
+                    }
+                  : null,
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30),
@@ -229,11 +270,14 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             TextButton(
               style: TextButton.styleFrom(
                   backgroundColor: AppColor.blue,
+                  disabledBackgroundColor: AppColor.blue.withOpacity(0.3),
                   foregroundColor: AppColor.white),
-              onPressed: () {
-                profileCubit.updateProfileData(
-                    nameController.text, phoneController.text);
-              },
+              onPressed: isEdited
+                  ? () {
+                      profileCubit.updateProfileData(
+                          nameController.text, phoneController.text);
+                    }
+                  : null,
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30),

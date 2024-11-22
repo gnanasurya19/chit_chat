@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:chit_chat_1/model/message_model.dart';
+import 'package:chit_chat/model/message_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';

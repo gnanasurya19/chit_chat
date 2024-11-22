@@ -1,6 +1,6 @@
-import 'package:chit_chat_1/view/screen/email_verification_page.dart';
-import 'package:chit_chat_1/view/screen/home_page.dart';
-import 'package:chit_chat_1/view/screen/login_page.dart';
+import 'package:chit_chat/view/screen/email_verification_page.dart';
+import 'package:chit_chat/view/screen/home_page.dart';
+import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 

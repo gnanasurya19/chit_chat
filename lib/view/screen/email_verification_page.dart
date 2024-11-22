@@ -1,6 +1,8 @@
-import 'package:chit_chat_1/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';

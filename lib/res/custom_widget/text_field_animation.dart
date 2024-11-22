@@ -1,6 +1,6 @@
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
-import 'package:chit_chat_1/res/custom_widget/svg_icon.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:popover/popover.dart';
@@ -97,6 +97,8 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
                   style: TextStyle(color: widget.color),
                   controller: widget.controller,
                   decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.all(5),
                     suffixIcon: (widget.isPassword ?? false)
                         ? IconButton(
                             onPressed: () {

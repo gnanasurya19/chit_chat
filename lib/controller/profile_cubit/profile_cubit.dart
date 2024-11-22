@@ -1,8 +1,8 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:chit_chat_1/firebase/firebase_repository.dart';
-import 'package:chit_chat_1/model/user_data.dart';
-import 'package:chit_chat_1/res/colors.dart';
-import 'package:chit_chat_1/res/common_instants.dart';
+import 'package:chit_chat/firebase/firebase_repository.dart';
+import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -96,10 +96,9 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   signout() async {
-    firebaseRepository.updateUser(currentUserId, {"fcm": ''}).then((value) {
-      firebaseAuth.signOut().then((value) {
-        emit(SignOut());
-      });
+    firebaseRepository.updateUser(currentUserId, {"fcm": ''});
+    firebaseAuth.signOut().then((value) {
+      emit(SignOut());
     });
   }
 
@@ -152,6 +151,8 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   void editProfile() {
+    emit(AddDataToFeild(
+        name: userModel.userName, phoneNo: userModel.phoneNumber));
     emit(ProfileInitial(
         user: userModel, isDarkTheme: isDark, isNotification: isNotification));
   }
@@ -179,8 +180,10 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   resetProfileField() {
     editedProfile = null;
-    emit(ProfileInitial(
-        user: userModel, isDarkTheme: isDark, isNotification: isNotification));
+    emit(AddDataToFeild(
+        name: userModel.userName, phoneNo: userModel.phoneNumber));
+    // emit(ProfileInitial(
+    //     user: userModel, isDarkTheme: isDark, isNotification: isNotification));
   }
 
   String? editedProfile;
