@@ -10,10 +10,8 @@ import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/view/widget/video_preview.dart';
 
 class FileUploadDialog extends StatelessWidget {
-  final UploadFile state;
   const FileUploadDialog({
     super.key,
-    required this.state,
   });
 
   @override
@@ -130,7 +128,14 @@ class ImageCollageWidget extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       backgroundColor: AppColor.black.withOpacity(0.3),
                       foregroundColor: AppColor.white),
-                  onPressed: () {},
+                  onPressed: () {
+                    if (medialist.length == 1) {
+                      Navigator.pop(context);
+                    }
+                    context
+                        .read<ChatCubit>()
+                        .deleteSelectedMedia(index, mediaType);
+                  },
                   icon: Icon(Icons.delete, size: style.icon.xs)),
             )
           ],

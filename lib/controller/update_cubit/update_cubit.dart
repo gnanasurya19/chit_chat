@@ -5,8 +5,8 @@ import 'package:chit_chat/res/common_instants.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:open_file_plus/open_file_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 part 'update_state.dart';
 
@@ -40,6 +40,7 @@ class UpdateCubit extends Cubit<UpdateState> {
         List loop = value['assets'];
         for (var element in loop) {
           downloadUrl = element['url'];
+          print(downloadUrl);
         }
       }
       if (currentVersion == '') {

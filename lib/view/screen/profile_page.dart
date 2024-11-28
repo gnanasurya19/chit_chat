@@ -219,15 +219,36 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      Text(
-                                                        e['title'],
-                                                        style: style
-                                                            .text.boldMedium
-                                                            .copyWith(
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .tertiaryContainer),
+                                                      Row(
+                                                        children: [
+                                                          Text(
+                                                            e['title'],
+                                                            style: style
+                                                                .text.boldMedium
+                                                                .copyWith(
+                                                                    color: Theme.of(
+                                                                            context)
+                                                                        .colorScheme
+                                                                        .tertiaryContainer),
+                                                          ),
+                                                          if (e['title'] ==
+                                                              'Check for Update')
+                                                            BlocBuilder<
+                                                                UpdateCubit,
+                                                                UpdateState>(
+                                                              builder: (context,
+                                                                  state) {
+                                                                return Expanded(
+                                                                  child: Text(
+                                                                    '  (Version: ${context.read<UpdateCubit>().currentVersion})',
+                                                                    style: style
+                                                                        .text
+                                                                        .regularSmall,
+                                                                  ),
+                                                                );
+                                                              },
+                                                            )
+                                                        ],
                                                       ),
                                                       Text(e['subTitle'],
                                                           style: style.text

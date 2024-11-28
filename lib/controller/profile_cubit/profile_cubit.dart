@@ -161,7 +161,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoader());
     if (name != userModel.userName) {
       userModel.userName = name;
-      await firebaseAuth.currentUser!.updateDisplayName('name');
+      await firebaseAuth.currentUser!.updateDisplayName(name);
     }
     if (mobileNumber != userModel.phoneNumber) {
       userModel.phoneNumber = mobileNumber;

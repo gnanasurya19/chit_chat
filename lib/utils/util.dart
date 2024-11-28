@@ -9,9 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+import 'dart:ui' as ui;
 
 class Util {
   PageRouteBuilder<dynamic> pageTransition(Widget name) {
@@ -259,5 +258,56 @@ class Util {
     //stores to device
     await newFile.writeAsBytes(bytes);
     showSnackbar(context, 'Image Downloaded', 'info');
+  }
+
+  Future<Uint8List?> createCircularBitmap(Uint8List imageBytes) async {
+    try {
+      // Decode the image bytes into an image
+      final ui.Codec codec = await ui.instantiateImageCodec(imageBytes);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+      final ui.Image originalImage = frameInfo.image;
+
+      // Determine the smaller dimension (width or height) to create a square
+      final int size = originalImage.width < originalImage.height
+          ? originalImage.width
+          : originalImage.height;
+
+      // Create a square canvas to center the image
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final Canvas canvas = Canvas(recorder);
+
+      // Fill the canvas with transparency
+      final Paint paint = Paint()..color = const Color(0x00000000);
+      canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()), paint);
+
+      // Calculate offsets to center the image on the square canvas
+      final double dx = (size - originalImage.width) / 2;
+      final double dy = (size - originalImage.height) / 2;
+
+      // Clip the canvas to a circle
+      final Path clipPath = Path()
+        ..addOval(Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()));
+      canvas.clipPath(clipPath);
+
+      // Draw the original image centered on the square canvas
+      canvas.drawImage(originalImage, Offset(dx, dy), Paint());
+
+      // Render the canvas as an image
+      final ui.Image circularImage =
+          await recorder.endRecording().toImage(size, size);
+
+      // Convert the image back to bytes
+      final ByteData? byteData =
+          await circularImage.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<Uint8List> getProfileFromLocal(String url) async {
+    final chachedFile = await DefaultCacheManager().getSingleFile(url);
+    return await chachedFile.readAsBytes();
   }
 }

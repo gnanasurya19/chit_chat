@@ -34,6 +34,7 @@ class NetworkApiService {
               uid: firebaseAuth.currentUser!.uid,
               userEmail: firebaseAuth.currentUser!.email,
               userName: firebaseAuth.currentUser!.displayName,
+              profileURL: firebaseAuth.currentUser?.photoURL,
             ).toJson()),
             "messageDocId": msgId,
             "chatRoomId": chatRoomId,
@@ -82,13 +83,23 @@ class NetworkApiService {
     }
   }
 
+  Future<Uint8List?> getGetApiRespone(String url) async {
+    try {
+      final response =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 50));
+      return response.bodyBytes;
+    } catch (e) {
+      return null;
+    }
+  }
+
   dynamic returnResponse(http.Response response) {
     switch (response.statusCode) {
       case 200:
         final responseJson = jsonDecode(response.body);
         return responseJson;
       default:
-        throw response.body;
+        return response.body;
     }
   }
 }
