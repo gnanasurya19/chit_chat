@@ -20,6 +20,13 @@ class AuthCubit extends Cubit<AuthState> {
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
+  loginInizialize() {
+    emit(AuthViewState(
+        status: PageStatus.notSignedIn,
+        userModel: UserData(userEmail: '', password: ''),
+        buttonLoader: false));
+  }
+
   void doSignIn(PageStatus status, UserData userModel) {
     if (status == PageStatus.signIn) {
       if (userModel.userEmail == null || userModel.userEmail!.isEmpty) {
@@ -35,7 +42,7 @@ class AuthCubit extends Cubit<AuthState> {
             await firebaseAuth.signInWithEmailAndPassword(
                 email: userModel.userEmail!, password: userModel.password!);
             //refreshing instance
-            firebaseAuth.currentUser!.reload();
+            firebaseAuth.currentUser?.reload();
 
             await firebaseMessaging.getToken().then(
               (token) async {
@@ -56,9 +63,10 @@ class AuthCubit extends Cubit<AuthState> {
                 });
               },
             );
+
             emit(AuthCancelLoading());
 
-            if (firebaseAuth.currentUser!.emailVerified) {
+            if (firebaseAuth.currentUser?.emailVerified == true) {
               emit(AuthUserLoginSuccess());
             } else {
               emit(AuthVerifyUserEmail());
@@ -67,6 +75,10 @@ class AuthCubit extends Cubit<AuthState> {
             emit(AuthCancelLoading());
             showFirebaseError(e);
           } catch (e) {
+            emit(AuthAlert(
+                type: 'network',
+                text: 'No internet\nPlease connect to internet'));
+
             emit(AuthCancelLoading());
           }
         }).catchError((e) {

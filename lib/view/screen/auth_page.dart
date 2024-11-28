@@ -1,8 +1,10 @@
+import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
 import 'package:chit_chat/view/screen/email_verification_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
 import 'package:chit_chat/view/screen/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -16,7 +18,7 @@ class _AuthPageState extends State<AuthPage> {
   late Widget loadWidget;
   @override
   void initState() {
-    // BlocProvider.of<UpdateCubit>(context).checkforUpdate('auto');
+    BlocProvider.of<UpdateCubit>(context).checkforUpdate('auto');
     super.initState();
   }
 

@@ -7,9 +7,10 @@ sealed class ChatActionState extends ChatState {}
 
 final class EmptyMessage extends ChatActionState {}
 
+final class OpenUploadFileDialog extends ChatActionState {}
+
 final class UploadFile extends ChatActionState {
   final MediaType mediaType;
-
   final List<String> filePath;
   final FileStatus fileStatus;
 

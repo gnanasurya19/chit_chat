@@ -38,6 +38,7 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     // BlocProvider.of<AuthCubit>(context).onInit();
     authCotroller = BlocProvider.of<AuthCubit>(context);
+    authCotroller.loginInizialize();
   }
 
   forgotPassword() {

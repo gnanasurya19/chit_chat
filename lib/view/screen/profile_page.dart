@@ -2,11 +2,13 @@ import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
 import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/loading_widget.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
 import 'package:chit_chat/view/widget/circular_profile_image.dart';
+import 'package:chit_chat/view/widget/view_media.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -65,42 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
           body: BlocConsumer<ProfileCubit, ProfileState>(
             listenWhen: (previous, current) => current is ProfileActionState,
             buildWhen: (previous, current) => current is! ProfileActionState,
-            listener: (context, state) {
-              if (state is SignOut) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  'auth',
-                  (route) => false,
-                );
-              } else if (state is ChangePasswordState) {
-                util.slideInDialog(
-                  context,
-                  const PasswordResetWidget(),
-                );
-              } else if (state is SigningOutState) {
-                util.slideInDialog(
-                  context,
-                  const LogoutConfirmation(),
-                );
-              } else if (state is AlertToast) {
-                util.showSnackbar(context, state.text, state.type);
-              } else if (state is AlertState) {
-                util.doAlert(context, state.text, state.type);
-              } else if (state is PasswordUpdated) {
-                Navigator.pop(context);
-                util.showSnackbar(context, 'Password updated', 'success');
-              } else if (state is ProfileUpdate) {
-                Navigator.pop(context);
-                util.showSnackbar(context, 'Profile updated', 'success');
-              } else if (state is ProfileLoader) {
-                showDialog(
-                  context: context,
-                  builder: (context) => const LoadingScreen(),
-                );
-              } else if (state is ProfileLoaderCancel) {
-                Navigator.pop(context);
-              }
-            },
+            listener: listener,
             builder: (context, state) {
               if (state is ProfileInitial) {
                 return SingleChildScrollView(
@@ -114,9 +81,28 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: SizedBox(
                             height: 120,
                             width: 120,
-                            child: CircularProfileImage(
-                              isNetworkImage: state.user.profileURL != null,
-                              image: state.user.profileURL,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (state.user.profileURL != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ViewMediaPage(
+                                        message: MessageModel(
+                                            message: state.user.profileURL,
+                                            messageType: 'image'),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  util.showSnackbar(
+                                      context, 'No profile', 'info');
+                                }
+                              },
+                              child: CircularProfileImage(
+                                isNetworkImage: state.user.profileURL != null,
+                                image: state.user.profileURL,
+                              ),
                             ),
                           ),
                         ),
@@ -153,183 +139,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                         const Gap(20),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Theme.of(context).colorScheme.inverseSurface,
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.only(left: 15),
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'General',
-                                  style: style.text.boldLarge
-                                      .copyWith(color: AppColor.greyText),
-                                ),
-                              ),
-                              const Gap(10),
-                              ...general.map(
-                                (e) => Material(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inverseSurface,
-                                  child: InkWell(
-                                    onTap: () {
-                                      if (e['title'] == "Change Password") {
-                                        context
-                                            .read<ProfileCubit>()
-                                            .passwordResetDialog();
-                                      } else if (e['title'] == "Edit Profile") {
-                                        Navigator.pushNamed(
-                                            context, 'profile-edit');
-                                      } else {
-                                        context
-                                            .read<UpdateCubit>()
-                                            .checkforUpdate('manual');
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(15),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .surface
-                                                  .withOpacity(0.5),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: SVGIcon(
-                                              name: e['icon'],
-                                              size: style.icon.sm,
-                                            ),
-                                          ),
-                                          const Gap(15),
-                                          Expanded(
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        e['title'],
-                                                        style: style
-                                                            .text.boldMedium
-                                                            .copyWith(
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .tertiaryContainer),
-                                                      ),
-                                                      Text(e['subTitle'],
-                                                          style: style.text
-                                                              .semiBoldSmall
-                                                              .copyWith(
-                                                                  color: AppColor
-                                                                      .greyText))
-                                                    ],
-                                                  ),
-                                                ),
-                                                if (e['title'] !=
-                                                    'Check for Update')
-                                                  SVGIcon(
-                                                    name: 'arrow-right',
-                                                    size: style.icon.sm,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .tertiaryContainer,
-                                                  )
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        GeneralOptions(general: general),
                         const Gap(12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Theme.of(context).colorScheme.inverseSurface,
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.only(left: 15),
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Preference',
-                                  style: style.text.semiBoldLarge,
-                                ),
-                              ),
-                              const Gap(10),
-                              ProfilePrefTile(
-                                  leadingIcon: 'bell',
-                                  title: 'Notification',
-                                  subtitle:
-                                      'Customize your notification preference',
-                                  action: Switch(
-                                      inactiveThumbColor: AppColor.greyText,
-                                      activeColor: AppColor.blue,
-                                      value: state.isNotification ?? false,
-                                      onChanged: (v) {
-                                        context
-                                            .read<ProfileCubit>()
-                                            .changeNotificationPref();
-                                      })),
-                              ThemeSwitcher.switcher(builder: (context, theme) {
-                                return ProfilePrefTile(
-                                  title: "Theme",
-                                  subtitle: 'Change theme',
-                                  leadingIcon: 'themes',
-                                  action: ThemeToggleBtn(
-                                    onChange: (value) {
-                                      BlocProvider.of<ProfileCubit>(context)
-                                          .changeTheme(theme);
-                                    },
-                                    value: state.isDarkTheme ?? false,
-                                  ),
-                                );
-                              }),
-                              Material(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .inverseSurface,
-                                child: InkWell(
-                                  onTap: () {
-                                    context.read<ProfileCubit>().signoutAlert();
-                                  },
-                                  child: ProfilePrefTile(
-                                    leadingIcon: 'logout',
-                                    title: 'Logout',
-                                    subtitle: 'securely logout of Account',
-                                    action: SVGIcon(
-                                      name: 'arrow-right',
-                                      size: 20,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiaryContainer,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
+                        PreferenceOptions(state: state),
                         const Gap(20),
                       ],
                     ),
@@ -342,6 +154,230 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }),
+    );
+  }
+
+  void listener(context, state) {
+    if (state is SignOut) {
+      Navigator.pushNamedAndRemoveUntil(context, 'auth', (route) => false);
+    } else if (state is ChangePasswordState) {
+      util.slideInDialog(
+        context,
+        const PasswordResetWidget(),
+      );
+    } else if (state is SigningOutState) {
+      util.slideInDialog(
+        context,
+        const LogoutConfirmation(),
+      );
+    } else if (state is AlertToast) {
+      util.showSnackbar(context, state.text, state.type);
+    } else if (state is AlertState) {
+      util.doAlert(context, state.text, state.type);
+    } else if (state is PasswordUpdated) {
+      Navigator.pop(context);
+      util.showSnackbar(context, 'Password updated', 'success');
+    } else if (state is ProfileUpdate) {
+      Navigator.pop(context);
+      util.showSnackbar(context, 'Profile updated', 'success');
+    } else if (state is ProfileLoader) {
+      showDialog(
+        context: context,
+        builder: (context) => const LoadingScreen(),
+      );
+    } else if (state is ProfileLoaderCancel) {
+      Navigator.pop(context);
+    }
+  }
+}
+
+class GeneralOptions extends StatelessWidget {
+  const GeneralOptions({
+    super.key,
+    required this.general,
+  });
+
+  final List general;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(context).colorScheme.inverseSurface,
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(left: 15),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'General',
+              style: style.text.boldLarge.copyWith(color: AppColor.greyText),
+            ),
+          ),
+          const Gap(10),
+          ...general.map(
+            (e) => Material(
+              color: Theme.of(context).colorScheme.inverseSurface,
+              child: InkWell(
+                onTap: () {
+                  if (e['title'] == "Change Password") {
+                    context.read<ProfileCubit>().passwordResetDialog();
+                  } else if (e['title'] == "Edit Profile") {
+                    Navigator.pushNamed(context, 'profile-edit');
+                  } else {
+                    context.read<UpdateCubit>().checkforUpdate('manual');
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: SVGIcon(
+                          name: e['icon'],
+                          size: style.icon.sm,
+                        ),
+                      ),
+                      const Gap(15),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        e['title'],
+                                        style: style.text.boldMedium.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .tertiaryContainer),
+                                      ),
+                                      if (e['title'] == 'Check for Update')
+                                        BlocBuilder<UpdateCubit, UpdateState>(
+                                          builder: (context, state) {
+                                            return Expanded(
+                                              child: Text(
+                                                '  (Version: ${context.read<UpdateCubit>().currentVersion})',
+                                                style: style.text.regularSmall,
+                                              ),
+                                            );
+                                          },
+                                        )
+                                    ],
+                                  ),
+                                  Text(e['subTitle'],
+                                      style: style.text.semiBoldSmall
+                                          .copyWith(color: AppColor.greyText))
+                                ],
+                              ),
+                            ),
+                            if (e['title'] != 'Check for Update')
+                              SVGIcon(
+                                name: 'arrow-right',
+                                size: style.icon.sm,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .tertiaryContainer,
+                              )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreferenceOptions extends StatelessWidget {
+  final ProfileInitial state;
+  const PreferenceOptions({
+    super.key,
+    required this.state,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(context).colorScheme.inverseSurface,
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(left: 15),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Preference',
+              style: style.text.semiBoldLarge,
+            ),
+          ),
+          const Gap(10),
+          ProfilePrefTile(
+              leadingIcon: 'bell',
+              title: 'Notification',
+              subtitle: 'Customize your notification preference',
+              action: Switch(
+                  inactiveThumbColor: AppColor.greyText,
+                  activeColor: AppColor.blue,
+                  value: state.isNotification ?? false,
+                  onChanged: (v) {
+                    context.read<ProfileCubit>().changeNotificationPref();
+                  })),
+          ThemeSwitcher.switcher(builder: (context, theme) {
+            return ProfilePrefTile(
+              title: "Theme",
+              subtitle: 'Change theme',
+              leadingIcon: 'themes',
+              action: ThemeToggleBtn(
+                onChange: (value) {
+                  BlocProvider.of<ProfileCubit>(context).changeTheme(theme);
+                },
+                value: state.isDarkTheme ?? false,
+              ),
+            );
+          }),
+          Material(
+            color: Theme.of(context).colorScheme.inverseSurface,
+            child: InkWell(
+              onTap: () {
+                context.read<ProfileCubit>().signoutAlert();
+              },
+              child: ProfilePrefTile(
+                leadingIcon: 'logout',
+                title: 'Logout',
+                subtitle: 'securely logout of Account',
+                action: SVGIcon(
+                  name: 'arrow-right',
+                  size: 20,
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
     );
   }
 }

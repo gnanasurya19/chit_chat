@@ -112,8 +112,8 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   pauseStream() {
-    userListStream!.pause();
-    chatlistStream!.pause();
+    userListStream?.pause();
+    chatlistStream?.pause();
   }
 
   resumeStream() {

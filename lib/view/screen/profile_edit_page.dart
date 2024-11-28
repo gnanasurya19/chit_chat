@@ -23,6 +23,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   final phoneController = TextEditingController();
   late ProfileCubit profileCubit;
   bool isEdited = false;
+  bool isProfileEdited = false;
   late String name;
   late String mobileNO;
 
@@ -50,7 +51,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ListTile(
                   onTap: () {
                     Navigator.pop(context);
-                    profileCubit.captureImage(ImageSource.camera);
+                    profileCubit.captureImage(ImageSource.camera).then((value) {
+                      setState(() {
+                        isProfileEdited = true;
+                      });
+                    }).catchError((e) {});
                   },
                   leading: const Icon(
                     Icons.camera,
@@ -63,7 +68,13 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ListTile(
                   onTap: () {
                     Navigator.pop(context);
-                    profileCubit.captureImage(ImageSource.gallery);
+                    profileCubit
+                        .captureImage(ImageSource.gallery)
+                        .then((value) {
+                      setState(() {
+                        isProfileEdited = true;
+                      });
+                    }).catchError((e) {});
                   },
                   leading: const Icon(
                     Icons.image,
@@ -250,11 +261,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   backgroundColor: AppColor.greyText,
                   disabledBackgroundColor: AppColor.black.withOpacity(0.1),
                   foregroundColor: AppColor.white),
-              onPressed: isEdited
+              onPressed: (isEdited || isProfileEdited)
                   ? () {
                       profileCubit.resetProfileField();
                       setState(() {
                         isEdited = false;
+                        isProfileEdited = false;
                       });
                     }
                   : null,
@@ -272,7 +284,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   backgroundColor: AppColor.blue,
                   disabledBackgroundColor: AppColor.blue.withOpacity(0.3),
                   foregroundColor: AppColor.white),
-              onPressed: isEdited
+              onPressed: (isEdited || isProfileEdited)
                   ? () {
                       profileCubit.updateProfileData(
                           nameController.text, phoneController.text);

@@ -161,7 +161,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoader());
     if (name != userModel.userName) {
       userModel.userName = name;
-      await firebaseAuth.currentUser!.updateDisplayName('name');
+      await firebaseAuth.currentUser!.updateDisplayName(name);
     }
     if (mobileNumber != userModel.phoneNumber) {
       userModel.phoneNumber = mobileNumber;
@@ -187,10 +187,12 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   String? editedProfile;
-  captureImage(ImageSource type) async {
+  Future captureImage(ImageSource type) async {
     await util.captureImage(type).then((value) {
       editedProfile = value!.path;
       emit(ProfileInitial(user: userModel, editedprofile: editedProfile));
+    }).catchError((e) {
+      throw e;
     });
   }
 }

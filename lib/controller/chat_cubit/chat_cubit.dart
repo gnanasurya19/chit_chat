@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:chit_chat/network/network_api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import 'package:chit_chat/network/network_api_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,6 +43,8 @@ class ChatCubit extends Cubit<ChatState> {
     chatIds.sort();
     chatRoomID = chatIds.join('');
 
+    await removeReadMsg(chatRoomID);
+
     //get chat message from firebase
 
     await firebaseFirestore
@@ -74,6 +77,23 @@ class ChatCubit extends Cubit<ChatState> {
     chatStream = query.snapshots().listen((element) {
       populateList(element.docs.reversed.toList());
     });
+  }
+
+  Future changeBadgeCount(String? status, int? batchCount) async {
+    if (status == 'unread' && batchCount != null) {
+      SharedPreferences sp = await SharedPreferences.getInstance();
+      int? count = sp.getInt('badgeCount');
+      count = (count ?? batchCount) - batchCount;
+      sp.setInt('badgeCount', count);
+      if (count == 0) {
+        // FlutterAppBadger.removeBadge();
+        // FlutterAppIconBadge.removeBadge();
+        // FlutterAppBadgeControl.removeBadge();
+      } else {
+        // FlutterAppBadger.updateBadgeCount(count);
+        // FlutterAppBadgeControl.updateBadgeCount(count);
+      }
+    }
   }
 
   Future loadMore() async {
@@ -269,12 +289,16 @@ class ChatCubit extends Cubit<ChatState> {
     chatStream!.cancel();
   }
 
+  List<String> mediaList = [];
+
   Future openGallery() async {
     util.captureMultiImage().then((value) {
       if (value != null) {
+        mediaList = value.map((e) => e.path).toList();
+        emit(OpenUploadFileDialog());
         emit(UploadFile(
             mediaType: MediaType.image,
-            filePath: value.map((e) => e.path).toList(),
+            filePath: mediaList,
             fileStatus: FileStatus.preview));
       }
     });
@@ -283,11 +307,21 @@ class ChatCubit extends Cubit<ChatState> {
   Future openVideoGallery() async {
     util.captureVideo().then((value) {
       if (value != null) {
+        mediaList = [value.path];
+        emit(OpenUploadFileDialog());
         emit(UploadFile(
             mediaType: MediaType.video,
-            filePath: [value.path],
+            filePath: mediaList,
             fileStatus: FileStatus.preview));
       }
     });
+  }
+
+  void deleteSelectedMedia(int index, MediaType mediaType) {
+    mediaList.removeAt(index);
+    emit(UploadFile(
+        mediaType: mediaType,
+        filePath: mediaList,
+        fileStatus: FileStatus.preview));
   }
 }

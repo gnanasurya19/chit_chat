@@ -29,7 +29,7 @@ class UserCard extends StatelessWidget {
         user: user,
       ),
       onTap: () => onTap(user),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1.5),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -213,7 +213,8 @@ class ProfileImage extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Navigator.of(context).push(
+                      Navigator.push(
+                        context,
                         MaterialPageRoute(
                           builder: (context) => ViewMediaPage(
                             message: MessageModel(
