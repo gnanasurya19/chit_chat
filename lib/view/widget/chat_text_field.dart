@@ -20,35 +20,53 @@ class ChatTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
-          child: TextField(
-            textCapitalization: TextCapitalization.sentences,
-            onSubmitted: (value) {
-              context.read<ChatCubit>().sendMessage(
-                  messageController.text.trim(), widget.userData, 'text');
-              messageController.clear();
-            },
-            controller: messageController,
-            cursorColor: AppColor.blue,
-            style: style.text.regular,
-            decoration: InputDecoration(
-              prefixIcon: const MediaOptionBtn(),
-              prefixIconConstraints: const BoxConstraints(minWidth: 0),
-              focusColor: AppColor.green,
-              hintText: "Type here",
-              hintStyle: style.text.regular,
-              contentPadding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-              fillColor: Theme.of(context).colorScheme.inverseSurface,
-              filled: true,
-              enabled: true,
-              enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: AppColor.greyline),
-                borderRadius: BorderRadius.circular(50),
-              ),
-              focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColor.greyline),
-                  borderRadius: BorderRadius.circular(50)),
+          child: Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.inverseSurface,
+                border: Border.all(color: AppColor.greyline),
+                borderRadius: BorderRadius.circular(25)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                MediaOptionBtn(),
+                Expanded(
+                  child: TextField(
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLines: 4,
+                    minLines: 1,
+                    onSubmitted: (value) {
+                      context.read<ChatCubit>().sendMessage(
+                          messageController.text.trim(),
+                          widget.userData,
+                          'text');
+                      messageController.clear();
+                    },
+                    controller: messageController,
+                    cursorColor: AppColor.blue,
+                    style: style.text.regular,
+                    decoration: InputDecoration(
+                      hintText: "Type here",
+                      hintStyle: style.text.regular,
+                      contentPadding: const EdgeInsets.fromLTRB(0, 10, 5, 10),
+                      // fillColor: Theme.of(context).colorScheme.inverseSurface,
+                      // filled: true,
+                      enabled: true,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      // enabledBorder: OutlineInputBorder(
+                      //   borderSide: const BorderSide(color: AppColor.greyline),
+                      //   borderRadius: BorderRadius.circular(50),
+                      // ),
+                      // focusedBorder: OutlineInputBorder(
+                      //     borderSide: const BorderSide(color: AppColor.greyline),
+                      //     borderRadius: BorderRadius.circular(50)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -86,7 +104,7 @@ class MediaOptionBtn extends StatelessWidget {
         Icons.filter,
         size: 25,
       ),
-      onPressed: () {
+      onPressed: () async {
         showPopover(
           direction: PopoverDirection.top,
           backgroundColor: Theme.of(context).colorScheme.onTertiary,

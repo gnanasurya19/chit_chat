@@ -6,7 +6,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
@@ -14,7 +13,6 @@ import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
 import 'package:chit_chat/firebase_options.dart';
-import 'package:chit_chat/notification/push_notification.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/style.dart';
@@ -28,7 +26,7 @@ import 'package:chit_chat/view/screen/register_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await PuchNotification().initialize();
+  await notificationService.initialize();
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
 
   runApp(const MainApp());

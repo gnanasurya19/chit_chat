@@ -37,7 +37,13 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    // decreaseBadgeCount();
     BlocProvider.of<ChatCubit>(context).onInit(widget.userData.uid!);
+    BlocProvider.of<ChatCubit>(context).changeBadgeCount(
+        widget.userData.lastMessage?.status,
+        widget.userData.lastMessage?.batch);
+    notificationService.cancelGroupNotification(widget.userData.uid!);
+    notificationService.cancelGroupNotification(widget.userData.uid!);
     WidgetsBinding.instance.addObserver(this);
     listScrollController.addListener(listListener);
   }
@@ -219,16 +225,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   void listener(BuildContext context, ChatState state) {
     if (state is EmptyMessage) {
       util.showSnackbar(context, 'cannot send empty msg', 'error');
-    } else if (state is UploadFile) {
-      if (state.fileStatus == FileStatus.preview) {
-        showDialog(
-          barrierDismissible: false,
-          context: context,
-          builder: (context) => FileUploadDialog(
-            state: state,
-          ),
-        );
-      }
+    } else if (state is OpenUploadFileDialog) {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => const FileUploadDialog(),
+      );
     } else if (state is FileUploaded) {
       Navigator.pop(context);
       context.read<ChatCubit>().sendMultipleMessage(
