@@ -40,7 +40,6 @@ class UpdateCubit extends Cubit<UpdateState> {
         List loop = value['assets'];
         for (var element in loop) {
           downloadUrl = element['url'];
-          print(downloadUrl);
         }
       }
       if (currentVersion == '') {

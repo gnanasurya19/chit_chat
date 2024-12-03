@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:chit_chat/network/network_api_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -323,5 +324,10 @@ class ChatCubit extends Cubit<ChatState> {
         mediaType: mediaType,
         filePath: mediaList,
         fileStatus: FileStatus.preview));
+  }
+
+  final record = AudioRecorder();
+  Future<void> recordAudio() async {
+    if (await record.hasPermission()) {}
   }
 }

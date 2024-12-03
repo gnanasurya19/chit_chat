@@ -66,6 +66,7 @@ class ChatTextField extends StatelessWidget {
                     ),
                   ),
                 ),
+                MicButton(),
               ],
             ),
           ),
@@ -87,6 +88,65 @@ class ChatTextField extends StatelessWidget {
               Icons.send_sharp,
               color: AppColor.white,
             )),
+      ],
+    );
+  }
+}
+
+class MicButton extends StatefulWidget {
+  const MicButton({
+    super.key,
+  });
+
+  @override
+  State<MicButton> createState() => _MicButtonState();
+}
+
+class _MicButtonState extends State<MicButton> {
+  bool isListening = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        GestureDetector(
+          onPanDown: (detail) {
+            setState(() {
+              isListening = true;
+            });
+          },
+          onPanEnd: (detail) {
+            setState(() {
+              isListening = false;
+            });
+          },
+          child: Container(
+            margin: EdgeInsets.all(5),
+            padding: EdgeInsets.all(5),
+            decoration:
+                BoxDecoration(shape: BoxShape.circle, color: AppColor.blue),
+            child: Icon(
+              Icons.mic,
+              color: AppColor.white,
+            ),
+          ),
+        ),
+        AnimatedPositioned(
+          duration: Duration(milliseconds: 200),
+          height: isListening ? 100 : 0,
+          width: isListening ? 100 : 0,
+          child: ClipOval(
+            child: Container(
+              color: AppColor.blue,
+              child: Icon(
+                Icons.mic,
+                color: AppColor.white,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
