@@ -73,7 +73,7 @@ class _SearchPageState extends State<SearchPage> {
                         user: state.userList[index],
                         onTap: (user) {
                           BlocProvider.of<ChatCubit>(context)
-                              .onInit(state.userList[index].uid!);
+                              .onInit(state.userList[index].uid!, user);
                           Navigator.pop(context);
                           Navigator.push(context, PageRouteBuilder(
                             pageBuilder:
@@ -111,7 +111,7 @@ class _SearchPageState extends State<SearchPage> {
                         user: state.chatList[index],
                         onTap: (user) {
                           BlocProvider.of<ChatCubit>(context)
-                              .onInit(state.chatList[index].uid!);
+                              .onInit(state.chatList[index].uid!, user);
                           Navigator.pop(context);
                           Navigator.push(context, PageRouteBuilder(
                             pageBuilder:

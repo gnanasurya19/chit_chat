@@ -241,7 +241,7 @@ class GeneralOptions extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .surface
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                           shape: BoxShape.circle,
                         ),
                         child: SVGIcon(

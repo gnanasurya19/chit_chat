@@ -29,8 +29,14 @@ class ProfilePrefTile extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: leadingIcon == 'logout'
-                  ? Theme.of(context).colorScheme.surfaceTint.withOpacity(0.5)
-                  : Theme.of(context).colorScheme.surface.withOpacity(0.5),
+                  ? Theme.of(context)
+                      .colorScheme
+                      .surfaceTint
+                      .withValues(alpha: 0.5)
+                  : Theme.of(context)
+                      .colorScheme
+                      .surface
+                      .withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: SVGIcon(

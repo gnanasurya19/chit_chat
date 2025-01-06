@@ -1,6 +1,6 @@
-// import 'package:cached_network_image/cached_network_image.dart';
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
@@ -38,10 +38,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     // decreaseBadgeCount();
-    BlocProvider.of<ChatCubit>(context).onInit(widget.userData.uid!);
-    BlocProvider.of<ChatCubit>(context).changeBadgeCount(
-        widget.userData.lastMessage?.status,
-        widget.userData.lastMessage?.batch);
+    _chatRoomsCubit = BlocProvider.of<ChatCubit>(context);
+    final lastMessage = widget.userData.lastMessage;
+    _chatRoomsCubit.onInit(widget.userData.uid!, widget.userData);
+    _chatRoomsCubit.changeBadgeCount(lastMessage?.status, lastMessage?.batch);
     notificationService.cancelGroupNotification(widget.userData.uid!);
     notificationService.cancelGroupNotification(widget.userData.uid!);
     WidgetsBinding.instance.addObserver(this);
@@ -68,7 +68,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   @override
   void didChangeDependencies() {
-    _chatRoomsCubit = BlocProvider.of<ChatCubit>(context);
     super.didChangeDependencies();
   }
 
@@ -182,6 +181,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                             );
                           },
                         ),
+
+                        // load more progress indicator
                         if (state.loadingOldchat ?? false)
                           Positioned(
                             top: 10,
@@ -318,12 +319,12 @@ class MessageBubble extends StatelessWidget {
                         fit: BoxFit.contain,
                       ),
                     ),
-                    //static button used as icon
+                    //play button
                     Positioned(
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColor.black.withOpacity(0.4),
+                          color: AppColor.black.withValues(alpha: 0.4),
                         ),
                         padding: const EdgeInsets.all(10),
                         child: const Icon(
@@ -336,6 +337,14 @@ class MessageBubble extends StatelessWidget {
                 ),
               ),
             ],
+            if (message.messageType == 'audio') ...[
+              AudioMsgBubble(
+                cubit: context.read<ChatCubit>(),
+                message: message,
+              ),
+            ],
+
+            // message info
             Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -370,6 +379,111 @@ class MessageBubble extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class AudioMsgBubble extends StatefulWidget {
+  const AudioMsgBubble({
+    super.key,
+    required this.message,
+    required this.cubit,
+  });
+  final MessageModel message;
+  final ChatCubit cubit;
+
+  @override
+  State<AudioMsgBubble> createState() => _AudioMsgBubbleState();
+}
+
+class _AudioMsgBubbleState extends State<AudioMsgBubble>
+    with SingleTickerProviderStateMixin {
+  late final animationController =
+      AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+  bool isPlaying = false;
+  int duration = 0;
+  late PlayerController playerCtl;
+
+  @override
+  void initState() {
+    super.initState();
+    audioSetUp();
+  }
+
+  audioSetUp() async {
+    isPlaying = widget.cubit.activeAudioId == widget.message.id;
+    playerCtl = widget.cubit.getPlayerController(widget.message.id!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    isPlaying = widget.cubit.activeAudioId == widget.message.id;
+    print("$isPlaying isPlaying");
+    print("${widget.cubit.activeAudioId} ${widget.message.id}");
+    if (isPlaying) {
+      animationController.forward();
+    } else {
+      animationController.reverse();
+    }
+
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () async {
+            if (!(widget.message.isAudioDownloaded ?? false)) {
+              widget.cubit.downloadAudio(widget.message.id!);
+            } else if (!isPlaying) {
+              widget.cubit.playAudioPlayer(
+                  widget.message.id!, widget.message.audioUrl!);
+              animationController.forward();
+            } else {
+              widget.cubit.pauseAudio();
+              animationController.reverse();
+            }
+          },
+          style: IconButton.styleFrom(backgroundColor: AppColor.blue),
+          icon: widget.message.isDownloading ?? false
+              ? SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: AppColor.white,
+                  ),
+                )
+              : ((widget.message.isAudioDownloaded ?? false) == false)
+                  ? Icon(
+                      Icons.download,
+                      color: AppColor.white,
+                    )
+                  : AnimatedIcon(
+                      icon: AnimatedIcons.play_pause,
+                      progress: animationController),
+          color: AppColor.white,
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return AudioFileWaveforms(
+                    size: Size(constraints.maxWidth, 30),
+                    enableSeekGesture: true,
+                    waveformType: WaveformType.fitWidth,
+                    playerWaveStyle: PlayerWaveStyle(
+                      fixedWaveColor: AppColor.blackGrey,
+                      liveWaveColor: AppColor.blue,
+                    ),
+                    playerController: playerCtl,
+                    waveformData: widget.message.audioFormData ?? [],
+                  );
+                },
+              ),
+              Text(duration.toString()),
+            ],
+          ),
+        )
+      ],
     );
   }
 }

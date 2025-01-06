@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/network/network_api_service.dart';
 import 'package:chit_chat/notification/notification_service.dart';
@@ -25,7 +26,10 @@ AppStyle get style => MainApp.style;
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 String get currentUserId => firebaseAuth.currentUser!.uid;
 NetworkApiService networkApiService = NetworkApiService();
+
 final notificationService = NotificationService();
+FirebaseRepository firebaseRepository = FirebaseRepository();
+
 String token = "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";
 
 @pragma('vm:entry-point')
@@ -164,7 +168,7 @@ Future<void> onNotificationAction(NotificationResponse details) async {
         .doc(roomId)
         .collection('message');
 
-    removeReadMsg(roomId);
+    removeReadMsgFromNotification(roomId);
     // decreaseBadgeCount();
 
     collection.where('status', isNotEqualTo: 'read').get().then((value) {
@@ -176,7 +180,7 @@ Future<void> onNotificationAction(NotificationResponse details) async {
 }
 
 @pragma('vm:entry-point')
-Future<void> removeReadMsg(String roomId) async {
+Future<void> removeReadMsgFromNotification(String roomId) async {
   List<RemoteMessage> messages = [];
   SharedPreferences sp = await SharedPreferences.getInstance();
   final localnotiMessages = sp.getStringList('notificationMessages') ?? [];

@@ -53,8 +53,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
                 padding: const WidgetStatePropertyAll(EdgeInsets.all(15)),
                 backgroundColor: const WidgetStatePropertyAll(AppColor.blue),
                 foregroundColor: const WidgetStatePropertyAll(AppColor.white),
-                overlayColor:
-                    WidgetStatePropertyAll(AppColor.white.withOpacity(0.3))),
+                overlayColor: WidgetStatePropertyAll(
+                    AppColor.white.withValues(alpha: 0.3))),
             onPressed: () {
               widget.onClick();
             },

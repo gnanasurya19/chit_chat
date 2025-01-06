@@ -14,6 +14,10 @@ class MessageModel {
   String? time;
   String? messageType;
   String? thumbnail;
+  String? audioUrl;
+  List<double>? audioFormData;
+  bool? isAudioDownloaded;
+  bool? isDownloading;
 
   MessageModel({
     this.senderID,
@@ -28,6 +32,9 @@ class MessageModel {
     this.messageType,
     this.id,
     this.thumbnail,
+    this.audioUrl,
+    this.audioFormData,
+    this.isAudioDownloaded,
   });
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
@@ -70,6 +77,10 @@ class MessageModel {
       time = DateFormat('dd/MM/yyyy').format(jsonDate);
       date = DateFormat('MMM dd, yyyy').format(jsonDate);
     }
+    audioUrl = json['audiourl'];
+    if (json['audioFormData'] != null) {
+      audioFormData = List.from(json['audioFormData']);
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -83,6 +94,8 @@ class MessageModel {
     data['batch'] = batch;
     data['messageType'] = messageType;
     data['thumbnail'] = thumbnail;
+    data['audiourl'] = audioUrl;
+    data['audioFormData'] = audioFormData;
     return data;
   }
 }

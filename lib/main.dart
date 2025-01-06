@@ -109,6 +109,7 @@ class _ThemeChangerState extends State<ThemeChanger> {
                   "email": (context) => const EmailVerificationPage(),
                   "profile": (context) => const ProfilePage(),
                   "profile-edit": (context) => const ProfileEditPage(),
+                  // "practice": (context) => const PracticePage(),
                 },
               );
             },

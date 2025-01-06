@@ -75,8 +75,8 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
-      value:
-          SystemUiOverlayStyle(statusBarColor: AppColor.black.withOpacity(0.2)),
+      value: SystemUiOverlayStyle(
+          statusBarColor: AppColor.black.withValues(alpha: 0.2)),
       child: Scaffold(
         backgroundColor: AppColor.black,
         body: BlocConsumer<MediaCubit, MediaState>(
@@ -136,7 +136,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                             opacity: state.iscontentVisible ? 1 : 0,
                             child: SafeArea(
                               child: Container(
-                                color: AppColor.black.withOpacity(0.2),
+                                color: AppColor.black.withValues(alpha: 0.2),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -220,7 +220,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                           child: IconButton.filled(
                             style: IconButton.styleFrom(
                                 backgroundColor:
-                                    AppColor.black.withOpacity(0.4)),
+                                    AppColor.black.withValues(alpha: 0.4)),
                             onPressed: () {
                               vpController!.play();
                               Future.delayed(const Duration(seconds: 3), () {
@@ -238,7 +238,8 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                       if (isVideoPlaying && state.iscontentVisible)
                         IconButton.filled(
                           style: IconButton.styleFrom(
-                              backgroundColor: AppColor.black.withOpacity(0.4)),
+                              backgroundColor:
+                                  AppColor.black.withValues(alpha: 0.4)),
                           onPressed: () {
                             vpController!.pause();
                           },
@@ -253,7 +254,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                           width: 45,
                           height: 45,
                           child: CircularProgressIndicator(
-                            color: AppColor.white.withOpacity(0.5),
+                            color: AppColor.white.withValues(alpha: 0.5),
                           ),
                         ),
                     ],

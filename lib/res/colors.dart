@@ -24,7 +24,7 @@ class MyAppTheme {
   static ThemeData lightTheme = ThemeData(
     textSelectionTheme: TextSelectionThemeData(
         cursorColor: AppColor.blue,
-        selectionColor: AppColor.blue.withOpacity(0.5),
+        selectionColor: AppColor.blue.withValues(alpha: 0.5),
         selectionHandleColor: AppColor.blue),
     brightness: Brightness.light,
     fontFamily: 'Roboto-Regular',
@@ -45,7 +45,7 @@ class MyAppTheme {
   static ThemeData darkTheme = ThemeData(
     textSelectionTheme: TextSelectionThemeData(
         cursorColor: AppColor.blue,
-        selectionColor: AppColor.blue.withOpacity(0.5),
+        selectionColor: AppColor.blue.withValues(alpha: 0.5),
         selectionHandleColor: AppColor.blue),
     brightness: Brightness.dark,
     fontFamily: 'Roboto-Regular',

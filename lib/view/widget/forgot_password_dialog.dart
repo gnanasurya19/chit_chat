@@ -43,7 +43,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
               decoration: InputDecoration(
                   hintText: 'Please enter email',
                   filled: true,
-                  fillColor: AppColor.blue.withOpacity(0.05),
+                  fillColor: AppColor.blue.withValues(alpha: 0.05),
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                   enabled: true,

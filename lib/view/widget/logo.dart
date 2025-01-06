@@ -19,7 +19,7 @@ class Logo extends StatelessWidget {
                 color: Theme.of(context)
                     .colorScheme
                     .tertiaryContainer
-                    .withOpacity(0.2)),
+                    .withValues(alpha: 0.2)),
           ]),
       height: MediaQuery.of(context).size.height * 0.1,
       padding: const EdgeInsets.all(10.0),

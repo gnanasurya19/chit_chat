@@ -9,10 +9,23 @@ import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/view/widget/video_preview.dart';
 
-class FileUploadDialog extends StatelessWidget {
+class FileUploadDialog extends StatefulWidget {
   const FileUploadDialog({
     super.key,
   });
+
+  @override
+  State<FileUploadDialog> createState() => _FileUploadDialogState();
+}
+
+class _FileUploadDialogState extends State<FileUploadDialog> {
+  late final ChatCubit chatCubit;
+  @override
+  void initState() {
+    chatCubit = context.read<ChatCubit>();
+    chatCubit.emitfileUploadState();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +139,7 @@ class ImageCollageWidget extends StatelessWidget {
               child: IconButton(
                   style: IconButton.styleFrom(
                       visualDensity: VisualDensity.compact,
-                      backgroundColor: AppColor.black.withOpacity(0.3),
+                      backgroundColor: AppColor.black.withValues(alpha: 0.3),
                       foregroundColor: AppColor.white),
                   onPressed: () {
                     if (medialist.length == 1) {

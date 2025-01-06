@@ -12,6 +12,8 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:ui' as ui;
 
+import 'package:path_provider/path_provider.dart';
+
 class Util {
   PageRouteBuilder<dynamic> pageTransition(Widget name) {
     return PageRouteBuilder(
@@ -239,7 +241,8 @@ class Util {
     Uint8List bytes = await chachedFile.readAsBytes();
 
     // generate image name
-    final String imageName = DateFormat('yyyyMMddhhmm').format(DateTime.now());
+    final String imageName =
+        DateFormat('yyyyMMddhhmmss').format(DateTime.now());
 
     //generate file
     File newFile =
@@ -309,5 +312,20 @@ class Util {
   Future<Uint8List> getProfileFromLocal(String url) async {
     final chachedFile = await DefaultCacheManager().getSingleFile(url);
     return await chachedFile.readAsBytes();
+  }
+
+  Directory? directory;
+  Future<String?> checkCache(String path) async {
+    directory = directory ?? await getApplicationDocumentsDirectory();
+    String fullPath = directory!.path + Platform.pathSeparator + path;
+    if (await File(fullPath).exists()) {
+      return fullPath;
+    }
+    return null;
+  }
+
+  Future<String> downloadtoCache(String audioUrl, String path) async {
+    final localPath = await networkApiService.downloadAudio(audioUrl, path);
+    return localPath;
   }
 }

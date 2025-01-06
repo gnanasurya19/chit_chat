@@ -1,18 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:chit_chat/network/network_api_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
-import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/common_instants.dart';
@@ -23,20 +27,22 @@ class ChatCubit extends Cubit<ChatState> {
   ChatCubit() : super(ChatError());
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  FirebaseRepository firebaseRepository = FirebaseRepository();
-  // FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
-  NetworkApiService apiService = NetworkApiService();
   List<MessageModel> messageList = [];
   String chatRoomID = '';
   String receiverID = '';
   DocumentSnapshot<Map<String, dynamic>>? lastDocument;
   StreamSubscription? chatStream;
   String? thumbnailUrl;
+  late UserData user;
 
-  Future onInit(String receiverID) async {
+  Future onInit(String receiverID, UserData user) async {
+    // To display notification properly
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', receiverID);
+
     this.receiverID = receiverID;
+    this.user = user;
+
     final String senderID = currentUserId;
 
     //create unique id for two user
@@ -44,18 +50,19 @@ class ChatCubit extends Cubit<ChatState> {
     chatIds.sort();
     chatRoomID = chatIds.join('');
 
-    await removeReadMsg(chatRoomID);
+    await removeReadMsgFromNotification(chatRoomID);
 
     //get chat message from firebase
 
-    await firebaseFirestore
+    var query = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
         .orderBy('timestamp', descending: true)
         .limit(20)
-        .get()
-        .then((element) {
+        .get();
+
+    await query.then((element) {
       populateList(element.docs);
     });
     listenNewmsg();
@@ -131,18 +138,34 @@ class ChatCubit extends Cubit<ChatState> {
     } else {
       lastDocument = element.last;
       messageList = [];
-      for (var e in element) {
-        final MessageModel message = MessageModel.fromJson(e.data(), e.id);
-        messageList.add(message);
-      }
+      messageList =
+          element.map((e) => MessageModel.fromJson(e.data(), e.id)).toList();
       emit(ChatReady(messageList: messageList));
-      for (var message in messageList) {
-        if (message.receiverID == firebaseAuth.currentUser!.uid &&
-            (message.status == 'unread' || message.status == 'delivered')) {
-          updateChatStatus(message);
-        }
+
+      audioPlayerInitialilze();
+
+      final filteredList = messageList.where((message) =>
+          message.receiverID == firebaseAuth.currentUser!.uid &&
+          (message.status == 'unread' || message.status == 'delivered'));
+
+      for (var message in filteredList) {
+        updateChatStatus(message);
       }
     }
+  }
+
+  audioPlayerInitialilze() async {
+    await Future.forEach(messageList, (element) async {
+      if (element.messageType == 'audio') {
+        await util.checkCache(element.audioUrl!).then((value) async {
+          if (value != null) {
+            element.isAudioDownloaded = true;
+            element.audioUrl = value;
+          }
+        });
+      }
+    });
+    emit(ChatReady(messageList: messageList));
   }
 
   Future updateChatStatus(MessageModel message) async {
@@ -151,7 +174,6 @@ class ChatCubit extends Cubit<ChatState> {
         .doc(chatRoomID)
         .collection('message')
         .doc(message.id);
-
     await messageRef.update({"status": "read", "batch": 0});
     message.status = 'read';
     emit(ChatReady(messageList: messageList));
@@ -217,7 +239,8 @@ class ChatCubit extends Cubit<ChatState> {
     emit(FileUploaded(fileUrl: fileUrls, mediaType: mediatype));
   }
 
-  Future sendMessage(String message, UserData receiver, String msgType) async {
+  Future sendMessage(String message, UserData receiver, String msgType,
+      {String? audioPath, List<double>? audiowave}) async {
     if (message.isNotEmpty) {
       final String senderID = firebaseAuth.currentUser!.uid;
 
@@ -250,6 +273,8 @@ class ChatCubit extends Cubit<ChatState> {
         timestamp: Timestamp.now(),
         messageType: msgType,
         thumbnail: thumbnailUrl,
+        audioUrl: audioPath,
+        audioFormData: audiowave,
       );
 
       //posting to firebase
@@ -269,7 +294,8 @@ class ChatCubit extends Cubit<ChatState> {
         });
 
         if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
-          apiService.sendMessage(receiver, newMessage, msgId, chatRoomID);
+          networkApiService.sendMessage(
+              receiver, newMessage, msgId, chatRoomID);
         }
       });
     }
@@ -293,23 +319,27 @@ class ChatCubit extends Cubit<ChatState> {
   List<String> mediaList = [];
 
   Future openGallery() async {
-    util.captureMultiImage().then((value) {
+    util.captureMultiImage().then((value) async {
       if (value != null) {
         mediaList = value.map((e) => e.path).toList();
         emit(OpenUploadFileDialog());
-        emit(UploadFile(
-            mediaType: MediaType.image,
-            filePath: mediaList,
-            fileStatus: FileStatus.preview));
       }
     });
   }
 
+  emitfileUploadState() {
+    emit(UploadFile(
+        mediaType: MediaType.image,
+        filePath: mediaList,
+        fileStatus: FileStatus.preview));
+  }
+
   Future openVideoGallery() async {
-    util.captureVideo().then((value) {
+    util.captureVideo().then((value) async {
       if (value != null) {
         mediaList = [value.path];
         emit(OpenUploadFileDialog());
+        await Future.delayed(Duration(milliseconds: 400));
         emit(UploadFile(
             mediaType: MediaType.video,
             filePath: mediaList,
@@ -326,8 +356,128 @@ class ChatCubit extends Cubit<ChatState> {
         fileStatus: FileStatus.preview));
   }
 
+  // recording
   final record = AudioRecorder();
-  Future<void> recordAudio() async {
-    if (await record.hasPermission()) {}
+  Future<bool> checkMicPermission() async {
+    final hasPermission = await record.hasPermission();
+    return hasPermission;
+  }
+
+  cancelRecording() {
+    record.cancel();
+  }
+
+  Future<void> startRecording() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      await record.cancel();
+
+      final String audioPath =
+          "${DateFormat('yyyyMMddHHmmsS').format(DateTime.now())}_CC_audioFile";
+
+      record.start(
+          RecordConfig(
+              bitRate: 28000,
+              sampleRate: 44100,
+              noiseSuppress: true,
+              encoder: AudioEncoder.wav,
+              androidConfig:
+                  AndroidRecordConfig(audioSource: AndroidAudioSource.mic)),
+          path: p.join(directory.path, '$audioPath.wav'));
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  stopRecording() async {
+    final recordedAudioPath = await record.stop();
+    if (recordedAudioPath != null) {
+      final audioUrl = await firebaseRepository.uploadFile(
+          XFile(recordedAudioPath), 'chat_media', 'audio/wav');
+
+      final audioPathName =
+          recordedAudioPath.split(Platform.pathSeparator).last;
+      final controller = PlayerController();
+      final data = await controller.extractWaveformData(
+          path: recordedAudioPath, noOfSamples: 40);
+      sendMessage(audioUrl, user, 'audio',
+          audioPath: audioPathName, audiowave: data);
+    }
+  }
+
+  PlayerController? playingController;
+  String? activeAudioId;
+  final Map<String, PlayerController> audioPlayers = {};
+  final Map<String, bool> isPrepared = {};
+
+  PlayerController getPlayerController(String audioID) {
+    if (!audioPlayers.containsKey(audioID)) {
+      audioPlayers[audioID] = PlayerController();
+    }
+    return audioPlayers[audioID]!;
+  }
+
+  playAudioPlayer(String audioID, String audioPath) async {
+    if (activeAudioId != null && activeAudioId != audioID) {
+      _stopActiveAudio();
+    }
+
+    final controller = getPlayerController(audioID);
+
+    print('$controller controller');
+    print('${controller.playerKey} controller.playerKey');
+    print(controller.playerState);
+    print(controller.onCurrentDurationChanged);
+
+    print("$audioPath audioPath");
+
+    if (!isPrepared.containsKey(audioID)) {
+      await controller.preparePlayer(path: audioPath);
+      controller.setFinishMode(finishMode: FinishMode.pause);
+      controller.onPlayerStateChanged.listen(
+        (event) {
+          if (event.isPaused) {
+            activeAudioId = null;
+            emit(ChatReady(messageList: messageList));
+          }
+        },
+      );
+      isPrepared[audioID] = true;
+    }
+    await controller.startPlayer();
+    activeAudioId = audioID;
+    emit(ChatReady(messageList: messageList));
+  }
+
+  void pauseAudio() {
+    if (activeAudioId != null) {
+      final controller = getPlayerController(activeAudioId!);
+      controller.pausePlayer();
+      activeAudioId = null;
+      emit(ChatReady(messageList: messageList));
+    }
+  }
+
+  void _stopActiveAudio() async {
+    if (activeAudioId != null) {
+      final controller = getPlayerController(activeAudioId!);
+      await controller.pausePlayer();
+      activeAudioId = null;
+      emit(ChatReady(messageList: messageList));
+    }
+  }
+
+  downloadAudio(String chatId) async {
+    final messageIndex =
+        messageList.indexWhere((element) => element.id == chatId);
+    final audioMessage = messageList[messageIndex];
+    audioMessage.isDownloading = true;
+    emit(ChatReady(messageList: messageList));
+    final localPath = await networkApiService.downloadAudio(
+        audioMessage.message!, audioMessage.audioUrl!);
+    audioMessage.audioUrl = localPath;
+    audioMessage.isDownloading = false;
+    messageList[messageIndex].isAudioDownloaded = true;
+    emit(ChatReady(messageList: messageList));
   }
 }

@@ -4,10 +4,12 @@ import 'dart:io';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/common_instants.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
+import 'package:path_provider/path_provider.dart';
 
 class NetworkApiService {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -85,14 +87,17 @@ class NetworkApiService {
     }
   }
 
-  Future<Uint8List?> getGetApiRespone(String url) async {
-    try {
-      final response =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 50));
-      return response.bodyBytes;
-    } catch (e) {
-      return null;
-    }
+  downloadAudio(String url, String savePath) async {
+    final directory = await getApplicationDocumentsDirectory();
+    String fullPath = directory.path + Platform.pathSeparator + savePath;
+
+    final Dio dio = Dio();
+    await dio.download(
+      url,
+      fullPath,
+      onReceiveProgress: (count, total) => print(count),
+    );
+    return fullPath;
   }
 
   dynamic returnResponse(http.Response response) {

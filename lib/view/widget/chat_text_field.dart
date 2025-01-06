@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
@@ -74,8 +76,8 @@ class ChatTextField extends StatelessWidget {
         ElevatedButton(
             style: ButtonStyle(
                 backgroundColor: const WidgetStatePropertyAll(AppColor.blue),
-                overlayColor:
-                    WidgetStatePropertyAll(AppColor.white.withOpacity(0.2)),
+                overlayColor: WidgetStatePropertyAll(
+                    AppColor.white.withValues(alpha: 0.2)),
                 padding: const WidgetStatePropertyAll(EdgeInsets.all(12)),
                 shape: const WidgetStatePropertyAll(
                     CircleBorder(eccentricity: 0))),
@@ -97,14 +99,13 @@ class MicButton extends StatefulWidget {
   const MicButton({
     super.key,
   });
-
   @override
   State<MicButton> createState() => _MicButtonState();
 }
 
 class _MicButtonState extends State<MicButton> {
   bool isListening = false;
-
+  double? draggedPosition;
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -112,14 +113,45 @@ class _MicButtonState extends State<MicButton> {
       alignment: Alignment.center,
       children: [
         GestureDetector(
-          onPanDown: (detail) {
+          onLongPressMoveUpdate: (details) {
+            if (details.localPosition.dx < 0) {
+              setState(() {
+                draggedPosition = details.localPosition.dx;
+              });
+            }
+            if (draggedPosition != null && draggedPosition! < -150) {
+              setState(() {
+                draggedPosition = null;
+                isListening = false;
+                context.read<ChatCubit>().cancelRecording();
+              });
+            }
+          },
+          onTap: () {
+            showPopover(
+              barrierColor: Colors.transparent,
+              context: context,
+              bodyBuilder: (context) {
+                return Container(
+                  padding: EdgeInsets.all(10),
+                  child: Text('Press And Hold to recoed Audio'),
+                );
+              },
+            );
+          },
+          onLongPress: () async {
+            if (await ChatCubit().checkMicPermission()) {
+              context.read<ChatCubit>().startRecording();
+            }
             setState(() {
               isListening = true;
             });
           },
-          onPanEnd: (detail) {
+          onLongPressEnd: (details) {
+            context.read<ChatCubit>().stopRecording();
             setState(() {
               isListening = false;
+              draggedPosition = null;
             });
           },
           child: Container(
@@ -134,9 +166,10 @@ class _MicButtonState extends State<MicButton> {
           ),
         ),
         AnimatedPositioned(
-          duration: Duration(milliseconds: 200),
-          height: isListening ? 100 : 0,
-          width: isListening ? 100 : 0,
+          left: draggedPosition,
+          duration: Duration(milliseconds: 100),
+          height: isListening ? 70 : 0,
+          width: isListening ? 70 : 0,
           child: ClipOval(
             child: Container(
               color: AppColor.blue,
@@ -147,8 +180,66 @@ class _MicButtonState extends State<MicButton> {
             ),
           ),
         ),
+        if (isListening) TimeDurationWidget(),
       ],
     );
+  }
+}
+
+class TimeDurationWidget extends StatefulWidget {
+  const TimeDurationWidget({
+    super.key,
+  });
+
+  @override
+  State<TimeDurationWidget> createState() => _TimeDurationWidgetState();
+}
+
+class _TimeDurationWidgetState extends State<TimeDurationWidget>
+    with SingleTickerProviderStateMixin {
+  late final fadeController =
+      AnimationController(vsync: this, duration: Duration(milliseconds: 800));
+  int timer = 0;
+  late final Timer countDown;
+  @override
+  void initState() {
+    super.initState();
+    countDown = Timer.periodic(Duration(seconds: 1), (value) {
+      setState(() {
+        timer++;
+      });
+    });
+    fadeController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    countDown.cancel();
+    fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+        top: -50,
+        child: Container(
+          decoration: BoxDecoration(
+              color: AppColor.blue,
+              borderRadius: BorderRadius.circular(style.radius.sm)),
+          padding: EdgeInsets.all(5),
+          child: Row(
+            children: [
+              FadeTransition(
+                  opacity: fadeController,
+                  child: Icon(Icons.mic,
+                      color: AppColor.lightgreyText, size: style.icon.rg)),
+              Text(
+                  "${(timer ~/ 60).toString().padLeft(2, '0')}:${(timer % 60).toString().padLeft(2, '0')}",
+                  style: style.text.regular.copyWith(color: AppColor.white)),
+            ],
+          ),
+        ));
   }
 }
 

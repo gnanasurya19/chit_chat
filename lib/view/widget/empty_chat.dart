@@ -52,7 +52,7 @@ class _EmptyChatState extends State<EmptyChat>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
-              BoxShadow(color: AppColor.white.withOpacity(0.5)),
+              BoxShadow(color: AppColor.white.withValues(alpha: 0.5)),
             ],
           ),
           child: Column(

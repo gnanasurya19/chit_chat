@@ -62,7 +62,8 @@ class _VideoPreviewState extends State<VideoPreview> {
               Positioned(
                 child: IconButton.filled(
                   style: IconButton.styleFrom(
-                      disabledBackgroundColor: AppColor.black.withOpacity(0.4)),
+                      disabledBackgroundColor:
+                          AppColor.black.withValues(alpha: 0.4)),
                   onPressed: null,
                   icon: const Icon(
                     Icons.play_arrow_rounded,

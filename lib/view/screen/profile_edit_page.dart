@@ -259,7 +259,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             TextButton(
               style: TextButton.styleFrom(
                   backgroundColor: AppColor.greyText,
-                  disabledBackgroundColor: AppColor.black.withOpacity(0.1),
+                  disabledBackgroundColor:
+                      AppColor.black.withValues(alpha: 0.1),
                   foregroundColor: AppColor.white),
               onPressed: (isEdited || isProfileEdited)
                   ? () {
@@ -282,7 +283,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             TextButton(
               style: TextButton.styleFrom(
                   backgroundColor: AppColor.blue,
-                  disabledBackgroundColor: AppColor.blue.withOpacity(0.3),
+                  disabledBackgroundColor: AppColor.blue.withValues(alpha: 0.3),
                   foregroundColor: AppColor.white),
               onPressed: (isEdited || isProfileEdited)
                   ? () {

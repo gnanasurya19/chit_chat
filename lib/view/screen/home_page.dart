@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     user: state.userList[index],
                     onTap: (userData) {
                       BlocProvider.of<ChatCubit>(context)
-                          .onInit(state.userList[index].uid!);
+                          .onInit(state.userList[index].uid!, userData);
                       action.call();
                     },
                   ),

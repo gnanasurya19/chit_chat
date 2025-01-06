@@ -69,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
         body: AnnotatedRegion(
           value: SystemUiOverlayStyle(
               statusBarColor:
-                  Theme.of(context).colorScheme.surface.withOpacity(0.5)),
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.5)),
           child: SafeArea(
             child: SingleChildScrollView(
               child: Container(
@@ -396,7 +396,7 @@ class SignInBtn extends StatelessWidget {
       left: state.status == PageStatus.signIn ? 0 : buttonPosition,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-            overlayColor: AppColor.black.withOpacity(0.05),
+            overlayColor: AppColor.black.withValues(alpha: 0.05),
             foregroundColor: AppColor.black,
             side: const BorderSide(color: AppColor.greyText),
             padding: const EdgeInsets.all(15),
