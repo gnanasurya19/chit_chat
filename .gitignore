@@ -41,3 +41,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Private key
+.chit-chat-19491-a3bf7aad3fbf.json

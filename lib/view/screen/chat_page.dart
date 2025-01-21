@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 // import '../widget/file_upload_dialog.dart';
 
 class ChatPage extends StatefulWidget {
@@ -31,7 +32,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
-  final ScrollController listScrollController = ScrollController();
+  // final ScrollController listScrollController = ScrollController();
+  final listItemCtl = ItemScrollController();
   late ChatCubit _chatRoomsCubit;
 
   @override
@@ -45,15 +47,15 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     notificationService.cancelGroupNotification(widget.userData.uid!);
     notificationService.cancelGroupNotification(widget.userData.uid!);
     WidgetsBinding.instance.addObserver(this);
-    listScrollController.addListener(listListener);
+    // listScrollController.addListener(listListener);
   }
 
   void listListener() {
-    if (listScrollController.position.atEdge &&
-        listScrollController.position.pixels ==
-            listScrollController.position.maxScrollExtent) {
-      BlocProvider.of<ChatCubit>(context).loadMore();
-    }
+    // if (listScrollController.position.atEdge &&
+    //     listScrollController.position.pixels ==
+    //         listScrollController.position.minScrollExtent) {
+    //   BlocProvider.of<ChatCubit>(context).loadMore();
+    // }
   }
 
   @override
@@ -125,12 +127,17 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 ),
               ),
             const Gap(10),
-            Text(
-                widget.userData.userName!.replaceRange(0, 1,
-                    widget.userData.userName!.split('').first.toUpperCase()),
-                style: style.text.boldMedium.copyWith(
-                  color: AppColor.white,
-                )),
+            InkWell(
+              onTap: () {
+                context.read<ChatCubit>().justEmit();
+              },
+              child: Text(
+                  widget.userData.userName!.replaceRange(0, 1,
+                      widget.userData.userName!.split('').first.toUpperCase()),
+                  style: style.text.boldMedium.copyWith(
+                    color: AppColor.white,
+                  )),
+            ),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -149,11 +156,13 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 builder: (context, state) {
                   if (state is ChatReady) {
                     return Stack(
-                      alignment: Alignment.center,
+                      alignment: Alignment.bottomCenter,
                       children: [
-                        ListView.builder(
-                          reverse: true,
-                          controller: listScrollController,
+                        ScrollablePositionedList.builder(
+                          // reverse: true,
+                          // shrinkWrap: true,
+                          // controller: listScrollController,
+                          itemScrollController: listItemCtl,
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           itemCount: state.messageList.length,
                           itemBuilder: (context, index) {
@@ -224,6 +233,23 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   }
 
   void listener(BuildContext context, ChatState state) {
+    if (state is ChatReady) {
+      print(state);
+      WidgetsBinding.instance.addPostFrameCallback((timestamp) {
+        if (listItemCtl.isAttached) {
+          print(listItemCtl.isAttached);
+          try {
+            listItemCtl.scrollTo(
+                duration: Duration(milliseconds: 1),
+                index: state.messageList.isNotEmpty
+                    ? state.messageList.length
+                    : 0);
+          } on Exception catch (e) {
+            print(e);
+          }
+        }
+      });
+    }
     if (state is EmptyMessage) {
       util.showSnackbar(context, 'cannot send empty msg', 'error');
     } else if (state is OpenUploadFileDialog) {
@@ -339,6 +365,7 @@ class MessageBubble extends StatelessWidget {
             ],
             if (message.messageType == 'audio') ...[
               AudioMsgBubble(
+                key: Key(message.id ?? ''),
                 cubit: context.read<ChatCubit>(),
                 message: message,
               ),
@@ -418,8 +445,7 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
   @override
   Widget build(BuildContext context) {
     isPlaying = widget.cubit.activeAudioId == widget.message.id;
-    print("$isPlaying isPlaying");
-    print("${widget.cubit.activeAudioId} ${widget.message.id}");
+
     if (isPlaying) {
       animationController.forward();
     } else {

@@ -79,11 +79,18 @@ class UserCard extends StatelessWidget {
                         const Gap(5),
                       ],
                       if (user.lastMessage!.messageType != 'text') ...[
-                        const Icon(
-                          Icons.image,
-                          size: 20,
-                          color: AppColor.greyText,
-                        ),
+                        if (user.lastMessage?.messageType == 'image')
+                          const Icon(
+                            Icons.image,
+                            size: 20,
+                            color: AppColor.greyText,
+                          )
+                        else if (user.lastMessage?.messageType == 'audio')
+                          Icon(
+                            Icons.headphones,
+                            size: 20,
+                            color: AppColor.greyText,
+                          ),
                         const Gap(5),
                         Text(
                           '${user.lastMessage!.messageType}',

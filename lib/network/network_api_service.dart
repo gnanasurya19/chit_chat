@@ -16,8 +16,8 @@ class NetworkApiService {
 
   Future sendMessage(UserData userData, MessageModel message, String msgId,
       String chatRoomId) async {
-    final jsonCredentials =
-        await rootBundle.loadString('assets/chit-chat-19491-a3bf7aad3fbf.json');
+    final jsonCredentials = await rootBundle
+        .loadString('assets/.chit-chat-19491-a3bf7aad3fbf.json');
     final creds = auth.ServiceAccountCredentials.fromJson(jsonCredentials);
 
     final client = await auth.clientViaServiceAccount(
@@ -73,6 +73,7 @@ class NetworkApiService {
           "X-GitHub-Api-Version": "2022-11-28"
         },
       ).timeout(const Duration(seconds: 10));
+      print("${response.statusCode} response.statusCode");
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {

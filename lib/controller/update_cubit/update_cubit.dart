@@ -36,6 +36,8 @@ class UpdateCubit extends Cubit<UpdateState> {
             }
           }
         });
+
+        print("$value latestVersion");
         latestVersion = value["tag_name"];
         List loop = value['assets'];
         for (var element in loop) {
@@ -56,6 +58,7 @@ class UpdateCubit extends Cubit<UpdateState> {
       }
     }).catchError((e) {
       if (type == 'manual') {
+        print(e.toString());
         emit(NetworkErrorState());
       }
     });

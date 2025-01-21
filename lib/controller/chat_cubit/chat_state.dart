@@ -27,6 +27,12 @@ final class FileUploaded extends ChatActionState {
   FileUploaded({required this.mediaType, required this.fileUrl});
 }
 
+final class ChatReadyActionState extends ChatActionState {
+  final int chatlength;
+
+  ChatReadyActionState({required this.chatlength});
+}
+
 final class ChatReady extends ChatState {
   final bool? loadingList;
   final bool? loadingOldchat;
