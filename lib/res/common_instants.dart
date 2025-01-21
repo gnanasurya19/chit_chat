@@ -30,8 +30,6 @@ NetworkApiService networkApiService = NetworkApiService();
 final notificationService = NotificationService();
 FirebaseRepository firebaseRepository = FirebaseRepository();
 
-String token = "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";
-
 @pragma('vm:entry-point')
 Future<void> onBackgroundMsg(RemoteMessage message) async {
   List<RemoteMessage> messages = [];

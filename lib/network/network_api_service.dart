@@ -63,16 +63,18 @@ class NetworkApiService {
 
   Future checkUpdate() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-          "https://api.github.com/repos/gnanasurya19/chit_chat/releases/latest",
-        ),
-        headers: {
-          'Authorization': 'Bearer $token',
-          "Accept": "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28"
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse(
+              "https://api.github.com/repos/gnanasurya19/chit_chat/releases/latest",
+            ),
+            // headers: {
+            //   'Authorization': 'Bearer $token',
+            //   "Accept": "application/vnd.github+json",
+            //   "X-GitHub-Api-Version": "2022-11-28"
+            // },
+          )
+          .timeout(const Duration(seconds: 10));
       print("${response.statusCode} response.statusCode");
       if (response.statusCode == 200) {
         return jsonDecode(response.body);

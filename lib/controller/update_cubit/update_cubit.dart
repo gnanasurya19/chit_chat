@@ -84,11 +84,11 @@ class UpdateCubit extends Cubit<UpdateState> {
           downloadUrl,
           "${path.path}${Platform.pathSeparator}chit_chat$latestVersion.apk",
           deleteOnError: true,
-          options: Options(headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/octet-stream',
-            "X-GitHub-Api-Version": "2022-11-28",
-          }),
+          // options: Options(headers: {
+          //   'Authorization': 'Bearer $token',
+          //   'Accept': 'application/octet-stream',
+          //   "X-GitHub-Api-Version": "2022-11-28",
+          // }),
           onReceiveProgress: (count, total) {
             double progress = count / total;
             emit(DownloadState(
