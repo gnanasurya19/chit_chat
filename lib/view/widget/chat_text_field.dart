@@ -156,19 +156,19 @@ class _MicButtonState extends State<MicButton> {
             );
           },
           onLongPress: () async {
-            if (await ChatCubit().checkMicPermission()) {
-              context.read<ChatCubit>().startRecording();
-            }
+            await context.read<ChatCubit>().startRecording();
             setState(() {
               isListening = true;
             });
           },
           onLongPressEnd: (details) {
-            context.read<ChatCubit>().stopRecording();
-            setState(() {
-              isListening = false;
-              draggedPosition = null;
-            });
+            if (isListening) {
+              context.read<ChatCubit>().stopRecording();
+              setState(() {
+                isListening = false;
+                draggedPosition = null;
+              });
+            }
           },
           child: Container(
             margin: EdgeInsets.all(5),

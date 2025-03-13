@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
@@ -32,8 +34,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
-  // final ScrollController listScrollController = ScrollController();
-  final listItemCtl = ItemScrollController();
+  final ScrollController listScrollController = ScrollController();
   late ChatCubit _chatRoomsCubit;
 
   @override
@@ -47,15 +48,15 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     notificationService.cancelGroupNotification(widget.userData.uid!);
     notificationService.cancelGroupNotification(widget.userData.uid!);
     WidgetsBinding.instance.addObserver(this);
-    // listScrollController.addListener(listListener);
+    listScrollController.addListener(listListener);
   }
 
   void listListener() {
-    // if (listScrollController.position.atEdge &&
-    //     listScrollController.position.pixels ==
-    //         listScrollController.position.minScrollExtent) {
-    //   BlocProvider.of<ChatCubit>(context).loadMore();
-    // }
+    if (listScrollController.position.atEdge &&
+        listScrollController.position.pixels ==
+            listScrollController.position.maxScrollExtent) {
+      BlocProvider.of<ChatCubit>(context).loadMore();
+    }
   }
 
   @override
@@ -158,11 +159,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     return Stack(
                       alignment: Alignment.bottomCenter,
                       children: [
-                        ScrollablePositionedList.builder(
-                          // reverse: true,
+                        ListView.builder(
+                          reverse: true,
                           // shrinkWrap: true,
-                          // controller: listScrollController,
-                          itemScrollController: listItemCtl,
+                          controller: listScrollController,
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           itemCount: state.messageList.length,
                           itemBuilder: (context, index) {
@@ -233,23 +233,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   }
 
   void listener(BuildContext context, ChatState state) {
-    if (state is ChatReady) {
-      print(state);
-      WidgetsBinding.instance.addPostFrameCallback((timestamp) {
-        if (listItemCtl.isAttached) {
-          print(listItemCtl.isAttached);
-          try {
-            listItemCtl.scrollTo(
-                duration: Duration(milliseconds: 1),
-                index: state.messageList.isNotEmpty
-                    ? state.messageList.length
-                    : 0);
-          } on Exception catch (e) {
-            print(e);
-          }
-        }
-      });
-    }
     if (state is EmptyMessage) {
       util.showSnackbar(context, 'cannot send empty msg', 'error');
     } else if (state is OpenUploadFileDialog) {
@@ -428,8 +411,9 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
   late final animationController =
       AnimationController(vsync: this, duration: Duration(milliseconds: 500));
   bool isPlaying = false;
-  int duration = 0;
+  String duration = '0:00';
   late PlayerController playerCtl;
+  StreamSubscription<int>? audioDurationSubscription;
 
   @override
   void initState() {
@@ -437,15 +421,25 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
     audioSetUp();
   }
 
+  @override
+  void dispose() {
+    if (audioDurationSubscription != null) audioDurationSubscription!.cancel();
+    super.dispose();
+  }
+
   audioSetUp() async {
     isPlaying = widget.cubit.activeAudioId == widget.message.id;
     playerCtl = widget.cubit.getPlayerController(widget.message.id!);
+    if (mounted) {
+      audioDurationSubscription = playerCtl.onCurrentDurationChanged.listen(
+        (event) => widget.cubit.changeAudioDuration(widget.message, event),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     isPlaying = widget.cubit.activeAudioId == widget.message.id;
-
     if (isPlaying) {
       animationController.forward();
     } else {
@@ -489,6 +483,7 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
         ),
         Expanded(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -505,7 +500,8 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
                   );
                 },
               ),
-              Text(duration.toString()),
+              Text(
+                  "${widget.message.audioCurrentDuration}/${widget.message.audioDuration}"),
             ],
           ),
         )

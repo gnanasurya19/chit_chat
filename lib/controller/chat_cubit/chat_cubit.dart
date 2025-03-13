@@ -146,11 +146,15 @@ class ChatCubit extends Cubit<ChatState> {
     } else {
       lastDocument = element.first;
 
-      messageList = [];
-      messageList =
-          element.map((e) => MessageModel.fromJson(e.data(), e.id)).toList();
+      // messageList = [];
+      messageList = element
+          .map((e) => MessageModel.fromJson(e.data(), e.id))
+          .toList()
+          .reversed
+          .toList();
 
       audioPlayerInitialilze();
+
       emit(ChatReady(messageList: messageList));
 
       final filteredList = messageList.where((message) =>
@@ -250,7 +254,7 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future sendMessage(String message, UserData receiver, String msgType,
-      {String? audioPath, List<double>? audiowave}) async {
+      {String? audioPath, List<double>? audiowave, int? audioDuration}) async {
     if (message.isNotEmpty) {
       final String senderID = firebaseAuth.currentUser!.uid;
 
@@ -274,18 +278,18 @@ class ChatCubit extends Cubit<ChatState> {
 
       //new message to send
       final MessageModel newMessage = MessageModel(
-        message: message,
-        receiverID: receiver.uid,
-        senderEmail: firebaseAuth.currentUser!.email!,
-        senderID: senderID,
-        batch: batchCount + 1,
-        status: 'unread',
-        timestamp: Timestamp.now(),
-        messageType: msgType,
-        thumbnail: thumbnailUrl,
-        audioUrl: audioPath,
-        audioFormData: audiowave,
-      );
+          message: message,
+          receiverID: receiver.uid,
+          senderEmail: firebaseAuth.currentUser!.email!,
+          senderID: senderID,
+          batch: batchCount + 1,
+          status: 'unread',
+          timestamp: Timestamp.now(),
+          messageType: msgType,
+          thumbnail: thumbnailUrl,
+          audioUrl: audioPath,
+          audioFormData: audiowave,
+          audioDuration: getTime(audioDuration ?? 0));
 
       //posting to firebase
       firebaseRepository
@@ -369,9 +373,11 @@ class ChatCubit extends Cubit<ChatState> {
 
   // recording
   final record = AudioRecorder();
-  Future<bool> checkMicPermission() async {
+  checkMicPermission() async {
     final hasPermission = await record.hasPermission();
-    return hasPermission;
+
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setBool('hasaudioPermission', hasPermission);
   }
 
   cancelRecording() {
@@ -379,8 +385,14 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future<void> startRecording() async {
-    final directory = await getApplicationDocumentsDirectory();
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    bool audioPermission = sp.getBool('hasaudioPermission') ?? false;
+    if (!audioPermission) {
+      await checkMicPermission();
+      throw 'mic permission required';
+    }
     await record.cancel();
+    final directory = await getApplicationDocumentsDirectory();
 
     final String audioPath =
         "${DateFormat('yyyyMMddHHmmsS').format(DateTime.now())}_CC_audioFile";
@@ -398,21 +410,29 @@ class ChatCubit extends Cubit<ChatState> {
 
   stopRecording() async {
     final recordedAudioPath = await record.stop();
+
     if (recordedAudioPath != null) {
+      final controller = PlayerController();
+      final data = await controller.extractWaveformData(
+          path: recordedAudioPath, noOfSamples: 60);
+
       final audioUrl = await firebaseRepository.uploadFile(
           XFile(recordedAudioPath), 'chat_media', 'audio/wav');
 
       final audioPathName =
           recordedAudioPath.split(Platform.pathSeparator).last;
-      final controller = PlayerController();
-      final data = await controller.extractWaveformData(
-          path: recordedAudioPath, noOfSamples: 60);
+
+      await controller.preparePlayer(path: recordedAudioPath);
+
+      final audioDuration = await controller.getDuration();
+
       sendMessage(audioUrl, user, 'audio',
-          audioPath: audioPathName, audiowave: data);
+          audioPath: audioPathName,
+          audiowave: data,
+          audioDuration: audioDuration);
     }
   }
 
-  PlayerController? playingController;
   String? activeAudioId;
   final Map<String, PlayerController> audioPlayers = {};
   final Map<String, bool> isPrepared = {};
@@ -422,6 +442,15 @@ class ChatCubit extends Cubit<ChatState> {
       audioPlayers[audioID] = PlayerController();
     }
     return audioPlayers[audioID]!;
+  }
+
+  String getTime(int value) {
+    return '${value ~/ 1000 ~/ 60}:${(value ~/ 1000).toString().padLeft(2, '0')}';
+  }
+
+  changeAudioDuration(MessageModel message, int currentDuration) {
+    message.audioCurrentDuration = getTime(currentDuration);
+    emit(ChatReady(messageList: messageList));
   }
 
   playAudioPlayer(String audioID, String audioPath) async {

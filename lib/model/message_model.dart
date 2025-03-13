@@ -18,6 +18,8 @@ class MessageModel {
   List<double>? audioFormData;
   bool? isAudioDownloaded;
   bool? isDownloading;
+  String? audioDuration = '0.00';
+  String? audioCurrentDuration = '0.00';
 
   MessageModel({
     this.senderID,
@@ -34,6 +36,9 @@ class MessageModel {
     this.thumbnail,
     this.audioUrl,
     this.audioFormData,
+    this.audioDuration,
+    this.audioCurrentDuration,
+    this.isDownloading,
     this.isAudioDownloaded,
   });
 
@@ -81,6 +86,7 @@ class MessageModel {
     if (json['audioFormData'] != null) {
       audioFormData = List.from(json['audioFormData']);
     }
+    audioDuration = json['audioDuration'];
   }
 
   Map<String, dynamic> toJson() {
@@ -96,6 +102,7 @@ class MessageModel {
     data['thumbnail'] = thumbnail;
     data['audiourl'] = audioUrl;
     data['audioFormData'] = audioFormData;
+    data['audioDuration'] = audioDuration;
     return data;
   }
 }

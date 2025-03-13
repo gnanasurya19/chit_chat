@@ -17,7 +17,7 @@ class NetworkApiService {
   Future sendMessage(UserData userData, MessageModel message, String msgId,
       String chatRoomId) async {
     final jsonCredentials = await rootBundle
-        .loadString('assets/.chit-chat-19491-a3bf7aad3fbf.json');
+        .loadString('assets/.chit-chat-19491-20cdfedef94b.json');
     final creds = auth.ServiceAccountCredentials.fromJson(jsonCredentials);
 
     final client = await auth.clientViaServiceAccount(
@@ -109,7 +109,7 @@ class NetworkApiService {
         final responseJson = jsonDecode(response.body);
         return responseJson;
       default:
-        return response.body;
+        throw response.body;
     }
   }
 }
