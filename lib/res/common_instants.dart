@@ -118,19 +118,12 @@ Future<void> onBackgroundMsg(RemoteMessage message) async {
 setBadgeCount(int count) async {
   SharedPreferences sp = await SharedPreferences.getInstance();
   sp.setInt('badgeCount', count);
-  // print('entered');
-
-  // print(count);
   if (count == 0) {
     // FlutterAppBadger.removeBadge(0);
     // FlutterAppBadgeControl().getPlatformVersion();
-    // print('badge');
   } else {
-    // print(await FlutterAppBadgeControl.isAppBadgeSupported());
     // FlutterAppBadger.updateBadgeCount(2);
-    // print('count');
     // FlutterAppBadgeControl.updateBadgeCount(count).then((value) {
-    // print('success');
     // });
   }
 }
@@ -264,3 +257,5 @@ Future<void> groupNotification(
     NotificationDetails(android: summaryNotificationDetails),
   );
 }
+
+enum AppTheme { dark, light, system }

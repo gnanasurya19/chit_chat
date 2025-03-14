@@ -4,6 +4,7 @@ import 'package:chit_chat/view/screen/profile_edit_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
@@ -66,34 +67,52 @@ class ThemeChanger extends StatefulWidget {
 }
 
 class _ThemeChangerState extends State<ThemeChanger> {
-  late Future<bool> isDarkThemeFuture;
+  late Future<AppTheme> isDarkThemeFuture;
+  ThemeData systemTheme = MyAppTheme.lightTheme;
 
   @override
   void initState() {
     super.initState();
-    isDarkThemeFuture = fetchIsDarkTheme().then(
-      (value) {
-        return value;
-      },
-    );
+    isDarkThemeFuture = fetchIsDarkTheme();
+    checkSystemtheme();
   }
 
-  Future<bool> fetchIsDarkTheme() async {
+  Future<AppTheme> fetchIsDarkTheme() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     String theme = sp.getString('thememode') ?? 'light';
-    return theme == 'dark';
+    switch (theme) {
+      case 'dark':
+        return AppTheme.dark;
+      case 'light':
+        return AppTheme.light;
+      default:
+        return AppTheme.system;
+    }
+  }
+
+  checkSystemtheme() {
+    var brightness =
+        SchedulerBinding.instance.platformDispatcher.platformBrightness;
+    if (brightness == Brightness.dark) {
+      setState(() {
+        systemTheme = MyAppTheme.darkTheme;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
+    return FutureBuilder<AppTheme>(
       future: isDarkThemeFuture,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          final isDarkTheme = snapshot.data ?? false;
+          final isDarkTheme = snapshot.data;
           return ThemeProvider(
-            initTheme:
-                isDarkTheme ? MyAppTheme.darkTheme : MyAppTheme.lightTheme,
+            initTheme: isDarkTheme == AppTheme.dark
+                ? MyAppTheme.darkTheme
+                : isDarkTheme == AppTheme.light
+                    ? MyAppTheme.lightTheme
+                    : systemTheme,
             builder: (context, myTheme) {
               return MaterialApp(
                 title: 'ChitChat',
@@ -109,7 +128,6 @@ class _ThemeChangerState extends State<ThemeChanger> {
                   "email": (context) => const EmailVerificationPage(),
                   "profile": (context) => const ProfilePage(),
                   "profile-edit": (context) => const ProfileEditPage(),
-                  // "practice": (context) => const PracticePage(),
                 },
               );
             },

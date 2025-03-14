@@ -47,7 +47,7 @@ class _FileUploadDialogState extends State<FileUploadDialog> {
                       style: style.text.regular,
                     ),
                     ImageCollageWidget(
-                        mediaType: state.mediaType, medialist: state.filePath),
+                        mediaType: state.mediaType, medialist: state.fileData),
                     // buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -70,19 +70,25 @@ class _FileUploadDialogState extends State<FileUploadDialog> {
                           ),
                           iconAlignment: IconAlignment.end,
                           icon: state.fileStatus == FileStatus.preview
-                              ? const Icon(Icons.upload)
-                              : const SizedBox(
+                              ? Icon(
+                                  Icons.upload,
+                                  size: style.icon.sm,
+                                  color: AppColor.blue,
+                                )
+                              : SizedBox(
                                   height: 16,
                                   width: 16,
                                   child: CircularProgressIndicator(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondary,
                                     strokeWidth: 2,
                                   )),
                           onPressed: state.fileStatus == FileStatus.preview
                               ? () {
                                   context
                                       .read<ChatCubit>()
-                                      .uploadFileToFirebase(
-                                          state.filePath, state.mediaType);
+                                      .uploadFileToFirebase();
                                 }
                               : null,
                           label: Text(

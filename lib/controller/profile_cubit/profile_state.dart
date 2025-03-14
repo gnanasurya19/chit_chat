@@ -8,13 +8,13 @@ sealed class ProfileActionState extends ProfileState {}
 final class ProfileInitial extends ProfileState {
   final UserData user;
   final bool? isNotification;
-  final bool? isDarkTheme;
+  final AppTheme? appTheme;
   final String? editedprofile;
 
   ProfileInitial({
     required this.user,
     this.isNotification,
-    this.isDarkTheme,
+    this.appTheme,
     this.editedprofile,
   });
 }

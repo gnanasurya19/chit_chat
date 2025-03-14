@@ -29,11 +29,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void initState() {
     BlocProvider.of<HomeCubit>(context).onInit().then((v) {
       if (mounted) {
-        BlocProvider.of<ProfileCubit>(context).getProfile().then((v) {
-          if (mounted) {
-            BlocProvider.of<UpdateCubit>(context).checkforUpdate('auto');
-          }
-        });
+        BlocProvider.of<ProfileCubit>(context).getProfile();
       }
     });
     WidgetsBinding.instance.addObserver(this);

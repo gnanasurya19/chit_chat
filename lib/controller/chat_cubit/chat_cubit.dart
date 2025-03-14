@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:chit_chat/model/media_data_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_size_getter/file_input.dart';
+import 'package:image_size_getter/image_size_getter.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -63,7 +67,6 @@ class ChatCubit extends Cubit<ChatState> {
         .get();
 
     await query.then((element) async {
-      // print(element.docs.map((ele) => ele.data()['message']));
       populateList(element.docs.reversed.toList());
       emit(ChatReadyActionState(chatlength: element.docs.length));
     });
@@ -226,35 +229,39 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  Future uploadFileToFirebase(
-      List<String> filepaths, MediaType mediatype) async {
+  Future uploadFileToFirebase() async {
     emit(
       UploadFile(
-        mediaType: mediatype,
-        filePath: filepaths,
+        mediaType: mediaType!,
+        fileData: mediaList.map((e) => e.filePath).toList(),
         fileStatus: FileStatus.uploading,
       ),
     );
-    List<String> fileUrls = [];
-    await Future.forEach(filepaths, (path) async {
-      final String url =
-          await firebaseRepository.uploadFile(XFile(path), 'chat_media');
-      fileUrls.add(url);
-      if (mediatype == MediaType.video) {
+    await Future.forEach(mediaList, (media) async {
+      final String url = await firebaseRepository.uploadFile(
+          XFile(media.filePath), 'chat_media');
+      media.fileUrl = url;
+      if (mediaType == MediaType.video) {
         String? thumbnailPath = await VideoThumbnail.thumbnailFile(
-          video: path,
+          video: media.filePath,
           imageFormat: ImageFormat.JPEG,
           quality: 100,
         );
         thumbnailUrl = await firebaseRepository.uploadFile(
             XFile(thumbnailPath!), 'chat_media');
+        final size = getMediaSize(thumbnailPath);
+        mediaList[0].height = size.height;
+        mediaList[0].width = size.width;
       }
     });
-    emit(FileUploaded(fileUrl: fileUrls, mediaType: mediatype));
+    emit(FileUploaded());
   }
 
   Future sendMessage(String message, UserData receiver, String msgType,
-      {String? audioPath, List<double>? audiowave, int? audioDuration}) async {
+      {String? audioPath,
+      List<double>? audiowave,
+      int? audioDuration,
+      Size? imageSize}) async {
     if (message.isNotEmpty) {
       final String senderID = firebaseAuth.currentUser!.uid;
 
@@ -278,18 +285,21 @@ class ChatCubit extends Cubit<ChatState> {
 
       //new message to send
       final MessageModel newMessage = MessageModel(
-          message: message,
-          receiverID: receiver.uid,
-          senderEmail: firebaseAuth.currentUser!.email!,
-          senderID: senderID,
-          batch: batchCount + 1,
-          status: 'unread',
-          timestamp: Timestamp.now(),
-          messageType: msgType,
-          thumbnail: thumbnailUrl,
-          audioUrl: audioPath,
-          audioFormData: audiowave,
-          audioDuration: getTime(audioDuration ?? 0));
+        message: message,
+        receiverID: receiver.uid,
+        senderEmail: firebaseAuth.currentUser!.email!,
+        senderID: senderID,
+        batch: batchCount + 1,
+        status: 'unread',
+        timestamp: Timestamp.now(),
+        messageType: msgType,
+        thumbnail: thumbnailUrl,
+        audioUrl: audioPath,
+        audioFormData: audiowave,
+        audioDuration: getTime(audioDuration ?? 0),
+        imageHeight: imageSize?.height.toDouble(),
+        imageWidth: imageSize?.width.toDouble(),
+      );
 
       //posting to firebase
       firebaseRepository
@@ -315,10 +325,12 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  Future sendMultipleMessage(
-      List<String> messages, UserData receiver, String msgType) async {
-    Future.forEach(messages, (message) async {
-      await sendMessage(message, receiver, msgType);
+  Future sendMediaMessages(UserData receiver) async {
+    Future.forEach(mediaList, (media) async {
+      await sendMessage(media.fileUrl!, receiver,
+          mediaType == MediaType.image ? 'image' : 'video',
+          imageSize:
+              media.width != null ? Size(media.width!, media.height!) : null);
     });
   }
 
@@ -331,34 +343,46 @@ class ChatCubit extends Cubit<ChatState> {
     // remove
   }
 
-  List<String> mediaList = [];
+  List<MediaDataModel> mediaList = [];
+  MediaType? mediaType;
 
   Future openGallery() async {
     util.captureMultiImage().then((value) async {
       if (value != null) {
-        mediaList = value.map((e) => e.path).toList();
+        mediaList.clear();
+        for (var ele in value) {
+          final size = getMediaSize(ele.path);
+          mediaList.add(MediaDataModel(
+              filePath: ele.path, height: size.height, width: size.width));
+        }
         emit(OpenUploadFileDialog());
+        mediaType = MediaType.image;
       }
     });
   }
 
+  Size getMediaSize(String filepath) {
+    final resultSize = ImageSizeGetter.getSizeResult(FileInput(File(filepath)));
+    if (resultSize.size.needRotate) {
+      final size = Size(resultSize.size.height, resultSize.size.width);
+      return size;
+    }
+    return resultSize.size;
+  }
+
   emitfileUploadState() {
     emit(UploadFile(
-        mediaType: MediaType.image,
-        filePath: mediaList,
+        mediaType: mediaType!,
+        fileData: mediaList.map((e) => e.filePath).toList(),
         fileStatus: FileStatus.preview));
   }
 
   Future openVideoGallery() async {
     util.captureVideo().then((value) async {
       if (value != null) {
-        mediaList = [value.path];
+        mediaList = [MediaDataModel(filePath: value.path)];
         emit(OpenUploadFileDialog());
-        await Future.delayed(Duration(milliseconds: 400));
-        emit(UploadFile(
-            mediaType: MediaType.video,
-            filePath: mediaList,
-            fileStatus: FileStatus.preview));
+        mediaType = MediaType.video;
       }
     });
   }
@@ -367,7 +391,7 @@ class ChatCubit extends Cubit<ChatState> {
     mediaList.removeAt(index);
     emit(UploadFile(
         mediaType: mediaType,
-        filePath: mediaList,
+        fileData: mediaList.map((e) => e.filePath).toList(),
         fileStatus: FileStatus.preview));
   }
 

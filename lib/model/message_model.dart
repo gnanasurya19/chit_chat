@@ -20,6 +20,8 @@ class MessageModel {
   bool? isDownloading;
   String? audioDuration = '0.00';
   String? audioCurrentDuration = '0.00';
+  double? imageHeight;
+  double? imageWidth;
 
   MessageModel({
     this.senderID,
@@ -40,6 +42,8 @@ class MessageModel {
     this.audioCurrentDuration,
     this.isDownloading,
     this.isAudioDownloaded,
+    this.imageHeight,
+    this.imageWidth,
   });
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
@@ -87,6 +91,8 @@ class MessageModel {
       audioFormData = List.from(json['audioFormData']);
     }
     audioDuration = json['audioDuration'];
+    imageHeight = json['imageHeight'];
+    imageWidth = json['imageWidth'];
   }
 
   Map<String, dynamic> toJson() {
@@ -103,6 +109,8 @@ class MessageModel {
     data['audiourl'] = audioUrl;
     data['audioFormData'] = audioFormData;
     data['audioDuration'] = audioDuration;
+    data['imageHeight'] = imageHeight;
+    data['imageWidth'] = imageWidth;
     return data;
   }
 }

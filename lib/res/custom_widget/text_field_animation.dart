@@ -98,20 +98,28 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
                   controller: widget.controller,
                   decoration: InputDecoration(
                     isDense: true,
-                    contentPadding: const EdgeInsets.all(5),
+                    contentPadding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
+                    suffixIconConstraints: BoxConstraints(minWidth: 0),
                     suffixIcon: (widget.isPassword ?? false)
-                        ? IconButton(
-                            onPressed: () {
+                        ? InkWell(
+                            splashFactory: NoSplash.splashFactory,
+                            onTap: () {
                               if (widget.onSufClick != null) {
                                 widget.onSufClick!();
                               }
                             },
-                            icon: SVGIcon(
-                              name: widget.isPassWordVisible ?? false
-                                  ? 'eye'
-                                  : 'hide-eye',
-                              color: widget.color,
-                              size: style.icon.sm,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              width: style.icon.sm,
+                              height: style.icon.sm,
+                              child: SVGIcon(
+                                name: widget.isPassWordVisible ?? false
+                                    ? 'eye'
+                                    : 'hide-eye',
+                                color: widget.color,
+                              ),
                             ),
                           )
                         : widget.issignUpEmail ?? false
@@ -141,8 +149,8 @@ class EmailNotePopoverBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () {
+    return InkWell(
+      onTap: () {
         showPopover(
           context: context,
           direction: PopoverDirection.top,
@@ -155,10 +163,14 @@ class EmailNotePopoverBtn extends StatelessWidget {
           ),
         );
       },
-      icon: Icon(
-        Icons.info,
-        color: AppColor.white,
-        size: style.icon.xs,
+      child: SizedBox(
+        width: style.icon.sm,
+        height: style.icon.sm,
+        child: Icon(
+          Icons.info,
+          color: AppColor.white,
+          size: style.icon.xs,
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,7 +19,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   bool isNotification = false;
-  bool isDark = false;
+  AppTheme appTheme = AppTheme.light;
   UserData userModel = UserData();
   FirebaseRepository firebaseRepository = FirebaseRepository();
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
@@ -31,12 +32,12 @@ class ProfileCubit extends Cubit<ProfileState> {
       profileURL: firebaseAuth.currentUser!.photoURL,
     );
     emit(ProfileInitial(
-        user: userModel, isDarkTheme: isDark, isNotification: isNotification));
+        user: userModel, appTheme: appTheme, isNotification: isNotification));
   }
 
   onProfilePage() {
     emit(ProfileInitial(
-        user: userModel, isNotification: isNotification, isDarkTheme: isDark));
+        user: userModel, isNotification: isNotification, appTheme: appTheme));
   }
 
   Future<void> onLoad() async {
@@ -61,26 +62,39 @@ class ProfileCubit extends Cubit<ProfileState> {
     SharedPreferences sp = await SharedPreferences.getInstance();
     String theme = sp.getString('thememode') ?? 'light';
     if (theme == 'light') {
-      isDark = false;
+      appTheme = AppTheme.light;
+    } else if (theme == 'dark') {
+      appTheme = AppTheme.dark;
     } else {
-      isDark = true;
+      appTheme = AppTheme.system;
     }
     emit(ProfileInitial(
-        user: userModel, isNotification: isNotification, isDarkTheme: isDark));
+        user: userModel, isNotification: isNotification, appTheme: appTheme));
   }
 
-  changeTheme(ThemeSwitcherState theme) async {
-    isDark = !isDark;
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    if (isDark) {
-      theme.changeTheme(theme: MyAppTheme.darkTheme);
-      sp.setString('thememode', 'dark');
-    } else {
-      theme.changeTheme(theme: MyAppTheme.lightTheme);
-      sp.setString('thememode', 'light');
+  changeTheme(ThemeSwitcherState theme, AppTheme apptheme) async {
+    if (appTheme != apptheme) {
+      appTheme = apptheme;
+      SharedPreferences sp = await SharedPreferences.getInstance();
+      if (appTheme == AppTheme.dark) {
+        theme.changeTheme(theme: MyAppTheme.darkTheme);
+        sp.setString('thememode', 'dark');
+      } else if (apptheme == AppTheme.light) {
+        theme.changeTheme(theme: MyAppTheme.lightTheme);
+        sp.setString('thememode', 'light');
+      } else {
+        var brightness =
+            SchedulerBinding.instance.platformDispatcher.platformBrightness;
+        sp.setString('thememode', 'system');
+        if (brightness == Brightness.dark) {
+          theme.changeTheme(theme: MyAppTheme.darkTheme);
+        } else {
+          theme.changeTheme(theme: MyAppTheme.lightTheme);
+        }
+      }
+      emit(ProfileInitial(
+          user: userModel, isNotification: isNotification, appTheme: appTheme));
     }
-    emit(ProfileInitial(
-        user: userModel, isNotification: isNotification, isDarkTheme: isDark));
   }
 
   updateProfile(XFile? value) async {
@@ -147,14 +161,14 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
     firebaseRepository.updateUser(currentUserId, {"fcm": fcm});
     emit(ProfileInitial(
-        user: userModel, isNotification: isNotification, isDarkTheme: isDark));
+        user: userModel, isNotification: isNotification, appTheme: appTheme));
   }
 
   void editProfile() {
     emit(AddDataToFeild(
         name: userModel.userName, phoneNo: userModel.phoneNumber));
     emit(ProfileInitial(
-        user: userModel, isDarkTheme: isDark, isNotification: isNotification));
+        user: userModel, appTheme: appTheme, isNotification: isNotification));
   }
 
   updateProfileData(String name, String mobileNumber) async {
@@ -174,7 +188,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
     emit(ProfileLoaderCancel());
     emit(ProfileInitial(
-        user: userModel, isDarkTheme: isDark, isNotification: isNotification));
+        user: userModel, appTheme: appTheme, isNotification: isNotification));
     emit(ProfileUpdate());
   }
 

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/res/common_instants.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -68,14 +67,8 @@ class NetworkApiService {
             Uri.parse(
               "https://api.github.com/repos/gnanasurya19/chit_chat/releases/latest",
             ),
-            // headers: {
-            //   'Authorization': 'Bearer $token',
-            //   "Accept": "application/vnd.github+json",
-            //   "X-GitHub-Api-Version": "2022-11-28"
-            // },
           )
           .timeout(const Duration(seconds: 10));
-      print("${response.statusCode} response.statusCode");
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
@@ -98,7 +91,6 @@ class NetworkApiService {
     await dio.download(
       url,
       fullPath,
-      onReceiveProgress: (count, total) => print(count),
     );
     return fullPath;
   }

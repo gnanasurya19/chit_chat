@@ -23,9 +23,10 @@ class AppColor {
 class MyAppTheme {
   static ThemeData lightTheme = ThemeData(
     textSelectionTheme: TextSelectionThemeData(
-        cursorColor: AppColor.blue,
-        selectionColor: AppColor.blue.withValues(alpha: 0.5),
-        selectionHandleColor: AppColor.blue),
+      cursorColor: AppColor.white,
+      selectionColor: AppColor.blue.withValues(alpha: 0.5),
+      selectionHandleColor: AppColor.blueGrey,
+    ),
     brightness: Brightness.light,
     fontFamily: 'Roboto-Regular',
     colorScheme: const ColorScheme.light(
@@ -40,6 +41,7 @@ class MyAppTheme {
       secondary: AppColor.darkGreyText,
       tertiary: AppColor.greyText,
       surfaceDim: AppColor.greyBg,
+      onSecondary: AppColor.blue,
     ),
   );
   static ThemeData darkTheme = ThemeData(
@@ -50,17 +52,17 @@ class MyAppTheme {
     brightness: Brightness.dark,
     fontFamily: 'Roboto-Regular',
     colorScheme: const ColorScheme.dark(
-      inversePrimary: AppColor.blueGrey,
-      inverseSurface: AppColor.darkblueGrey,
-      tertiaryContainer: AppColor.white,
-      onTertiary: AppColor.blackGrey,
-      surface: AppColor.darkLoginBg,
-      surfaceTint: AppColor.darkLoginBg,
-      primary: AppColor.darkLoginBg,
-      primaryContainer: AppColor.darkBlue,
-      secondary: AppColor.white,
-      tertiary: AppColor.white,
-      surfaceDim: AppColor.blueGrey,
-    ),
+        inversePrimary: AppColor.blueGrey,
+        inverseSurface: AppColor.darkblueGrey,
+        tertiaryContainer: AppColor.white,
+        onTertiary: AppColor.blackGrey,
+        surface: AppColor.darkLoginBg,
+        surfaceTint: AppColor.darkLoginBg,
+        primary: AppColor.darkLoginBg,
+        primaryContainer: AppColor.darkBlue,
+        secondary: AppColor.white,
+        tertiary: AppColor.white,
+        surfaceDim: AppColor.blueGrey,
+        onSecondary: AppColor.white),
   );
 }

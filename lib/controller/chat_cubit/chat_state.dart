@@ -11,21 +11,16 @@ final class OpenUploadFileDialog extends ChatActionState {}
 
 final class UploadFile extends ChatActionState {
   final MediaType mediaType;
-  final List<String> filePath;
+  final List<String> fileData;
   final FileStatus fileStatus;
 
   UploadFile(
-      {required this.filePath,
+      {required this.fileData,
       required this.fileStatus,
       required this.mediaType});
 }
 
-final class FileUploaded extends ChatActionState {
-  final List<String> fileUrl;
-  final MediaType mediaType;
-
-  FileUploaded({required this.mediaType, required this.fileUrl});
-}
+final class FileUploaded extends ChatActionState {}
 
 final class ChatReadyActionState extends ChatActionState {
   final int chatlength;

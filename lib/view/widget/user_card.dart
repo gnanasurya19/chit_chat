@@ -80,15 +80,21 @@ class UserCard extends StatelessWidget {
                       ],
                       if (user.lastMessage!.messageType != 'text') ...[
                         if (user.lastMessage?.messageType == 'image')
-                          const Icon(
+                          Icon(
                             Icons.image,
-                            size: 20,
+                            size: style.icon.sm,
                             color: AppColor.greyText,
                           )
                         else if (user.lastMessage?.messageType == 'audio')
                           Icon(
                             Icons.headphones,
-                            size: 20,
+                            size: style.icon.sm,
+                            color: AppColor.greyText,
+                          )
+                        else if (user.lastMessage?.messageType == 'video')
+                          Icon(
+                            Icons.videocam_rounded,
+                            size: style.icon.sm,
                             color: AppColor.greyText,
                           ),
                         const Gap(5),

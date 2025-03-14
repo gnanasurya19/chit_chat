@@ -1,5 +1,4 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
 import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
 import 'package:chit_chat/model/message_model.dart';
@@ -334,6 +333,20 @@ class PreferenceOptions extends StatelessWidget {
             ),
           ),
           const Gap(10),
+          ThemeSwitcher.switcher(builder: (context, theme) {
+            return ProfilePrefTile(
+              title: "Theme",
+              subtitle: 'Change theme',
+              leadingIcon: 'themes',
+              action: ThemeDropDown(
+                selectedTheme: state.appTheme,
+                onchange: (value) {
+                  BlocProvider.of<ProfileCubit>(context)
+                      .changeTheme(theme, value);
+                },
+              ),
+            );
+          }),
           ProfilePrefTile(
               leadingIcon: 'bell',
               title: 'Notification',
@@ -345,19 +358,6 @@ class PreferenceOptions extends StatelessWidget {
                   onChanged: (v) {
                     context.read<ProfileCubit>().changeNotificationPref();
                   })),
-          ThemeSwitcher.switcher(builder: (context, theme) {
-            return ProfilePrefTile(
-              title: "Theme",
-              subtitle: 'Change theme',
-              leadingIcon: 'themes',
-              action: ThemeToggleBtn(
-                onChange: (value) {
-                  BlocProvider.of<ProfileCubit>(context).changeTheme(theme);
-                },
-                value: state.isDarkTheme ?? false,
-              ),
-            );
-          }),
           Material(
             color: Theme.of(context).colorScheme.inverseSurface,
             child: InkWell(
@@ -382,55 +382,80 @@ class PreferenceOptions extends StatelessWidget {
   }
 }
 
-class ThemeToggleBtn extends StatelessWidget {
-  final bool value;
-  final Function(bool value) onChange;
-  const ThemeToggleBtn({
+class ThemeDropDown extends StatefulWidget {
+  const ThemeDropDown({
     super.key,
-    required this.value,
-    required this.onChange,
+    required this.onchange,
+    this.selectedTheme,
   });
 
+  final AppTheme? selectedTheme;
+  final Function(AppTheme value) onchange;
+
+  @override
+  State<ThemeDropDown> createState() => _ThemeDropDownState();
+}
+
+class _ThemeDropDownState extends State<ThemeDropDown> {
+  final List themes = [
+    {
+      'name': 'Light',
+      'value': AppTheme.light,
+      'icon': Icons.light_mode,
+    },
+    {
+      'name': 'Dark',
+      'value': AppTheme.dark,
+      'icon': Icons.dark_mode,
+    },
+    {
+      'name': 'Device',
+      'value': AppTheme.system,
+      'icon': Icons.phone_android,
+    }
+  ];
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 55,
-      child: AnimatedToggleSwitch<bool>.dual(
-        current: !value,
-        first: true,
-        second: false,
-        spacing: 10.0,
-        style: const ToggleStyle(
-          borderColor: Colors.transparent,
-          indicatorColor: Colors.transparent,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              spreadRadius: 1,
-              blurRadius: 2,
-              offset: Offset(0, 1.5),
-            ),
-          ],
-        ),
-        borderWidth: 5.0,
-        height: 30,
-        onChanged: (value) {
-          onChange(value);
-        },
-        styleBuilder: (b) => ToggleStyle(
-            backgroundColor: !value ? Colors.white : AppColor.black),
-        iconBuilder: (value) => value
-            ? const Icon(
-                Icons.sunny,
-                size: 15,
-                color: Colors.amber,
-              )
-            : const Icon(
-                Icons.nightlight_round_sharp,
-                size: 15,
-                color: Colors.amber,
+    return Container(
+      margin: EdgeInsets.only(right: style.insets.sm),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(style.radius.sm),
+          border: Border.all(
+              color: Theme.of(context).colorScheme.tertiaryContainer)),
+      child: DropdownButton<AppTheme>(
+          padding: EdgeInsets.all(5),
+          style: style.text.regular
+              .copyWith(color: Theme.of(context).colorScheme.tertiaryContainer),
+          isDense: true,
+          value: widget.selectedTheme ?? AppTheme.light,
+          dropdownColor: Theme.of(context).colorScheme.onTertiary,
+          underline: SizedBox(),
+          items: List.generate(themes.length, (index) {
+            return DropdownMenuItem<AppTheme>(
+              value: themes[index]['value'],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  spacing: style.insets.sm,
+                  children: [
+                    Icon(
+                      themes[index]['icon'],
+                      size: 18,
+                      color: AppColor.blue,
+                    ),
+                    Text(
+                      themes[index]['name'],
+                    ),
+                  ],
+                ),
               ),
-      ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              widget.onchange(value);
+            }
+          }),
     );
   }
 }

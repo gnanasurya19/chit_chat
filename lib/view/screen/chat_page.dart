@@ -1,11 +1,8 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
-import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
@@ -18,11 +15,8 @@ import 'package:chit_chat/view/widget/file_upload_dialog.dart';
 import 'package:chit_chat/view/widget/view_media.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-// import '../widget/file_upload_dialog.dart';
 
 class ChatPage extends StatefulWidget {
   final UserData userData;
@@ -90,6 +84,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             splashRadius: 40,
             onPressed: () async {
               await BlocProvider.of<ChatCubit>(context).stopStream().then((e) {
+                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               });
             },
@@ -243,10 +238,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       );
     } else if (state is FileUploaded) {
       Navigator.pop(context);
-      context.read<ChatCubit>().sendMultipleMessage(
-          state.fileUrl,
-          widget.userData,
-          state.mediaType == MediaType.image ? 'image' : 'video');
+      context.read<ChatCubit>().sendMediaMessages(widget.userData);
     }
   }
 }
@@ -288,21 +280,26 @@ class MessageBubble extends StatelessWidget {
               ),
             if (message.messageType == 'image') ...[
               Container(
+                width: MediaQuery.sizeOf(context).width * 0.7,
                 constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * 0.35),
-                child: InkWell(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => ViewMediaPage(
-                        message: message,
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.45),
+                child: AspectRatio(
+                  aspectRatio:
+                      (message.imageWidth ?? 1) / (message.imageHeight ?? 1),
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ViewMediaPage(
+                          message: message,
+                        ),
                       ),
                     ),
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: message.message!,
-                    placeholder: _loader,
-                    errorWidget: _error,
-                    fit: BoxFit.contain,
+                    child: CachedNetworkImage(
+                      imageUrl: message.message!,
+                      placeholder: _loader,
+                      errorWidget: _error,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -318,14 +315,19 @@ class MessageBubble extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Container(
+                      width: MediaQuery.sizeOf(context).width * 0.7,
                       margin: const EdgeInsets.only(bottom: 5),
                       constraints: BoxConstraints(
-                          maxHeight: MediaQuery.sizeOf(context).height * 0.35),
-                      child: CachedNetworkImage(
-                        imageUrl: message.thumbnail!,
-                        placeholder: _loader,
-                        errorWidget: _error,
-                        fit: BoxFit.contain,
+                          maxHeight: MediaQuery.sizeOf(context).height * 0.45),
+                      child: AspectRatio(
+                        aspectRatio: (message.imageWidth ?? 1) /
+                            (message.imageHeight ?? 1),
+                        child: CachedNetworkImage(
+                          imageUrl: message.thumbnail!,
+                          placeholder: _loader,
+                          errorWidget: _error,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                     //play button

@@ -14,7 +14,7 @@ class LogoutConfirmation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shadowColor: AppColor.black,
-      elevation: 20,
+      elevation: 15,
       backgroundColor: Theme.of(context).colorScheme.onTertiary,
       clipBehavior: Clip.antiAliasWithSaveLayer,
       child: Container(
