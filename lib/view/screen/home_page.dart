@@ -80,6 +80,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 util.doAlert(context, 'Please connect to internet', 'network');
               } else if (state is UptoDateState) {
                 util.showSnackbar(context, 'You are up to date', 'success');
+              } else if (state is UpdateAlertState) {
+                util.doAlert(context, state.text, state.type);
               }
             },
             child: BlocBuilder<ProfileCubit, ProfileState>(

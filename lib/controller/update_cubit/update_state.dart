@@ -19,3 +19,10 @@ enum UpdateStatus { hasUpdate, downloading, downloaded }
 final class UptoDateState extends UpdateState {}
 
 final class NetworkErrorState extends UpdateState {}
+
+final class UpdateAlertState extends UpdateState {
+  final String type;
+  final String text;
+
+  UpdateAlertState({required this.type, required this.text});
+}

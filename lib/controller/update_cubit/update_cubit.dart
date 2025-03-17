@@ -28,32 +28,37 @@ class UpdateCubit extends Cubit<UpdateState> {
 
   Future checkforUpdate(String type) async {
     util.checkNetwork().then((e) async {
-      if (latestVersion == '') {
-        dynamic value = await networkApiService.checkUpdate().catchError((e) {
-          if (type == 'manual') {
-            if (e is TimeoutException || e is SocketException) {
-              emit(NetworkErrorState());
+      try {
+        if (latestVersion == '') {
+          dynamic value = await networkApiService.checkUpdate().catchError((e) {
+            if (type == 'manual') {
+              if (e is TimeoutException || e is SocketException) {
+                emit(NetworkErrorState());
+              }
             }
-          }
-        });
+          });
 
-        latestVersion = value["tag_name"];
-        List loop = value['assets'];
-        for (var element in loop) {
-          downloadUrl = element['url'];
+          latestVersion = value["tag_name"];
+          List loop = value['assets'];
+          for (var element in loop) {
+            downloadUrl = element['browser_download_url'];
+          }
         }
-      }
-      if (currentVersion == '') {
-        await oninit();
-      }
-      if (downloadUrl != '' && currentVersion != latestVersion) {
-        emit(UpdateAvailableState());
-        emit(DownloadState(
-          progress: 0,
-          state: UpdateStatus.hasUpdate,
-        ));
-      } else if (currentVersion == latestVersion && type == 'manual') {
-        emit(UptoDateState());
+        if (currentVersion == '') {
+          await oninit();
+        }
+        if (downloadUrl != '' && currentVersion != latestVersion) {
+          emit(UpdateAvailableState());
+          emit(DownloadState(
+            progress: 0,
+            state: UpdateStatus.hasUpdate,
+          ));
+        } else if (currentVersion == latestVersion && type == 'manual') {
+          emit(UptoDateState());
+        }
+      } catch (e) {
+        emit(UpdateAlertState(
+            type: "error", text: 'Something went wrong contact admin'));
       }
     }).catchError((e) {
       if (type == 'manual') {
@@ -74,10 +79,6 @@ class UpdateCubit extends Cubit<UpdateState> {
     } else {
       await util.checkNetwork().then((value) async {
         Dio dio = Dio();
-        if (!downloadUrl.contains('api')) {
-          downloadUrl =
-              downloadUrl.split("github.com").join("api.github.com/repos");
-        }
         await dio.download(
           downloadUrl,
           "${path.path}${Platform.pathSeparator}chit_chat$latestVersion.apk",
