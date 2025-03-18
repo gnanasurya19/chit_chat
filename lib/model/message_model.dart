@@ -17,7 +17,8 @@ class MessageModel {
   String? audioUrl;
   List<double>? audioFormData;
   bool? isAudioDownloaded;
-  bool? isDownloading;
+  bool? isAudioDownloading;
+  bool? isAudioUploading;
   String? audioDuration = '0.00';
   String? audioCurrentDuration = '0.00';
   double? imageHeight;
@@ -40,7 +41,8 @@ class MessageModel {
     this.audioFormData,
     this.audioDuration,
     this.audioCurrentDuration,
-    this.isDownloading,
+    this.isAudioUploading,
+    this.isAudioDownloading,
     this.isAudioDownloaded,
     this.imageHeight,
     this.imageWidth,

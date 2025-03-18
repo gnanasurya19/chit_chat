@@ -55,7 +55,13 @@ class UpdateDialog extends StatelessWidget {
                         backgroundColor: AppColor.greyBg,
                         color: AppColor.blue,
                       ),
-                    const Gap(20),
+                    const Gap(10),
+                    if (state.releaseNote != null &&
+                        state.state == UpdateStatus.hasUpdate) ...[
+                      Text('Release Notes', style: style.text.semiBold),
+                      Text(state.releaseNote ?? ''),
+                    ],
+                    const Gap(10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [

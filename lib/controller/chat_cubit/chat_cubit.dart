@@ -260,7 +260,7 @@ class ChatCubit extends Cubit<ChatState> {
   Future sendMessage(String message, UserData receiver, String msgType,
       {String? audioPath,
       List<double>? audiowave,
-      int? audioDuration,
+      String? audioDuration,
       Size? imageSize}) async {
     if (message.isNotEmpty) {
       final String senderID = firebaseAuth.currentUser!.uid;
@@ -296,7 +296,7 @@ class ChatCubit extends Cubit<ChatState> {
         thumbnail: thumbnailUrl,
         audioUrl: audioPath,
         audioFormData: audiowave,
-        audioDuration: getTime(audioDuration ?? 0),
+        audioDuration: audioDuration,
         imageHeight: imageSize?.height.toDouble(),
         imageWidth: imageSize?.width.toDouble(),
       );
@@ -415,11 +415,11 @@ class ChatCubit extends Cubit<ChatState> {
       await checkMicPermission();
       throw 'mic permission required';
     }
-    await record.cancel();
+
     final directory = await getApplicationDocumentsDirectory();
 
     final String audioPath =
-        "${DateFormat('yyyyMMddHHmmsS').format(DateTime.now())}_CC_audioFile";
+        "${DateFormat('yyyyMMddHHmmssS').format(DateTime.now())}_CC_audioFile";
 
     record.start(
         RecordConfig(
@@ -432,27 +432,45 @@ class ChatCubit extends Cubit<ChatState> {
         path: p.join(directory.path, '$audioPath.wav'));
   }
 
-  stopRecording() async {
+  completeRecording() async {
     final recordedAudioPath = await record.stop();
 
     if (recordedAudioPath != null) {
       final controller = PlayerController();
-      final data = await controller.extractWaveformData(
+      await controller.preparePlayer(path: recordedAudioPath);
+
+      final audioDurationInt = await controller.getDuration();
+      final audioDuration = getTime(audioDurationInt);
+
+      final audiowavedata = await controller.extractWaveformData(
           path: recordedAudioPath, noOfSamples: 60);
 
-      final audioUrl = await firebaseRepository.uploadFile(
-          XFile(recordedAudioPath), 'chat_media', 'audio/wav');
+      final lastAudioMessage = MessageModel(
+        audioFormData: audiowavedata,
+        audioUrl: recordedAudioPath,
+        audioDuration: audioDuration,
+        date: 'Today',
+        timestamp: Timestamp.now(),
+        status: 'unread',
+        messageType: 'audio',
+        isAudioUploading: true,
+        isAudioDownloaded: true,
+        audioCurrentDuration: "0:00",
+      );
+
+      messageList.insert(0, lastAudioMessage);
+
+      emit(ChatReady(messageList: messageList));
 
       final audioPathName =
           recordedAudioPath.split(Platform.pathSeparator).last;
 
-      await controller.preparePlayer(path: recordedAudioPath);
-
-      final audioDuration = await controller.getDuration();
+      final audioUrl = await firebaseRepository.uploadFile(
+          XFile(recordedAudioPath), 'chat_media', 'audio/wav');
 
       sendMessage(audioUrl, user, 'audio',
           audioPath: audioPathName,
-          audiowave: data,
+          audiowave: audiowavedata,
           audioDuration: audioDuration);
     }
   }
@@ -524,12 +542,12 @@ class ChatCubit extends Cubit<ChatState> {
     final messageIndex =
         messageList.indexWhere((element) => element.id == chatId);
     final audioMessage = messageList[messageIndex];
-    audioMessage.isDownloading = true;
+    audioMessage.isAudioDownloading = true;
     emit(ChatReady(messageList: messageList));
     final localPath = await networkApiService.downloadAudio(
         audioMessage.message!, audioMessage.audioUrl!);
     audioMessage.audioUrl = localPath;
-    audioMessage.isDownloading = false;
+    audioMessage.isAudioDownloading = false;
     messageList[messageIndex].isAudioDownloaded = true;
     emit(ChatReady(messageList: messageList));
   }

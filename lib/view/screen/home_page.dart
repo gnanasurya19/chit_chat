@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           BlocListener<UpdateCubit, UpdateState>(
             listener: (context, state) {
               if (state is UpdateAvailableState) {
-                util.slideInDialog(context, const UpdateDialog(), false);
+                util.slideInDialog(context, UpdateDialog(), false);
               } else if (state is NetworkErrorState) {
                 util.doAlert(context, 'Please connect to internet', 'network');
               } else if (state is UptoDateState) {

@@ -40,7 +40,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     _chatRoomsCubit.onInit(widget.userData.uid!, widget.userData);
     _chatRoomsCubit.changeBadgeCount(lastMessage?.status, lastMessage?.batch);
     notificationService.cancelGroupNotification(widget.userData.uid!);
-    notificationService.cancelGroupNotification(widget.userData.uid!);
     WidgetsBinding.instance.addObserver(this);
     listScrollController.addListener(listListener);
   }
@@ -420,12 +419,18 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
   @override
   void initState() {
     super.initState();
-    audioSetUp();
+    if (widget.message.isAudioUploading != true) {
+      audioSetUp();
+    } else {
+      playerCtl = PlayerController();
+    }
   }
 
   @override
   void dispose() {
-    if (audioDurationSubscription != null) audioDurationSubscription!.cancel();
+    if (audioDurationSubscription != null) {
+      audioDurationSubscription!.cancel();
+    }
     super.dispose();
   }
 
@@ -464,23 +469,45 @@ class _AudioMsgBubbleState extends State<AudioMsgBubble>
             }
           },
           style: IconButton.styleFrom(backgroundColor: AppColor.blue),
-          icon: widget.message.isDownloading ?? false
-              ? SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: AppColor.white,
-                  ),
+          icon: widget.message.isAudioUploading == true
+              ? Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      height: 25,
+                      width: 25,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.8,
+                        color: AppColor.white,
+                      ),
+                    ),
+                    Positioned(
+                      child: Icon(
+                        Icons.upload,
+                        color: AppColor.white,
+                        size: style.icon.sm,
+                      ),
+                    ),
+                  ],
                 )
-              : ((widget.message.isAudioDownloaded ?? false) == false)
-                  ? Icon(
-                      Icons.download,
-                      color: AppColor.white,
+              : widget.message.isAudioDownloading ?? false
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: AppColor.white,
+                      ),
                     )
-                  : AnimatedIcon(
-                      icon: AnimatedIcons.play_pause,
-                      progress: animationController),
+                  : ((widget.message.isAudioDownloaded ?? false) == false)
+                      ? Icon(
+                          Icons.download,
+                          color: AppColor.white,
+                        )
+                      : AnimatedIcon(
+                          icon: AnimatedIcons.play_pause,
+                          progress: animationController),
           color: AppColor.white,
         ),
         Expanded(

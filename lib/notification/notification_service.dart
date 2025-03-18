@@ -67,10 +67,6 @@ class NotificationService {
         payload: 'item x');
   }
 
-  cancelNotification(int id) {
-    localNotification.cancel(id);
-  }
-
   cancelGroupNotification(String userId) {
     RegExp regExp = RegExp(r'\d+');
     final integer =

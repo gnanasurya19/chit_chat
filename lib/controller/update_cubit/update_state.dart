@@ -10,8 +10,10 @@ final class UpdateAvailableState extends UpdateState {}
 final class DownloadState extends UpdateState {
   final double progress;
   final UpdateStatus state;
+  final String? releaseNote;
 
-  DownloadState({required this.progress, required this.state});
+  DownloadState(
+      {this.releaseNote, required this.progress, required this.state});
 }
 
 enum UpdateStatus { hasUpdate, downloading, downloaded }

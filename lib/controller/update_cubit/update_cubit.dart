@@ -19,6 +19,7 @@ class UpdateCubit extends Cubit<UpdateState> {
   String latestVersion = '';
   String downloadUrl = '';
   bool isFileDownloaded = false;
+  String releaseNotes = '';
 
   oninit() async {
     await PackageInfo.fromPlatform().then((value) {
@@ -38,6 +39,8 @@ class UpdateCubit extends Cubit<UpdateState> {
             }
           });
 
+          releaseNotes = value['body'];
+
           latestVersion = value["tag_name"];
           List loop = value['assets'];
           for (var element in loop) {
@@ -50,9 +53,9 @@ class UpdateCubit extends Cubit<UpdateState> {
         if (downloadUrl != '' && currentVersion != latestVersion) {
           emit(UpdateAvailableState());
           emit(DownloadState(
-            progress: 0,
-            state: UpdateStatus.hasUpdate,
-          ));
+              progress: 0,
+              state: UpdateStatus.hasUpdate,
+              releaseNote: releaseNotes));
         } else if (currentVersion == latestVersion && type == 'manual') {
           emit(UptoDateState());
         }
