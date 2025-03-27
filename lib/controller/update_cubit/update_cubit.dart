@@ -5,8 +5,9 @@ import 'package:chit_chat/res/common_instants.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 part 'update_state.dart';
 
@@ -70,7 +71,8 @@ class UpdateCubit extends Cubit<UpdateState> {
     });
   }
 
-  downLoadUpdate() async {
+  downloadUpdate(context) async {
+    await checkPermissionDownload(context);
     final path = Directory('/storage/emulated/0/Download');
     final String downloadPath =
         "${path.path}${Platform.pathSeparator}chit_chat$latestVersion.apk";
@@ -78,7 +80,8 @@ class UpdateCubit extends Cubit<UpdateState> {
             "${path.path}${Platform.pathSeparator}chit_chat$latestVersion.apk")
         .exists();
     if (isExists) {
-      OpenFile.open(downloadPath);
+      await checkPermissionForInstall(context);
+      await OpenFile.open(downloadPath);
     } else {
       await util.checkNetwork().then((value) async {
         Dio dio = Dio();
@@ -104,5 +107,23 @@ class UpdateCubit extends Cubit<UpdateState> {
   @override
   void onChange(Change<UpdateState> change) {
     super.onChange(change);
+  }
+
+  Future<void> checkPermissionForInstall(context) async {
+    var installPackage = await Permission.requestInstallPackages.request();
+    var status = await Permission.manageExternalStorage.request();
+    if (status.isPermanentlyDenied && installPackage.isPermanentlyDenied) {
+      util.showSnackbar(
+          context, 'Please allow storage permission in app settings', 'error');
+      throw 'Permission Issue';
+    }
+  }
+
+  checkPermissionDownload(context) async {
+    final downloadPermission = await Permission.storage.request();
+    if (downloadPermission.isPermanentlyDenied) {
+      util.showSnackbar(
+          context, 'Please allow storage permission in app settings', 'error');
+    }
   }
 }

@@ -28,12 +28,26 @@ class FirebaseRepository {
     }
   }
 
+  Future deleteMessage(String chatRoomID, String id) async {
+    DocumentReference<Map<String, dynamic>> msgDocRef = firebaseFirestore
+        .collection('chatrooms')
+        .doc(chatRoomID)
+        .collection('message')
+        .doc(id);
+    await msgDocRef.delete();
+  }
+
   Future<String> uploadFile(XFile file, String path, [String? fileType]) async {
     final ref = firebaseStorage.ref('users/$path').child(file.name);
     // final String contentType = "$fileType/${file.path.split('.').last}";
     await ref.putFile(File(file.path), SettableMetadata(contentType: fileType));
     final url = await ref.getDownloadURL();
     return url;
+  }
+
+  deleteMedia(String path) async {
+    final ref = firebaseStorage.ref('users/chat_media/$path');
+    await ref.delete();
   }
 
   Future updateUser(String userId, Map<String, String> json) async {

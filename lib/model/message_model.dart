@@ -23,6 +23,9 @@ class MessageModel {
   String? audioCurrentDuration = '0.00';
   double? imageHeight;
   double? imageWidth;
+  bool? isSelected;
+  String? fileName;
+  String? thumbnailName;
 
   MessageModel({
     this.senderID,
@@ -46,6 +49,9 @@ class MessageModel {
     this.isAudioDownloaded,
     this.imageHeight,
     this.imageWidth,
+    this.isSelected,
+    this.fileName,
+    this.thumbnailName,
   });
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
@@ -95,6 +101,8 @@ class MessageModel {
     audioDuration = json['audioDuration'];
     imageHeight = json['imageHeight'];
     imageWidth = json['imageWidth'];
+    fileName = json['fileName'];
+    thumbnailName = json['thumbnailName'];
   }
 
   Map<String, dynamic> toJson() {
@@ -113,6 +121,8 @@ class MessageModel {
     data['audioDuration'] = audioDuration;
     data['imageHeight'] = imageHeight;
     data['imageWidth'] = imageWidth;
+    data['fileName'] = fileName;
+    data['thumbnailName'] = thumbnailName;
     return data;
   }
 }

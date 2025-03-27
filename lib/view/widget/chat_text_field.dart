@@ -35,6 +35,7 @@ class _ChatTextFieldState extends State<ChatTextField> {
       children: [
         Expanded(
           child: Container(
+            margin: EdgeInsets.only(top: style.insets.xs),
             decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.inverseSurface,
                 border: Border.all(color: AppColor.greyline),

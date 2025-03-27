@@ -249,11 +249,17 @@ Future<void> groupNotification(
   final integer =
       regExp.allMatches(userId).map((match) => match.group(0)).join();
 
-  await notificationService.localNotification.show(
+  Map payload = {
+    'user': messages.first.data['user'],
+    'messageDocId': messages.first.data['messageDocId'],
+    'chatRoomId': messages.first.data['chatRoomId'],
+  };
+
+  notificationService.localNotification.show(
     int.parse(integer),
     userName.toUpperCase(),
     messages.last.data['body'],
-    payload: jsonEncode(messages.first.data),
+    payload: jsonEncode(payload),
     NotificationDetails(android: summaryNotificationDetails),
   );
 }

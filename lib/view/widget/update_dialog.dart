@@ -86,7 +86,9 @@ class UpdateDialog extends StatelessWidget {
                           onPressed: state.state == UpdateStatus.downloading
                               ? null
                               : () {
-                                  context.read<UpdateCubit>().downLoadUpdate();
+                                  context
+                                      .read<UpdateCubit>()
+                                      .downloadUpdate(context);
                                 },
                           child: Text(
                             state.state == UpdateStatus.downloaded

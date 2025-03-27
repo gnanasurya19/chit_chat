@@ -16,6 +16,8 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   initialize() async {
+    // NotificationSettings notificationSettings =
+    //     await FirebaseMessaging.instance.getNotificationSettings();
     await firebaseMessaging.requestPermission(
         badge: true, alert: true, announcement: false, sound: true);
     await localNotification.initialize(
@@ -23,11 +25,10 @@ class NotificationService {
       onDidReceiveBackgroundNotificationResponse: onNotificationAction,
       const InitializationSettings(
         android: AndroidInitializationSettings(
-          '@mipmap/launcher_icon',
+          'ic_launcher_foreground',
         ),
       ),
     );
-
     FirebaseMessaging.onMessage.listen(onArriveForegroundMsg);
   }
 

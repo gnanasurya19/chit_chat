@@ -125,6 +125,7 @@ class _AppText {
 class _Insets {
   _Insets(this.scale);
   late final double scale;
+  late final xxs = 3 * scale;
   late final xs = 5 * scale;
   late final sm = 8 * scale;
   late final md = 12 * scale;

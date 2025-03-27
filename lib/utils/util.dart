@@ -11,7 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:ui' as ui;
-
+import 'package:media_store_plus/media_store_plus.dart';
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 class Util {
@@ -194,6 +195,48 @@ class Util {
         }));
   }
 
+  showDeleteConfirmation(context, int msgCount, Function() func) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        clipBehavior: Clip.none,
+        backgroundColor: AppColor.white,
+        child: Container(
+          padding: EdgeInsets.all(style.insets.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(style.insets.md, style.insets.lg,
+                    style.insets.lg, style.insets.lg),
+                child: Text(
+                    'Are you sure want to delete ${msgCount > 1 ? 'these messages' : 'this message'}?'),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      func();
+                    },
+                    child: Text('Delete'),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<XFile?> captureImage(ImageSource source) async {
     final file = await ImagePicker()
         .pickImage(source: source, preferredCameraDevice: CameraDevice.front);
@@ -234,33 +277,32 @@ class Util {
 
   Future downloadMedia(String url, String mediaType, context) async {
     // get's the cache of the image if not available downloads from network
-    final chachedFile = await DefaultCacheManager().getSingleFile(url);
-    Directory documentDirectory = Directory('/storage/emulated/0/Download');
-    String mediaExtention = mediaType == 'image' ? ".jpeg" : 'mp4';
+    final cachedFile = await DefaultCacheManager().getSingleFile(url);
+    final cachedFilepath = path.dirname(cachedFile.path);
+
+    String mediaExtention = mediaType == 'image' ? "jpeg" : 'mp4';
     String prefix = mediaType == 'image' ? 'IMG' : 'VID';
-    Uint8List bytes = await chachedFile.readAsBytes();
 
     // generate image name
-    final String imageName =
-        DateFormat('yyyyMMddhhmmss').format(DateTime.now());
+    final String fileID = DateFormat('yyyyMMddhhmmS').format(DateTime.now());
+    final String fileName = "$prefix-$fileID-CC.$mediaExtention";
 
-    //generate file
-    File newFile =
-        File('${documentDirectory.path}/$prefix-$imageName-CC.$mediaExtention');
+    final newFile =
+        await cachedFile.copy('$cachedFilepath${path.separator}$fileName');
 
-    //checking existing file
-    int count = 1;
-    while (await newFile.exists()) {
-      String newImageName = "$imageName$count";
-      File file = File(
-          '${documentDirectory.path}/$prefix-$newImageName-CC.$mediaExtention');
-      newFile = file;
-      count++;
-    }
+    print("Coped File: ${newFile.path}");
 
     //stores to device
-    await newFile.writeAsBytes(bytes);
-    showSnackbar(context, 'Image Downloaded', 'info');
+    final value = await MediaStore().saveFile(
+      dirName: DirName.download,
+      dirType: DirType.download,
+      tempFilePath: newFile.path,
+    );
+
+    print("Saved File:${value.toString()}");
+
+    util.showSnackbar(context,
+        mediaType == 'image' ? 'Image' : 'Video' + " downloaded", 'success');
   }
 
   Future<Uint8List?> createCircularBitmap(Uint8List imageBytes) async {
@@ -315,7 +357,7 @@ class Util {
   }
 
   Directory? directory;
-  Future<String?> checkCache(String path) async {
+  Future<String?> checkCacheAudio(String path) async {
     directory = directory ?? await getApplicationDocumentsDirectory();
     String fullPath = directory!.path + Platform.pathSeparator + path;
     if (await File(fullPath).exists()) {

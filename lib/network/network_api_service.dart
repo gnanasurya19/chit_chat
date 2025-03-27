@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 class NetworkApiService {
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
-  Future sendMessage(UserData userData, MessageModel message, String msgId,
+  Future sendNotification(UserData userData, MessageModel message, String msgId,
       String chatRoomId) async {
     final jsonCredentials = await rootBundle
         .loadString('assets/.chit-chat-19491-20cdfedef94b.json');
@@ -52,6 +52,7 @@ class NetworkApiService {
         Uri.parse(
             'https://fcm.googleapis.com/v1/projects/$senderId/messages:send'),
         headers: {
+          'Autherization': 'Bearer ${client.credentials.accessToken.data}',
           'content-type': 'application/json',
         },
         body: jsonEncode(notificationData),

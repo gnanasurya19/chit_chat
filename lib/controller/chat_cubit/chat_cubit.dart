@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_size_getter/file_input.dart';
 import 'package:image_size_getter/image_size_getter.dart';
@@ -37,6 +38,7 @@ class ChatCubit extends Cubit<ChatState> {
   DocumentSnapshot<Map<String, dynamic>>? lastDocument;
   StreamSubscription? chatStream;
   String? thumbnailUrl;
+  String? thumbnailName;
   late UserData user;
 
   Future onInit(String receiverID, UserData user) async {
@@ -68,7 +70,6 @@ class ChatCubit extends Cubit<ChatState> {
 
     await query.then((element) async {
       populateList(element.docs.reversed.toList());
-      emit(ChatReadyActionState(chatlength: element.docs.length));
     });
 
     listenNewmsg();
@@ -173,7 +174,7 @@ class ChatCubit extends Cubit<ChatState> {
   audioPlayerInitialilze() async {
     await Future.forEach(messageList, (element) async {
       if (element.messageType == 'audio' && element.isAudioDownloaded != true) {
-        await util.checkCache(element.audioUrl!).then((value) async {
+        await util.checkCacheAudio(element.audioUrl!).then((value) async {
           if (value != null) {
             element.isAudioDownloaded = true;
             element.audioUrl = value;
@@ -241,12 +242,14 @@ class ChatCubit extends Cubit<ChatState> {
       final String url = await firebaseRepository.uploadFile(
           XFile(media.filePath), 'chat_media');
       media.fileUrl = url;
+      media.fileName = media.filePath.split(Platform.pathSeparator).last;
       if (mediaType == MediaType.video) {
         String? thumbnailPath = await VideoThumbnail.thumbnailFile(
           video: media.filePath,
           imageFormat: ImageFormat.JPEG,
           quality: 100,
         );
+        thumbnailName = thumbnailPath?.split(Platform.pathSeparator).last;
         thumbnailUrl = await firebaseRepository.uploadFile(
             XFile(thumbnailPath!), 'chat_media');
         final size = getMediaSize(thumbnailPath);
@@ -261,7 +264,9 @@ class ChatCubit extends Cubit<ChatState> {
       {String? audioPath,
       List<double>? audiowave,
       String? audioDuration,
-      Size? imageSize}) async {
+      Size? imageSize,
+      String? fileName,
+      String? thumbnailName}) async {
     if (message.isNotEmpty) {
       final String senderID = firebaseAuth.currentUser!.uid;
 
@@ -299,6 +304,8 @@ class ChatCubit extends Cubit<ChatState> {
         audioDuration: audioDuration,
         imageHeight: imageSize?.height.toDouble(),
         imageWidth: imageSize?.width.toDouble(),
+        fileName: fileName,
+        thumbnailName: thumbnailName,
       );
 
       //posting to firebase
@@ -318,7 +325,7 @@ class ChatCubit extends Cubit<ChatState> {
         });
 
         if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
-          networkApiService.sendMessage(
+          networkApiService.sendNotification(
               receiver, newMessage, msgId, chatRoomID);
         }
       });
@@ -327,10 +334,15 @@ class ChatCubit extends Cubit<ChatState> {
 
   Future sendMediaMessages(UserData receiver) async {
     Future.forEach(mediaList, (media) async {
-      await sendMessage(media.fileUrl!, receiver,
-          mediaType == MediaType.image ? 'image' : 'video',
-          imageSize:
-              media.width != null ? Size(media.width!, media.height!) : null);
+      await sendMessage(
+        media.fileUrl!,
+        receiver,
+        mediaType == MediaType.image ? 'image' : 'video',
+        imageSize:
+            media.width != null ? Size(media.width!, media.height!) : null,
+        fileName: media.fileName,
+        thumbnailName: thumbnailName,
+      );
     });
   }
 
@@ -353,12 +365,15 @@ class ChatCubit extends Cubit<ChatState> {
         for (var ele in value) {
           final size = getMediaSize(ele.path);
           mediaList.add(MediaDataModel(
-              filePath: ele.path, height: size.height, width: size.width));
+              filePath: ele.path,
+              height: size.height,
+              width: size.width,
+              fileName: ele.name));
         }
         emit(OpenUploadFileDialog());
         mediaType = MediaType.image;
       }
-    });
+    }).catchError((e) {});
   }
 
   Size getMediaSize(String filepath) {
@@ -550,5 +565,90 @@ class ChatCubit extends Cubit<ChatState> {
     audioMessage.isAudioDownloading = false;
     messageList[messageIndex].isAudioDownloaded = true;
     emit(ChatReady(messageList: messageList));
+  }
+
+  int selectedMsgCount = 0;
+  bool get isMsgSelected => selectedMsgCount != 0;
+  selectMessages(MessageModel message) {
+    if (message.isSelected == true) {
+      message.isSelected = false;
+      selectedMsgCount--;
+    } else {
+      message.isSelected = true;
+      selectedMsgCount++;
+    }
+
+    if (selectedMsgCount == 0) {
+      emit(ChatMessgesDeselectedState());
+    } else {
+      emit(ChatMessageSelectedState(
+          isMessageSelected: isMsgSelected,
+          selectedMsgCount: selectedMsgCount));
+    }
+
+    emit(ChatReady(
+      messageList: messageList,
+      isMsgsSelected: isMsgSelected,
+    ));
+  }
+
+  deSelectAllMsg() {
+    for (var element in messageList) {
+      element.isSelected = false;
+    }
+    selectedMsgCount = 0;
+    emit(ChatReady(
+      messageList: messageList,
+      isMsgsSelected: isMsgSelected,
+    ));
+    emit(ChatMessgesDeselectedState());
+  }
+
+  List<MessageModel>? selectedMsgs;
+  showDeleteAlert() {
+    selectedMsgs = messageList.where((e) => e.isSelected == true).toList();
+    emit(ChatDeleteDialogState(
+        msgCount: selectedMsgs?.length ?? 0,
+        function: () {
+          deleteMsgs();
+        }));
+  }
+
+  deleteMsgs() async {
+    Future.forEach(selectedMsgs ?? <MessageModel>[], (ele) async {
+      await firebaseRepository.deleteMessage(chatRoomID, ele.id!);
+      if (ele.messageType == 'image' || ele.messageType == 'video') {
+        await deleteMedia(ele.message!, ele.fileName);
+        if (ele.thumbnail != null) {
+          await deleteMedia(ele.thumbnail!, ele.thumbnailName);
+        }
+      }
+      if (ele.messageType == 'audio' &&
+          ele.isAudioDownloaded == true &&
+          ele.audioUrl != null) {
+        await deleteAudio(ele.audioUrl!, ele.audioUrl);
+      }
+    });
+    emit(ChatMessgesDeselectedState());
+  }
+
+  deleteMedia(String url, String? filename) async {
+    if (filename != null) {
+      firebaseRepository.deleteMedia(filename);
+    }
+    final cachedFile = await DefaultCacheManager().getFileFromMemory(url);
+    if (cachedFile != null) {
+      await cachedFile.file.delete();
+    }
+  }
+
+  deleteAudio(String url, filename) async {
+    if (filename != null) {
+      firebaseRepository.deleteMedia(filename);
+    }
+    final audioPath = await util.checkCacheAudio(url);
+    if (audioPath != null) {
+      await File(audioPath).delete();
+    }
   }
 }

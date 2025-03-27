@@ -26,6 +26,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
   bool isVideoPlaying = false;
   bool isBuffering = true;
   int videoDuration = 0;
+  bool isCompleted = false;
 
   @override
   void dispose() {
@@ -50,12 +51,18 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
         vpController = VideoPlayerController.file(File(filepath));
       }
 
-      vpController!
-        ..initialize().then((v) {
+      vpController!.initialize().then((_) {
+        setState(() {
           videoDuration = vpController!.value.duration.inMilliseconds;
-          vpController!.addListener(videoListener);
-        })
-        ..play();
+        });
+        vpController!.addListener(videoListener);
+
+        // ✅ Ensure video is ready before playing
+        if (vpController!.value.isInitialized) {
+          vpController!.play();
+        }
+      });
+
       BlocProvider.of<MediaCubit>(context).toggleStatusbar();
     }
     super.initState();
@@ -63,8 +70,19 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
 
   void videoListener() {
     setState(() {
-      isVideoPlaying = vpController!.value.isPlaying;
-      isBuffering = vpController!.value.isBuffering;
+      isVideoPlaying = vpController?.value.isPlaying ?? false;
+      isBuffering = vpController?.value.isBuffering ?? false;
+      isCompleted = vpController?.value.isCompleted ?? false;
+
+      if (vpController?.value.isCompleted == true) {
+        // vpController?.seekTo(Duration.zero);
+        vpController?.pause();
+        isCompleted = true;
+
+        // ✅ Manually reset buffering state when video completes
+        isBuffering = false;
+      }
+
       seekPosition =
           vpController!.value.position.inMilliseconds / videoDuration;
     });
@@ -105,6 +123,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                   }
                 },
                 child: Container(
+                  color: Colors.transparent,
                   constraints: const BoxConstraints.expand(),
                   child: Stack(
                     alignment: Alignment.center,
@@ -164,7 +183,8 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                                           onTap: () {
                                             controller.downloadMedia(
                                                 widget.message!.message!,
-                                                widget.message!.messageType!);
+                                                widget.message!.messageType!,
+                                                context);
                                           },
                                         ),
                                         PopupMenuItem(
@@ -223,6 +243,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                                     AppColor.black.withValues(alpha: 0.4)),
                             onPressed: () {
                               vpController!.play();
+                              setState(() => isCompleted = false);
                               Future.delayed(const Duration(seconds: 3), () {
                                 BlocProvider.of<MediaCubit>(context)
                                     .toggleStatusbar(true);
@@ -249,7 +270,9 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
                           ),
                         ),
                       // buffer icon
-                      if (isBuffering && widget.message!.messageType == 'video')
+                      if (!isCompleted &&
+                          isBuffering &&
+                          widget.message!.messageType == 'video')
                         SizedBox(
                           width: 45,
                           height: 45,

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
@@ -75,152 +74,226 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  bool canPop = true;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            splashRadius: 40,
-            onPressed: () async {
-              await BlocProvider.of<ChatCubit>(context).stopStream().then((e) {
-                // ignore: use_build_context_synchronously
-                Navigator.pop(context);
-              });
-            },
-            icon: const SVGIcon(
-              name: 'arrow-left',
-              color: AppColor.white,
-              size: 20,
-            )),
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            if (widget.userData.profileURL != null)
-              Container(
-                width: 30,
-                height: 30,
-                clipBehavior: Clip.antiAliasWithSaveLayer,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: GestureDetector(
-                  onTap: () {
-                    if (widget.userData.profileURL != null) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ViewMediaPage(
-                            message: MessageModel(
-                                message: widget.userData.profileURL,
-                                messageType: 'image'),
-                          ),
-                        ),
-                      );
-                    }
+    return PopScope(
+      canPop: canPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          context.read<ChatCubit>().deSelectAllMsg();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: BlocBuilder<ChatCubit, ChatState>(
+            buildWhen: (previous, current) => current is ChatSelectionState,
+            builder: (context, state) {
+              if (state is ChatMessageSelectedState) {
+                return IconButton(
+                  splashRadius: 40,
+                  color: AppColor.white,
+                  iconSize: style.icon.md,
+                  icon: Icon(Icons.close_sharp),
+                  onPressed: () {
+                    _chatRoomsCubit.deSelectAllMsg();
                   },
-                  child: CircularProfileImage(
-                    image: widget.userData.profileURL,
-                    isNetworkImage: true,
+                );
+              } else {
+                return IconButton(
+                    splashRadius: 40,
+                    onPressed: () {
+                      _chatRoomsCubit.stopStream();
+                      Navigator.pop(context);
+                    },
+                    icon: SVGIcon(
+                      name: 'arrow-left',
+                      color: AppColor.white,
+                      size: style.icon.sm,
+                    ));
+              }
+            },
+          ),
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              if (widget.userData.profileURL != null)
+                Container(
+                  width: 30,
+                  height: 30,
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: GestureDetector(
+                    onTap: () {
+                      if (widget.userData.profileURL != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ViewMediaPage(
+                              message: MessageModel(
+                                  message: widget.userData.profileURL,
+                                  messageType: 'image'),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: CircularProfileImage(
+                      image: widget.userData.profileURL,
+                      isNetworkImage: true,
+                    ),
                   ),
                 ),
+              const Gap(10),
+              InkWell(
+                onTap: () {
+                  context.read<ChatCubit>().justEmit();
+                },
+                child: Text(
+                    widget.userData.userName!.replaceRange(
+                        0,
+                        1,
+                        widget.userData.userName!
+                            .split('')
+                            .first
+                            .toUpperCase()),
+                    style: style.text.boldMedium.copyWith(
+                      color: AppColor.white,
+                    )),
               ),
-            const Gap(10),
-            InkWell(
-              onTap: () {
-                context.read<ChatCubit>().justEmit();
+            ],
+          ),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          iconTheme: const IconThemeData(color: AppColor.white),
+          actions: [
+            BlocBuilder<ChatCubit, ChatState>(
+              buildWhen: (previous, current) => current is ChatSelectionState,
+              builder: (context, state) {
+                if (state is ChatMessageSelectedState) {
+                  return Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(style.insets.xs),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColor.white,
+                        ),
+                        child: Text(
+                          '${state.selectedMsgCount}',
+                          style: style.text.regular.copyWith(
+                              color:
+                                  Theme.of(context).colorScheme.inversePrimary),
+                        ),
+                      ),
+                      IconButton(
+                        color: AppColor.white,
+                        iconSize: style.icon.rg,
+                        onPressed: () {
+                          _chatRoomsCubit.showDeleteAlert();
+                        },
+                        icon: Icon(Icons.delete),
+                      ),
+                    ],
+                  );
+                } else {
+                  return SizedBox();
+                }
               },
-              child: Text(
-                  widget.userData.userName!.replaceRange(0, 1,
-                      widget.userData.userName!.split('').first.toUpperCase()),
-                  style: style.text.boldMedium.copyWith(
-                    color: AppColor.white,
-                  )),
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        iconTheme: const IconThemeData(color: AppColor.white),
-      ),
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-        child: Column(
-          children: [
-            Expanded(
-              child: BlocConsumer<ChatCubit, ChatState>(
-                listenWhen: (previous, current) => current is ChatActionState,
-                listener: listener,
-                buildWhen: (previous, current) => current is! ChatActionState,
-                builder: (context, state) {
-                  if (state is ChatReady) {
-                    return Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        ListView.builder(
-                          reverse: true,
-                          // shrinkWrap: true,
-                          controller: listScrollController,
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          itemCount: state.messageList.length,
-                          itemBuilder: (context, index) {
-                            final MessageModel message =
-                                state.messageList[index];
-                            return Column(
-                              children: [
-                                //date
-                                Builder(builder: (context) {
-                                  if (index < state.messageList.length - 1 &&
-                                      message.date ==
-                                          state.messageList[index + 1].date) {
-                                    return const SizedBox();
-                                  } else {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0),
-                                      child: Text('${message.date}'),
-                                    );
-                                  }
-                                }),
-                                //message bubble
-                                MessageBubble(widget: widget, message: message),
-                              ],
-                            );
-                          },
-                        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+          child: Column(
+            children: [
+              Expanded(
+                child: BlocConsumer<ChatCubit, ChatState>(
+                  listenWhen: (previous, current) =>
+                      current is ChatActionState ||
+                      current is ChatSelectionState,
+                  listener: listener,
+                  buildWhen: (previous, current) =>
+                      current is! ChatActionState &&
+                      current is! ChatSelectionState,
+                  builder: (context, state) {
+                    if (state is ChatReady) {
+                      return Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          ListView.builder(
+                            reverse: true,
+                            // shrinkWrap: true,
+                            controller: listScrollController,
+                            itemCount: state.messageList.length,
+                            itemBuilder: (context, index) {
+                              final MessageModel message =
+                                  state.messageList[index];
+                              return Column(
+                                children: [
+                                  //date
+                                  Builder(builder: (context) {
+                                    if (index < state.messageList.length - 1 &&
+                                        message.date ==
+                                            state.messageList[index + 1].date) {
+                                      return const SizedBox();
+                                    } else {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0),
+                                        child: Text('${message.date}'),
+                                      );
+                                    }
+                                  }),
+                                  //message bubble
+                                  MessageBubble(
+                                    widget: widget,
+                                    message: message,
+                                    isMsgsSelected: state.isMsgsSelected,
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
 
-                        // load more progress indicator
-                        if (state.loadingOldchat ?? false)
-                          Positioned(
-                            top: 10,
-                            child: Container(
-                              height: 30,
-                              width: 30,
-                              padding: const EdgeInsets.all(7),
-                              decoration: const BoxDecoration(
-                                  color: AppColor.white,
-                                  shape: BoxShape.circle),
-                              child: const CircularProgressIndicator(
-                                color: AppColor.blue,
-                                strokeWidth: 2,
+                          // load more progress indicator
+                          if (state.loadingOldchat ?? false)
+                            Positioned(
+                              top: 10,
+                              child: Container(
+                                height: 30,
+                                width: 30,
+                                padding: const EdgeInsets.all(7),
+                                decoration: const BoxDecoration(
+                                    color: AppColor.white,
+                                    shape: BoxShape.circle),
+                                child: const CircularProgressIndicator(
+                                  color: AppColor.blue,
+                                  strokeWidth: 2,
+                                ),
                               ),
-                            ),
-                          )
-                      ],
-                    );
-                  } else if (state is ChatListEmpty) {
-                    return EmptyChat(
-                      onPress: () async {
-                        context
-                            .read<ChatCubit>()
-                            .sendMessage('Hi', widget.userData, 'text');
-                      },
-                    );
-                  } else {
-                    return const SizedBox();
-                  }
-                },
+                            )
+                        ],
+                      );
+                    } else if (state is ChatListEmpty) {
+                      return EmptyChat(
+                        onPress: () async {
+                          context
+                              .read<ChatCubit>()
+                              .sendMessage('Hi', widget.userData, 'text');
+                        },
+                      );
+                    } else {
+                      return const SizedBox();
+                    }
+                  },
+                ),
               ),
-            ),
-            //chat field
-            ChatTextField(messageController: messageController, widget: widget),
-          ],
+              //chat field
+              ChatTextField(
+                  messageController: messageController, widget: widget),
+            ],
+          ),
         ),
       ),
     );
@@ -238,6 +311,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     } else if (state is FileUploaded) {
       Navigator.pop(context);
       context.read<ChatCubit>().sendMediaMessages(widget.userData);
+    } else if (state is ChatMessageSelectedState) {
+      setState(() => canPop = false);
+    } else if (state is ChatMessgesDeselectedState) {
+      setState(() => canPop = true);
+    } else if (state is ChatDeleteDialogState) {
+      util.showDeleteConfirmation(context, state.msgCount, state.function);
     }
   }
 }
@@ -247,148 +326,178 @@ class MessageBubble extends StatelessWidget {
     super.key,
     required this.widget,
     required this.message,
+    this.isMsgsSelected,
   });
 
   final ChatPage widget;
   final MessageModel message;
+  final bool? isMsgsSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: widget.userData.uid == message.senderID
-          ? Alignment.centerLeft
-          : Alignment.centerRight,
-      child: Container(
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.7),
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.inverseSurface,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          crossAxisAlignment: widget.userData.uid == message.senderID
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.end,
-          children: [
-            if (message.messageType == 'text')
-              SelectableText(
-                '${message.message}',
-                style: style.text.regular,
+    return GestureDetector(
+      onTap: (isMsgsSelected ?? false) || message.isSelected == true
+          ? () {
+              context.read<ChatCubit>().selectMessages(message);
+            }
+          : null,
+      onLongPress: !(isMsgsSelected ?? false)
+          ? () {
+              context.read<ChatCubit>().selectMessages(message);
+            }
+          : null,
+      child: Stack(
+        children: [
+          Container(
+            color: Colors.transparent,
+            alignment: widget.userData.uid == message.senderID
+                ? Alignment.centerLeft
+                : Alignment.centerRight,
+            child: Container(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.7),
+              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.inverseSurface,
+                borderRadius: BorderRadius.circular(10),
               ),
-            if (message.messageType == 'image') ...[
-              Container(
-                width: MediaQuery.sizeOf(context).width * 0.7,
-                constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * 0.45),
-                child: AspectRatio(
-                  aspectRatio:
-                      (message.imageWidth ?? 1) / (message.imageHeight ?? 1),
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => ViewMediaPage(
-                          message: message,
-                        ),
-                      ),
+              child: Column(
+                crossAxisAlignment: widget.userData.uid == message.senderID
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.end,
+                children: [
+                  if (message.messageType == 'text')
+                    SelectableText(
+                      '${message.message}',
+                      style: style.text.regular,
                     ),
-                    child: CachedNetworkImage(
-                      imageUrl: message.message!,
-                      placeholder: _loader,
-                      errorWidget: _error,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              const Gap(5)
-            ],
-            if (message.messageType == 'video') ...[
-              GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) => ViewMediaPage(message: message)),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
+                  if (message.messageType == 'image') ...[
                     Container(
                       width: MediaQuery.sizeOf(context).width * 0.7,
-                      margin: const EdgeInsets.only(bottom: 5),
                       constraints: BoxConstraints(
                           maxHeight: MediaQuery.sizeOf(context).height * 0.45),
                       child: AspectRatio(
                         aspectRatio: (message.imageWidth ?? 1) /
                             (message.imageHeight ?? 1),
-                        child: CachedNetworkImage(
-                          imageUrl: message.thumbnail!,
-                          placeholder: _loader,
-                          errorWidget: _error,
-                          fit: BoxFit.cover,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ViewMediaPage(
+                                message: message,
+                              ),
+                            ),
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl: message.message!,
+                            placeholder: _loader,
+                            errorWidget: _error,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
-                    //play button
-                    Positioned(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.black.withValues(alpha: 0.4),
-                        ),
-                        padding: const EdgeInsets.all(10),
-                        child: const Icon(
-                          Icons.play_arrow_rounded,
-                          color: AppColor.white,
-                        ),
-                      ),
-                    )
+                    const Gap(5)
                   ],
-                ),
-              ),
-            ],
-            if (message.messageType == 'audio') ...[
-              AudioMsgBubble(
-                key: Key(message.id ?? ''),
-                cubit: context.read<ChatCubit>(),
-                message: message,
-              ),
-            ],
-
-            // message info
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  DateFormat('hh:mm a').format(message.timestamp!.toDate()),
-                  style: style.text.regularSmall,
-                ),
-                const Gap(3),
-                if (widget.userData.uid != message.senderID)
-                  if (message.status == 'unread')
-                    SVGIcon(
-                      name: "check",
-                      size: style.icon.xs,
-                      color: AppColor.greyText,
-                    )
-                  else if (message.status == 'delivered')
-                    SVGIcon(
-                      name: "read",
-                      size: style.icon.xs,
-                      color: AppColor.greyText,
-                    )
-                  else ...[
-                    SVGIcon(
-                      name: "read",
-                      size: style.icon.xs,
-                      color: AppColor.blue,
+                  if (message.messageType == 'video') ...[
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                ViewMediaPage(message: message)),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: MediaQuery.sizeOf(context).width * 0.7,
+                            margin: const EdgeInsets.only(bottom: 5),
+                            constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.sizeOf(context).height * 0.45),
+                            child: AspectRatio(
+                              aspectRatio: (message.imageWidth ?? 1) /
+                                  (message.imageHeight ?? 1),
+                              child: CachedNetworkImage(
+                                imageUrl: message.thumbnail!,
+                                placeholder: _loader,
+                                errorWidget: _error,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          //play button
+                          Positioned(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColor.black.withValues(alpha: 0.4),
+                              ),
+                              padding: const EdgeInsets.all(10),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                color: AppColor.white,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
                     ),
-                  ]
-              ],
+                  ],
+                  if (message.messageType == 'audio') ...[
+                    AudioMsgBubble(
+                      key: Key(message.id ?? ''),
+                      cubit: context.read<ChatCubit>(),
+                      message: message,
+                    ),
+                  ],
+
+                  // message info
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat('hh:mm a')
+                            .format(message.timestamp!.toDate()),
+                        style: style.text.regularSmall,
+                      ),
+                      const Gap(3),
+                      if (widget.userData.uid != message.senderID)
+                        if (message.status == 'unread')
+                          SVGIcon(
+                            name: "check",
+                            size: style.icon.xs,
+                            color: AppColor.greyText,
+                          )
+                        else if (message.status == 'delivered')
+                          SVGIcon(
+                            name: "read",
+                            size: style.icon.xs,
+                            color: AppColor.greyText,
+                          )
+                        else ...[
+                          SVGIcon(
+                            name: "read",
+                            size: style.icon.xs,
+                            color: AppColor.blue,
+                          ),
+                        ]
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+          if (message.isSelected == true)
+            Positioned(
+                top: 0,
+                bottom: 0,
+                width: MediaQuery.sizeOf(context).width,
+                child: Container(
+                  color: AppColor.blue.withValues(alpha: 0.3),
+                ))
+        ],
       ),
     );
   }

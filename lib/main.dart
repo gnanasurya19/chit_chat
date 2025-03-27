@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
 import 'package:chit_chat/view/screen/profile_edit_page.dart';
@@ -6,6 +8,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:media_store_plus/media_store_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
@@ -27,11 +32,38 @@ import 'package:chit_chat/view/screen/register_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await setUpMediaStore();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService().initialize();
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
-
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
   runApp(const MainApp());
+}
+
+final mediaStorePlugin = MediaStore();
+
+Future<void> setUpMediaStore() async {
+  if (Platform.isAndroid) {
+    await MediaStore.ensureInitialized();
+  }
+
+  List<Permission> permissions = [
+    Permission.storage,
+  ];
+
+  if ((await mediaStorePlugin.getPlatformSDKInt()) >= 33) {
+    permissions.add(Permission.photos);
+    permissions.add(Permission.audio);
+    permissions.add(Permission.videos);
+  }
+
+  await permissions.request();
+
+  MediaStore.appFolder = "ChitChat";
 }
 
 final navigationKey = GlobalKey<NavigatorState>();

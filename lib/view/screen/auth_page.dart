@@ -24,14 +24,17 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (firebaseAuth.currentUser == null) {
-      loadWidget = const LoginPage();
-    } else if (!firebaseAuth.currentUser!.emailVerified) {
-      loadWidget = const EmailVerificationPage();
-    } else if (firebaseAuth.currentUser != null) {
-      loadWidget = const HomePage();
-    }
-
-    return loadWidget;
+    return Builder(
+      builder: (context) {
+        if (firebaseAuth.currentUser == null) {
+          loadWidget = const LoginPage();
+        } else if (!firebaseAuth.currentUser!.emailVerified) {
+          loadWidget = const EmailVerificationPage();
+        } else if (firebaseAuth.currentUser != null) {
+          loadWidget = const HomePage();
+        }
+        return loadWidget;
+      },
+    );
   }
 }

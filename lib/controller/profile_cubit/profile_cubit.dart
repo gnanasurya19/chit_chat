@@ -44,8 +44,6 @@ class ProfileCubit extends Cubit<ProfileState> {
     CollectionReference<Map<String, dynamic>> query =
         firebaseFirestore.collection('users');
 
-    query.doc().get().then((v) {});
-
     await query.where('uid', isEqualTo: currentUserId).get().then(
       (value) {
         if (value.docs.isNotEmpty) {

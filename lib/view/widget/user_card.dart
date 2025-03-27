@@ -56,8 +56,8 @@ class UserCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (user.lastMessage!.senderID ==
-                          FirebaseAuth.instance.currentUser!.uid) ...[
+                      if (user.lastMessage?.senderID ==
+                          FirebaseAuth.instance.currentUser?.uid) ...[
                         if (user.lastMessage!.status == 'unread')
                           SVGIcon(
                             name: "check",
@@ -125,7 +125,7 @@ class UserCard extends StatelessWidget {
                                         user.lastMessage!.batch != 0 &&
                                         user.lastMessage!.receiverID ==
                                             FirebaseAuth
-                                                .instance.currentUser!.uid
+                                                .instance.currentUser?.uid
                                     ? "Roboto.Bold"
                                     : "Roboto.Regular",
                               ),
