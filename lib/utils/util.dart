@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -14,8 +15,12 @@ import 'dart:ui' as ui;
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Util {
+  final mediaStorePlugin = MediaStore();
+
   PageRouteBuilder<dynamic> pageTransition(Widget name) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => name,
@@ -195,7 +200,8 @@ class Util {
         }));
   }
 
-  showDeleteConfirmation(context, int msgCount, Function() func) {
+  showDeleteConfirmation(context, int msgCount, bool isDeleteForAll,
+      Function() deleteForAll, Function() deleteForMe) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -212,23 +218,37 @@ class Util {
                 child: Text(
                     'Are you sure want to delete ${msgCount > 1 ? 'these messages' : 'this message'}?'),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      func();
-                    },
-                    child: Text('Delete'),
-                  ),
-                ],
+              Container(
+                padding: EdgeInsets.only(right: style.insets.md),
+                width: double.infinity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (isDeleteForAll)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          deleteForAll();
+                        },
+                        child: Text('Delete for everyone'),
+                      ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        deleteForMe();
+                      },
+                      child: Text('Delete for me'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Cancel'),
+                    ),
+                  ],
+                ),
               )
             ],
           ),
@@ -290,19 +310,15 @@ class Util {
     final newFile =
         await cachedFile.copy('$cachedFilepath${path.separator}$fileName');
 
-    print("Coped File: ${newFile.path}");
-
     //stores to device
-    final value = await MediaStore().saveFile(
+    await MediaStore().saveFile(
       dirName: DirName.download,
       dirType: DirType.download,
       tempFilePath: newFile.path,
     );
 
-    print("Saved File:${value.toString()}");
-
     util.showSnackbar(context,
-        mediaType == 'image' ? 'Image' : 'Video' + " downloaded", 'success');
+        "${mediaType == 'image' ? 'Image' : 'Video'} Downloaded", 'success');
   }
 
   Future<Uint8List?> createCircularBitmap(Uint8List imageBytes) async {
@@ -369,5 +385,37 @@ class Util {
   Future<String> downloadtoCache(String audioUrl, String path) async {
     final localPath = await networkApiService.downloadAudio(audioUrl, path);
     return localPath;
+  }
+
+  changeTheme(ThemeSwitcherState? themestate, BuildContext context) async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    String currentTheme = sp.getString('thememode') ?? 'light';
+    if (currentTheme == 'system' && context.mounted) {
+      final brightness = MediaQuery.platformBrightnessOf(context);
+      themestate?.changeTheme(
+          theme: brightness == Brightness.light
+              ? MyAppTheme.darkTheme
+              : MyAppTheme.lightTheme);
+    }
+  }
+
+  Future<void> setUpMediaStore() async {
+    if (Platform.isAndroid) {
+      await MediaStore.ensureInitialized();
+    }
+
+    List<Permission> permissions = [
+      Permission.storage,
+    ];
+
+    if ((await mediaStorePlugin.getPlatformSDKInt()) >= 33) {
+      permissions.add(Permission.photos);
+      permissions.add(Permission.audio);
+      permissions.add(Permission.videos);
+    }
+
+    await permissions.request();
+
+    MediaStore.appFolder = "ChitChat";
   }
 }

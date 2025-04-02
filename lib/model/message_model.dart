@@ -26,33 +26,32 @@ class MessageModel {
   bool? isSelected;
   String? fileName;
   String? thumbnailName;
-
-  MessageModel({
-    this.senderID,
-    this.receiverID,
-    this.senderEmail,
-    this.message,
-    this.timestamp,
-    this.status,
-    this.batch,
-    this.time,
-    this.date,
-    this.messageType,
-    this.id,
-    this.thumbnail,
-    this.audioUrl,
-    this.audioFormData,
-    this.audioDuration,
-    this.audioCurrentDuration,
-    this.isAudioUploading,
-    this.isAudioDownloading,
-    this.isAudioDownloaded,
-    this.imageHeight,
-    this.imageWidth,
-    this.isSelected,
-    this.fileName,
-    this.thumbnailName,
-  });
+  String? deletedBy;
+  MessageModel(
+      {this.senderID,
+      this.receiverID,
+      this.senderEmail,
+      this.message,
+      this.timestamp,
+      this.status,
+      this.batch,
+      this.time,
+      this.date,
+      this.messageType,
+      this.id,
+      this.thumbnail,
+      this.audioUrl,
+      this.audioFormData,
+      this.audioDuration,
+      this.audioCurrentDuration,
+      this.isAudioUploading,
+      this.isAudioDownloading,
+      this.isAudioDownloaded,
+      this.imageHeight,
+      this.imageWidth,
+      this.isSelected,
+      this.fileName,
+      this.thumbnailName});
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
     id = docID;
@@ -103,6 +102,7 @@ class MessageModel {
     imageWidth = json['imageWidth'];
     fileName = json['fileName'];
     thumbnailName = json['thumbnailName'];
+    deletedBy = json['deletedBy'];
   }
 
   Map<String, dynamic> toJson() {
@@ -123,6 +123,7 @@ class MessageModel {
     data['imageWidth'] = imageWidth;
     data['fileName'] = fileName;
     data['thumbnailName'] = thumbnailName;
+    data['deletedBy'] = deletedBy ?? '';
     return data;
   }
 }

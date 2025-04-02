@@ -316,7 +316,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     } else if (state is ChatMessgesDeselectedState) {
       setState(() => canPop = true);
     } else if (state is ChatDeleteDialogState) {
-      util.showDeleteConfirmation(context, state.msgCount, state.function);
+      util.showDeleteConfirmation(context, state.msgCount, state.isDeleteForAll,
+          state.deleteForAll, state.deleteOnlyForMe);
     }
   }
 }

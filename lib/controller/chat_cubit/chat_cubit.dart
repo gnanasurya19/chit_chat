@@ -59,11 +59,11 @@ class ChatCubit extends Cubit<ChatState> {
     await removeReadMsgFromNotification(chatRoomID);
 
     //get chat message from firebase
-
     var query = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
+        .where('deletedBy', isNotEqualTo: senderID)
         .orderBy('timestamp', descending: true)
         .limit(20)
         .get();
@@ -77,12 +77,16 @@ class ChatCubit extends Cubit<ChatState> {
 
   listenNewmsg() {
     if (chatStream != null) {
-      chatStream!.cancel();
+      chatStream?.cancel();
     }
+    final String senderID = currentUserId;
+
     Query<Map<String, dynamic>> query = firebaseFirestore
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
+        .where('deletedBy', isNotEqualTo: senderID)
+        .orderBy('deletedBy')
         .orderBy('timestamp');
 
     if (lastDocument != null) {
@@ -198,7 +202,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   pauseChatStream() {
     if (chatStream != null) {
-      chatStream!.pause();
+      chatStream?.pause();
     }
   }
 
@@ -351,7 +355,7 @@ class ChatCubit extends Cubit<ChatState> {
     sp.setString('receiverId', '');
     messageList.clear();
     emit(ChatReady(messageList: const []));
-    chatStream!.cancel();
+    chatStream?.cancel();
     // remove
   }
 
@@ -606,12 +610,23 @@ class ChatCubit extends Cubit<ChatState> {
 
   List<MessageModel>? selectedMsgs;
   showDeleteAlert() {
+    final currentUserID = firebaseAuth.currentUser?.uid;
+
     selectedMsgs = messageList.where((e) => e.isSelected == true).toList();
+
+    final isDeleteForAll = selectedMsgs?.every((element) {
+      return element.senderID == currentUserID;
+    });
+
     emit(ChatDeleteDialogState(
         msgCount: selectedMsgs?.length ?? 0,
-        function: () {
+        deleteForAll: () {
           deleteMsgs();
-        }));
+        },
+        deleteOnlyForMe: () {
+          markAsDelete();
+        },
+        isDeleteForAll: isDeleteForAll ?? false));
   }
 
   deleteMsgs() async {
@@ -629,6 +644,22 @@ class ChatCubit extends Cubit<ChatState> {
         await deleteAudio(ele.audioUrl!, ele.audioUrl);
       }
     });
+    selectedMsgCount = 0;
+    emit(ChatMessgesDeselectedState());
+  }
+
+  markAsDelete() async {
+    final currentUserID = firebaseAuth.currentUser?.uid;
+    for (var msg in selectedMsgs ?? <MessageModel>[]) {
+      DocumentReference messageRef = firebaseFirestore
+          .collection('chatrooms')
+          .doc(chatRoomID)
+          .collection('message')
+          .doc(msg.id);
+      await messageRef.update({"deletedBy": currentUserID});
+      msg.deletedBy = currentUserID;
+    }
+    selectedMsgCount = 0;
     emit(ChatMessgesDeselectedState());
   }
 

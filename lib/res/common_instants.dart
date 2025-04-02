@@ -5,14 +5,12 @@ import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/network/network_api_service.dart';
 import 'package:chit_chat/notification/notification_service.dart';
-// import 'package:chit_chat/notification/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +27,44 @@ NetworkApiService networkApiService = NetworkApiService();
 
 final notificationService = NotificationService();
 FirebaseRepository firebaseRepository = FirebaseRepository();
+
+UserData? userDataFromTerminated;
+
+FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+
+Future<void> refreshToken() async {
+  // get device token
+  final token = await firebaseMessaging.getToken();
+
+  SharedPreferences sp = await SharedPreferences.getInstance();
+  final localToken = sp.getString('deviceToken');
+  if (localToken == null || token != localToken) {
+    sp.setString('deviceToken', token!);
+
+    // get current user to update token
+    final user = await firebaseFirestore
+        .collection('users')
+        .where('uid', isEqualTo: firebaseAuth.currentUser!.uid)
+        .get();
+
+    final UserData userData = UserData.fromJson(user.docs[0].data());
+
+    DocumentReference messageRef =
+        firebaseFirestore.collection('users').doc(user.docs[0].id);
+
+    if (userData.fCM != token) {
+      userData.fCM = token;
+      messageRef.update(userData.toJson());
+    }
+  }
+}
+
+@pragma('vm:entry-point')
+saveuserInfo(UserData user) async {
+  SharedPreferences sp = await SharedPreferences.getInstance();
+  sp.setString('userData', jsonEncode(user));
+}
 
 @pragma('vm:entry-point')
 Future<void> onBackgroundMsg(RemoteMessage message) async {
@@ -87,30 +123,6 @@ Future<void> onBackgroundMsg(RemoteMessage message) async {
 
     groupNotification(groupChannelId, groupChannelName, groupChannelDescription,
         userId, userName, currentUserList, userProfile);
-
-    // FlutterLocalNotificationsPlugin().show(
-    //   DateTime.now().microsecondsSinceEpoch % 10000000,
-    //   userData.userName,
-    //   message.data['body'],
-    //   payload: jsonEncode(message.data),
-    //   NotificationDetails(
-    //     iOS: const DarwinNotificationDetails(),
-    //     android: AndroidNotificationDetails(
-    //         "grouped channel id", "grouped channel name",
-    //         channelDescription: 'Description',
-    //         importance: Importance.max,
-    //         priority: Priority.max,
-    //         groupKey: userId,
-    //         actions: [
-    //           const AndroidNotificationAction(
-    //             '0',
-    //             'mark as read',
-    //             titleColor: Colors.lightBlue,
-    //             cancelNotification: true,
-    //           )
-    //         ]),
-    //   ),
-    // );
   }
 }
 

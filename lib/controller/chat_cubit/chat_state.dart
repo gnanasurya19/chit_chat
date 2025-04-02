@@ -26,8 +26,14 @@ final class FileUploaded extends ChatActionState {}
 
 final class ChatDeleteDialogState extends ChatActionState {
   final int msgCount;
-  final Function() function;
-  ChatDeleteDialogState({required this.function, required this.msgCount});
+  final Function() deleteForAll;
+  final Function() deleteOnlyForMe;
+  final bool isDeleteForAll;
+  ChatDeleteDialogState(
+      {required this.deleteForAll,
+      required this.msgCount,
+      required this.isDeleteForAll,
+      required this.deleteOnlyForMe});
 }
 
 final class ChatReady extends ChatState {

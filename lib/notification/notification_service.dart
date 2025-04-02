@@ -20,6 +20,7 @@ class NotificationService {
     //     await FirebaseMessaging.instance.getNotificationSettings();
     await firebaseMessaging.requestPermission(
         badge: true, alert: true, announcement: false, sound: true);
+
     await localNotification.initialize(
       onDidReceiveNotificationResponse: onClickLocalNotification,
       onDidReceiveBackgroundNotificationResponse: onNotificationAction,
@@ -33,14 +34,24 @@ class NotificationService {
   }
 
   void onClickLocalNotification(NotificationResponse details) {
-    if (navigationKey.currentState != null) {
+    if (details.payload != null) {
       final data = jsonDecode(details.payload!);
       final UserData userData = UserData.fromJson(jsonDecode(data['user']));
-      Navigator.push(
-          navigationKey.currentContext!,
-          MaterialPageRoute(
-            builder: (context) => ChatPage(userData: userData),
-          ));
+      if (navigationKey.currentState != null) {
+        Navigator.push(
+            navigationKey.currentContext!,
+            MaterialPageRoute(
+              builder: (context) => ChatPage(userData: userData),
+            ));
+      }
+    }
+  }
+
+  void onClickTerminatedLNotificatoin(NotificationAppLaunchDetails? details) {
+    if (details != null &&
+        details.didNotificationLaunchApp &&
+        details.notificationResponse != null) {
+      onClickLocalNotification(details.notificationResponse!);
     }
   }
 

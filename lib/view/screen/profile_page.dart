@@ -23,7 +23,7 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   final List general = [
     {
       'icon': "user",
@@ -41,118 +41,135 @@ class _ProfilePageState extends State<ProfilePage> {
       'subTitle': 'Keep your application up to date',
     },
   ];
+  ThemeSwitcherState? themeSwitcherState;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     BlocProvider.of<ProfileCubit>(context).onProfilePage();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    util.changeTheme(themeSwitcherState, context);
+    super.didChangePlatformBrightness();
+  }
+
+  @override
+  Future<void> dispose() async {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ThemeSwitchingArea(
-      child: Builder(builder: (context) {
-        return Scaffold(
-          appBar: AppBar(
-            scrolledUnderElevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-            centerTitle: true,
-            title: Text(
-              'PROFILE SETTING',
-              style: style.text.boldLarge,
+      child: ThemeSwitcher.switcher(
+        builder: (p0, switcher) => Builder(builder: (context) {
+          themeSwitcherState ??= switcher;
+          return Scaffold(
+            appBar: AppBar(
+              scrolledUnderElevation: 0,
+              backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+              centerTitle: true,
+              title: Text(
+                'PROFILE SETTING',
+                style: style.text.boldLarge,
+              ),
             ),
-          ),
-          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-          body: BlocConsumer<ProfileCubit, ProfileState>(
-            listenWhen: (previous, current) => current is ProfileActionState,
-            buildWhen: (previous, current) => current is! ProfileActionState,
-            listener: listener,
-            builder: (context, state) {
-              if (state is ProfileInitial) {
-                return SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      children: [
-                        const Gap(30),
-                        Hero(
-                          tag: 'profile',
-                          child: SizedBox(
-                            height: 120,
-                            width: 120,
-                            child: GestureDetector(
-                              onTap: () {
-                                if (state.user.profileURL != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ViewMediaPage(
-                                        message: MessageModel(
-                                            message: state.user.profileURL,
-                                            messageType: 'image'),
+            backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+            body: BlocConsumer<ProfileCubit, ProfileState>(
+              listenWhen: (previous, current) => current is ProfileActionState,
+              buildWhen: (previous, current) => current is! ProfileActionState,
+              listener: listener,
+              builder: (context, state) {
+                if (state is ProfileInitial) {
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        children: [
+                          const Gap(30),
+                          Hero(
+                            tag: 'profile',
+                            child: SizedBox(
+                              height: 120,
+                              width: 120,
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (state.user.profileURL != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ViewMediaPage(
+                                          message: MessageModel(
+                                              message: state.user.profileURL,
+                                              messageType: 'image'),
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                } else {
-                                  util.showSnackbar(
-                                      context, 'No profile', 'info');
-                                }
-                              },
-                              child: CircularProfileImage(
-                                isNetworkImage: state.user.profileURL != null,
-                                image: state.user.profileURL,
+                                    );
+                                  } else {
+                                    util.showSnackbar(
+                                        context, 'No profile', 'info');
+                                  }
+                                },
+                                child: CircularProfileImage(
+                                  isNetworkImage: state.user.profileURL != null,
+                                  image: state.user.profileURL,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const Gap(20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 30),
-                          child: Text(
-                            (state.user.userName ?? '').toUpperCase(),
-                            textAlign: TextAlign.center,
-                            style: style.text.boldXLarge,
+                          const Gap(20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 30),
+                            child: Text(
+                              (state.user.userName ?? '').toUpperCase(),
+                              textAlign: TextAlign.center,
+                              style: style.text.boldXLarge,
+                            ),
                           ),
-                        ),
-                        Text(
-                          state.user.userEmail ?? '',
-                          style: style.text.semiBoldMedium.copyWith(
-                            color: AppColor.greyText,
+                          Text(
+                            state.user.userEmail ?? '',
+                            style: style.text.semiBoldMedium.copyWith(
+                              color: AppColor.greyText,
+                            ),
                           ),
-                        ),
-                        if ((state.user.phoneNumber ?? '').isNotEmpty)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.phone,
-                                size: style.icon.sm - 2,
-                              ),
-                              const Gap(5),
-                              Text(
-                                state.user.phoneNumber ?? '',
-                                style: style.text.semiBoldMedium.copyWith(
-                                  color: AppColor.greyText,
+                          if ((state.user.phoneNumber ?? '').isNotEmpty)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.phone,
+                                  size: style.icon.sm - 2,
                                 ),
-                              ),
-                            ],
-                          ),
-                        const Gap(20),
-                        GeneralOptions(general: general),
-                        const Gap(12),
-                        PreferenceOptions(state: state),
-                        const Gap(20),
-                      ],
+                                const Gap(5),
+                                Text(
+                                  state.user.phoneNumber ?? '',
+                                  style: style.text.semiBoldMedium.copyWith(
+                                    color: AppColor.greyText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          const Gap(20),
+                          GeneralOptions(general: general),
+                          const Gap(12),
+                          PreferenceOptions(state: state),
+                          const Gap(20),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              } else {
-                return const SizedBox();
-              }
-            },
-          ),
-        );
-      }),
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              },
+            ),
+          );
+        }),
+      ),
     );
   }
 

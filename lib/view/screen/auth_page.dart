@@ -24,16 +24,31 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (context) {
-        if (firebaseAuth.currentUser == null) {
-          loadWidget = const LoginPage();
-        } else if (!firebaseAuth.currentUser!.emailVerified) {
-          loadWidget = const EmailVerificationPage();
-        } else if (firebaseAuth.currentUser != null) {
-          loadWidget = const HomePage();
+    return FutureBuilder<User?>(
+      future: Future.value(firebaseAuth.currentUser),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: SizedBox.expand(),
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        } else if (snapshot.connectionState == ConnectionState.done) {
+          final user = snapshot.data;
+          if (user == null) {
+            return const LoginPage();
+          } else if (!user.emailVerified) {
+            return const EmailVerificationPage();
+          } else {
+            return const HomePage();
+          }
+        } else {
+          return const Scaffold(
+            body: Center(child: Text('Unexpected state')),
+          );
         }
-        return loadWidget;
       },
     );
   }

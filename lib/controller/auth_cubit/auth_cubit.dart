@@ -44,25 +44,7 @@ class AuthCubit extends Cubit<AuthState> {
             //refreshing instance
             firebaseAuth.currentUser?.reload();
 
-            await firebaseMessaging.getToken().then(
-              (token) async {
-                await firebaseFirestore
-                    .collection('users')
-                    .where('uid', isEqualTo: firebaseAuth.currentUser!.uid)
-                    .get()
-                    .then((user) {
-                  final UserData userData =
-                      UserData.fromJson(user.docs[0].data());
-                  DocumentReference messageRef = firebaseFirestore
-                      .collection('users')
-                      .doc(user.docs[0].id);
-                  if (userData.fCM != token) {
-                    userData.fCM = token;
-                    messageRef.update(userData.toJson());
-                  }
-                });
-              },
-            );
+            await refreshToken();
 
             emit(AuthCancelLoading());
 

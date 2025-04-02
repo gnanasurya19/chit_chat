@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
+import 'package:chit_chat/notification/notification_service.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 part 'home_state.dart';
 
@@ -22,13 +25,27 @@ class HomeCubit extends Cubit<HomeState> {
   String get currentUserId => firebaseAuth.currentUser!.uid;
   FirebaseRepository firebaseRepository = FirebaseRepository();
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  FlutterLocalNotificationsPlugin localNotification =
+      FlutterLocalNotificationsPlugin();
 
   getLocalInfo() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString('receiverId', '');
   }
 
+  checkNotificationStack() async {
+    final appLaunchDetails =
+        await localNotification.getNotificationAppLaunchDetails();
+    NotificationService().onClickTerminatedLNotificatoin(appLaunchDetails);
+  }
+
   Future onInit([bool? isRefresh]) async {
+    // Permissions
+    util.setUpMediaStore();
+
+    // Notification token refresh
+    await refreshToken();
+
     if (isRefresh == null) {
       emit(HomeChatLoading());
       userList = [];
@@ -62,9 +79,13 @@ class HomeCubit extends Cubit<HomeState> {
         },
       );
       userList = newList;
-      // emit(HomeReadyState(userList: userList));
+      emit(HomeReadyState(userList: userList));
       bindlatestData();
     });
+  }
+
+  listernThemeChange(context) {
+    // MediaQuery.of(context).platformBrightness.
   }
 
   Future<void> bindlatestData() async {
@@ -121,8 +142,8 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void stopStream() {
-    userListStream!.cancel();
-    chatlistStream!.cancel();
+    userListStream?.cancel();
+    chatlistStream?.cancel();
   }
 
   @override

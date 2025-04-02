@@ -1,3 +1,4 @@
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:animations/animations.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
@@ -33,7 +34,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       }
     });
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((target) {
+      BlocProvider.of<HomeCubit>(context).checkNotificationStack();
+    });
     super.initState();
+  }
+
+  ThemeSwitcherState? themeSwitcherState;
+
+  @override
+  void didChangePlatformBrightness() {
+    util.changeTheme(themeSwitcherState, context);
+    super.didChangePlatformBrightness();
   }
 
   @override
@@ -61,140 +73,147 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-      appBar: AppBar(
-        toolbarHeight: kTextTabBarHeight + 30,
-        titleSpacing: 20,
-        title: Text(
-          'ChitChat',
-          style: style.text.regularLarge.copyWith(color: AppColor.darkBlue),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-        actions: [
-          BlocListener<UpdateCubit, UpdateState>(
+    return ThemeSwitcher.switcher(
+      builder: (p0, switcher) => Builder(builder: (context) {
+        themeSwitcherState ??= switcher;
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+          appBar: AppBar(
+            toolbarHeight: kTextTabBarHeight + 30,
+            titleSpacing: 20,
+            title: Text(
+              'ChitChat',
+              style: style.text.regularLarge.copyWith(color: AppColor.darkBlue),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+            actions: [
+              BlocListener<UpdateCubit, UpdateState>(
+                listener: (context, state) {
+                  if (state is UpdateAvailableState) {
+                    util.slideInDialog(context, UpdateDialog(), false);
+                  } else if (state is NetworkErrorState) {
+                    util.doAlert(
+                        context, 'Please connect to internet', 'network');
+                  } else if (state is UptoDateState) {
+                    util.showSnackbar(context, 'You are up to date', 'success');
+                  } else if (state is UpdateAlertState) {
+                    util.doAlert(context, state.text, state.type);
+                  }
+                },
+                child: BlocBuilder<ProfileCubit, ProfileState>(
+                  buildWhen: (previous, current) =>
+                      current is! ProfileActionState,
+                  builder: (context, state) {
+                    if (state is ProfileInitial) {
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          Navigator.pushNamed(context, 'profile');
+                        },
+                        child: Hero(
+                          tag: 'profile',
+                          child: Container(
+                            margin: const EdgeInsets.all(10),
+                            height: 40,
+                            width: 40,
+                            child: CircularProfileImage(
+                              isNetworkImage: state.user.profileURL != null,
+                              image: state.user.profileURL,
+                            ),
+                          ),
+                        ),
+                      );
+                    } else {
+                      return const SizedBox();
+                    }
+                  },
+                ),
+              )
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              context.read<HomeCubit>().toSearch();
+            },
+            child: const SVGIcon(
+              name: 'message-plus',
+              color: AppColor.white,
+              size: 30,
+            ),
+          ),
+          body: BlocConsumer<HomeCubit, HomeState>(
+            listenWhen: (previous, current) => current is HomeActionState,
             listener: (context, state) {
-              if (state is UpdateAvailableState) {
-                util.slideInDialog(context, UpdateDialog(), false);
-              } else if (state is NetworkErrorState) {
-                util.doAlert(context, 'Please connect to internet', 'network');
-              } else if (state is UptoDateState) {
-                util.showSnackbar(context, 'You are up to date', 'success');
-              } else if (state is UpdateAlertState) {
-                util.doAlert(context, state.text, state.type);
+              listener(state, context, context.read<HomeCubit>());
+            },
+            buildWhen: (previous, current) => current is! HomeActionState,
+            builder: (context, state) {
+              if (state is HomeReadyState) {
+                if (state.userList.isEmpty) {
+                  return WelcomeWidget(
+                    username: FirebaseAuth.instance.currentUser!.displayName!
+                        .toUpperCase(),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: state.userList.length,
+                  itemBuilder: (context, index) {
+                    return OpenContainer(
+                      closedElevation: 0,
+                      tappable: false,
+                      openColor: Theme.of(context).colorScheme.surfaceDim,
+                      closedColor: Theme.of(context).colorScheme.surfaceDim,
+                      openBuilder: (context, action) =>
+                          ChatPage(userData: state.userList[index]),
+                      closedBuilder: (context, action) => UserCard(
+                        user: state.userList[index],
+                        onTap: (userData) {
+                          BlocProvider.of<ChatCubit>(context)
+                              .onInit(state.userList[index].uid!, userData);
+                          action.call();
+                        },
+                      ),
+                    );
+                  },
+                );
+              } else if (state is HomeChatLoading) {
+                return ListView.builder(
+                    itemCount: 3,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                          leading: Container(
+                              width: 50,
+                              height: 50,
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              decoration:
+                                  const BoxDecoration(shape: BoxShape.circle),
+                              child: const CircularProfileImage(
+                                  isNetworkImage: false)),
+                          contentPadding: const EdgeInsets.all(15),
+                          title: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              height: 20,
+                              width: MediaQuery.sizeOf(context).width * 0.3,
+                              color: AppColor.greyline,
+                            ),
+                          ),
+                          subtitle: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              height: 10,
+                              width: MediaQuery.sizeOf(context).width * 0.15,
+                              color: AppColor.greyline,
+                            ),
+                          ));
+                    });
+              } else {
+                return const SizedBox();
               }
             },
-            child: BlocBuilder<ProfileCubit, ProfileState>(
-              buildWhen: (previous, current) => current is! ProfileActionState,
-              builder: (context, state) {
-                if (state is ProfileInitial) {
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      Navigator.pushNamed(context, 'profile');
-                    },
-                    child: Hero(
-                      tag: 'profile',
-                      child: Container(
-                        margin: const EdgeInsets.all(10),
-                        height: 40,
-                        width: 40,
-                        child: CircularProfileImage(
-                          isNetworkImage: state.user.profileURL != null,
-                          image: state.user.profileURL,
-                        ),
-                      ),
-                    ),
-                  );
-                } else {
-                  return const SizedBox();
-                }
-              },
-            ),
-          )
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.read<HomeCubit>().toSearch();
-        },
-        child: const SVGIcon(
-          name: 'message-plus',
-          color: AppColor.white,
-          size: 30,
-        ),
-      ),
-      body: BlocConsumer<HomeCubit, HomeState>(
-        listenWhen: (previous, current) => current is HomeActionState,
-        listener: (context, state) {
-          listener(state, context, context.read<HomeCubit>());
-        },
-        buildWhen: (previous, current) => current is! HomeActionState,
-        builder: (context, state) {
-          if (state is HomeReadyState) {
-            if (state.userList.isEmpty) {
-              return WelcomeWidget(
-                username: FirebaseAuth.instance.currentUser!.displayName!
-                    .toUpperCase(),
-              );
-            }
-            return ListView.builder(
-              itemCount: state.userList.length,
-              itemBuilder: (context, index) {
-                return OpenContainer(
-                  closedElevation: 0,
-                  tappable: false,
-                  openColor: Theme.of(context).colorScheme.surfaceDim,
-                  closedColor: Theme.of(context).colorScheme.surfaceDim,
-                  openBuilder: (context, action) =>
-                      ChatPage(userData: state.userList[index]),
-                  closedBuilder: (context, action) => UserCard(
-                    user: state.userList[index],
-                    onTap: (userData) {
-                      BlocProvider.of<ChatCubit>(context)
-                          .onInit(state.userList[index].uid!, userData);
-                      action.call();
-                    },
-                  ),
-                );
-              },
-            );
-          } else if (state is HomeChatLoading) {
-            return ListView.builder(
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                      leading: Container(
-                          width: 50,
-                          height: 50,
-                          clipBehavior: Clip.antiAliasWithSaveLayer,
-                          decoration:
-                              const BoxDecoration(shape: BoxShape.circle),
-                          child: const CircularProfileImage(
-                              isNetworkImage: false)),
-                      contentPadding: const EdgeInsets.all(15),
-                      title: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          height: 20,
-                          width: MediaQuery.sizeOf(context).width * 0.3,
-                          color: AppColor.greyline,
-                        ),
-                      ),
-                      subtitle: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          height: 10,
-                          width: MediaQuery.sizeOf(context).width * 0.15,
-                          color: AppColor.greyline,
-                        ),
-                      ));
-                });
-          } else {
-            return const SizedBox();
-          }
-        },
-      ),
+          ),
+        );
+      }),
     );
   }
 
