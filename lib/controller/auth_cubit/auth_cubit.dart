@@ -41,10 +41,9 @@ class AuthCubit extends Cubit<AuthState> {
             emit(AuthLoading());
             await firebaseAuth.signInWithEmailAndPassword(
                 email: userModel.userEmail!, password: userModel.password!);
+
             //refreshing instance
             firebaseAuth.currentUser?.reload();
-
-            await refreshToken();
 
             emit(AuthCancelLoading());
 

@@ -40,16 +40,16 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future onInit([bool? isRefresh]) async {
-    // Permissions
-    util.setUpMediaStore();
-
-    // Notification token refresh
-    await refreshToken();
-
     if (isRefresh == null) {
       emit(HomeChatLoading());
       userList = [];
     }
+    // Permissions
+    util.setUpMediaStore();
+
+    // Notification token refresh
+    refreshToken();
+
     userListStream = firebaseFirestore
         .collection('chatrooms')
         .where('roomid', arrayContains: currentUserId)

@@ -122,6 +122,8 @@ class ChatCubit extends Cubit<ChatState> {
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
+        .where('deletedBy', isNotEqualTo: currentUserId)
+        .orderBy('deletedBy')
         .orderBy('timestamp', descending: true)
         .limit(20)
         .startAfterDocument(lastDocument!)
@@ -160,6 +162,8 @@ class ChatCubit extends Cubit<ChatState> {
           .toList()
           .reversed
           .toList();
+
+      messageList.sort((a, b) => b.timestamp!.compareTo(a.timestamp!));
 
       audioPlayerInitialilze();
 
@@ -213,6 +217,8 @@ class ChatCubit extends Cubit<ChatState> {
         .collection('chatrooms')
         .doc(chatRoomID)
         .collection('message')
+        .where('deletedBy', isNotEqualTo: currentUserId)
+        .orderBy('deletedBy')
         .orderBy('timestamp')
         .startAtDocument(lastDocument!)
         .get();
@@ -329,8 +335,11 @@ class ChatCubit extends Cubit<ChatState> {
         });
 
         if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
-          networkApiService.sendNotification(
-              receiver, newMessage, msgId, chatRoomID);
+          networkApiService
+              .sendNotification(receiver, newMessage, msgId, chatRoomID)
+              .catchError((e) {
+            // Do nothing
+          });
         }
       });
     }

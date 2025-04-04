@@ -206,7 +206,7 @@ class Util {
       context: context,
       builder: (context) => Dialog(
         clipBehavior: Clip.none,
-        backgroundColor: AppColor.white,
+        backgroundColor: Theme.of(context).colorScheme.onTertiary,
         child: Container(
           padding: EdgeInsets.all(style.insets.md),
           child: Column(
@@ -228,6 +228,9 @@ class Util {
                   children: [
                     if (isDeleteForAll)
                       TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                        ),
                         onPressed: () {
                           Navigator.pop(context);
                           deleteForAll();
@@ -235,6 +238,9 @@ class Util {
                         child: Text('Delete for everyone'),
                       ),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                      ),
                       onPressed: () {
                         Navigator.pop(context);
                         deleteForMe();
@@ -242,6 +248,9 @@ class Util {
                       child: Text('Delete for me'),
                     ),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                      ),
                       onPressed: () {
                         Navigator.pop(context);
                       },

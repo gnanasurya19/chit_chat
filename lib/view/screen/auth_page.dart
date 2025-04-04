@@ -1,4 +1,5 @@
 import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
+import 'package:chit_chat/notification/notification_service.dart';
 import 'package:chit_chat/view/screen/email_verification_page.dart';
 import 'package:chit_chat/view/screen/home_page.dart';
 import 'package:chit_chat/view/screen/login_page.dart';
@@ -18,6 +19,7 @@ class _AuthPageState extends State<AuthPage> {
   late Widget loadWidget;
   @override
   void initState() {
+    NotificationService().initialize();
     BlocProvider.of<UpdateCubit>(context).checkforUpdate('auto');
     super.initState();
   }
