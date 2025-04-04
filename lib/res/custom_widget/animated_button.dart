@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
+import 'package:chit_chat/res/common_instants.dart';
+import 'package:flutter/material.dart';
 
 class AnimatedButton extends StatefulWidget {
   const AnimatedButton({
@@ -53,46 +53,16 @@ class _AnimatedButtonState extends State<AnimatedButton>
                 padding: const WidgetStatePropertyAll(EdgeInsets.all(15)),
                 backgroundColor: const WidgetStatePropertyAll(AppColor.blue),
                 foregroundColor: const WidgetStatePropertyAll(AppColor.white),
-                overlayColor:
-                    WidgetStatePropertyAll(AppColor.white.withOpacity(0.3))),
+                overlayColor: WidgetStatePropertyAll(
+                    AppColor.white.withValues(alpha: 0.3))),
             onPressed: () {
               widget.onClick();
             },
-            child: Text(
-              "CREATE AN ACCOUNT",
-              textScaler: TextScaler.linear(ScaleSize.textScaleFactor(context)),
-              style: const TextStyle(
+            child: Text("CREATE AN ACCOUNT",
+                style: style.text.semiBold.copyWith(
                   color: AppColor.white,
-                  fontFamily: Roboto.medium,
-                  fontSize: AppFontSize.xs),
-            ),
+                )),
           ),
-          // InkWell(
-          //   borderRadius: BorderRadius.circular(30),
-          //   onTap: () {
-          //     widget.onClick();
-          //   },
-          //   child: Container(
-          //     key: buttonKey,
-          //     padding: const EdgeInsets.all(12),
-          //     decoration: BoxDecoration(
-          //       color: widget.isLogin           ? Theme.of(context).colorScheme.primaryContainer           : Colors.transparent,
-          //       border: Border.all(
-          //           color:
-          //               widget.isLogin ? Colors.transparent : AppColor.white),
-          //       borderRadius: BorderRadius.circular(30),
-          //     ),
-          //     child: Text(
-          //       "CREATE AN ACCOUNT",
-          //       textScaler:
-          //           TextScaler.linear(ScaleSize.textScaleFactor(context)),
-          //       style: const TextStyle(
-          //           color: AppColor.white,
-          //           fontFamily: Roboto.medium,
-          //           fontSize: AppFontSize.xs),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );

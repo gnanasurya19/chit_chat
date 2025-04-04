@@ -1,1 +1,22 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"chit-chat-19491","appId":"1:789734382133:android:b721e175ce246b80a36f7c","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"chit-chat-19491","configurations":{"android":"1:789734382133:android:b721e175ce246b80a36f7c","web":"1:789734382133:web:896184c5ced9f462a36f7c"}}}}}}
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "chit-chat-19491",
+                    "appId": "1:789734382133:android:b721e175ce246b80a36f7c",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "chit-chat-19491",
+                    "configurations": {
+                        "android": "1:789734382133:android:b721e175ce246b80a36f7c",
+                        "web": "1:789734382133:web:896184c5ced9f462a36f7c"
+                    }
+                }
+            }
+        }
+    }
+}

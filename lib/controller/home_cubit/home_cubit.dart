@@ -1,87 +1,61 @@
+import 'dart:async';
 import 'package:chit_chat/firebase/firebase_repository.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
-import 'package:chit_chat/model/user_model.dart';
-import 'package:chit_chat/utils/util.dart';
+import 'package:chit_chat/notification/notification_service.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(HomeReadyState(user: UserModel(), userList: const []));
+  HomeCubit() : super(HomeReadyState(userList: const [])) {
+    getLocalInfo();
+  }
 
-  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  FirebaseRepository firebaseRepository = FirebaseRepository();
-  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-  Util util = Util();
-  UserModel userModel = UserModel();
-
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? userListStream;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? chatlistStream;
   List<UserData> userList = [];
 
-  // getCurrentUserData() {
-  //   userModel = UserModel(
-  //       email: firebaseAuth.currentUser!.email,
-  //       name: firebaseAuth.currentUser!.displayName!,
-  //       profileURL: firebaseAuth.currentUser!.photoURL);
+  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  String get currentUserId => firebaseAuth.currentUser!.uid;
+  FirebaseRepository firebaseRepository = FirebaseRepository();
+  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  FlutterLocalNotificationsPlugin localNotification =
+      FlutterLocalNotificationsPlugin();
 
-  //   emit(HomeReadyState(userList: userList, user: userModel));
-  // }
-
-  // onInit() async {
-  //   firebaseFirestore
-  //       .collection('chat_rooms')
-  //       .snapshots()
-  //       .listen((chatrooms) async {
-  //     userList = [];
-  //     for (var chatroom in chatrooms.docs) {
-  //       if (chatroom.id.contains(currentUserId)) {
-  //         final receiverIndex = chatroom.id.indexOf(currentUserId);
-  //         String receiverID = '';
-  //         if (receiverIndex > 0) {
-  //           receiverID = chatroom.id.substring(0, receiverIndex);
-  //         } else {
-  //           receiverID = chatroom.id.substring(currentUserId.length);
-  //         }
-
-  //         await firebaseFirestore
-  //             .collection('users')
-  //             .where('uid', isEqualTo: receiverID)
-  //             .get()
-  //             .then((users) async {
-  //           final UserData user = UserData.fromJson(users.docs[0].data());
-  //           userList.add(user);
-  //         });
-  //       }
-  //     }
-  //     emit(HomeReadyState(userList: userList, user: userModel));
-  //   });
-  // }
-
-  onInit() async {
+  getLocalInfo() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
-    final bool value = sp.getBool('oldUser') ?? false;
-    if (value == true) {
+    sp.setString('receiverId', '');
+  }
+
+  checkNotificationStack() async {
+    final appLaunchDetails =
+        await localNotification.getNotificationAppLaunchDetails();
+    NotificationService().onClickTerminatedLNotificatoin(appLaunchDetails);
+  }
+
+  Future onInit([bool? isRefresh]) async {
+    if (isRefresh == null) {
       emit(HomeChatLoading());
+      userList = [];
     }
-    userModel = UserModel(
-      email: firebaseAuth.currentUser!.email,
-      name: firebaseAuth.currentUser!.displayName!,
-      profileURL: firebaseAuth.currentUser!.photoURL,
-    );
+    // Permissions
+    util.setUpMediaStore();
 
-    String currentUserId = firebaseAuth.currentUser!.uid;
+    // Notification token refresh
+    refreshToken();
 
-    firebaseFirestore
+    userListStream = firebaseFirestore
         .collection('chatrooms')
         .where('roomid', arrayContains: currentUserId)
         .snapshots()
         .listen((chatRooms) async {
-      userList = [];
+      final List<UserData> newList = [];
       await Future.forEach(
         chatRooms.docs,
         (roomdIds) async {
@@ -98,25 +72,30 @@ class HomeCubit extends Cubit<HomeState> {
               .then(
             (value) {
               if (value.docs.isNotEmpty) {
-                userList.add(UserData.fromJson(value.docs.first.data()));
+                newList.add(UserData.fromJson(value.docs.first.data()));
               }
             },
           );
         },
       );
-      emit(HomeReadyState(userList: userList, user: userModel));
+      userList = newList;
+      emit(HomeReadyState(userList: userList));
       bindlatestData();
     });
   }
 
+  listernThemeChange(context) {
+    // MediaQuery.of(context).platformBrightness.
+  }
+
   Future<void> bindlatestData() async {
     await Future.forEach(userList, (element) {
-      if (firebaseAuth.currentUser!.uid != element.uid) {
-        final List ids = [firebaseAuth.currentUser!.uid, element.uid];
+      if (currentUserId != element.uid) {
+        final List ids = [currentUserId, element.uid];
         ids.sort();
         String chatRoomId = ids.join('');
 
-        firebaseFirestore
+        chatlistStream = firebaseFirestore
             .collection('chatrooms')
             .doc(chatRoomId)
             .collection('message')
@@ -130,65 +109,51 @@ class HomeCubit extends Cubit<HomeState> {
             for (var ele in userList) {
               if (message.receiverID == ele.uid ||
                   message.senderID == ele.uid) {
-                if (message.receiverID == firebaseAuth.currentUser!.uid) {
-                  ele.batch = message.batch;
-                }
-                ele.timestamp = message.timestamp;
-                ele.lastMessage = message.message;
-                ele.time = message.time;
+                ele.lastMessage = message;
               }
             }
+
             userList.sort((a, b) {
-              if (a.timestamp != null && b.timestamp != null) {
-                return (b.timestamp!).compareTo(a.timestamp!);
+              if (a.lastMessage != null && b.lastMessage != null) {
+                return (b.lastMessage!.timestamp!)
+                    .compareTo(a.lastMessage!.timestamp!);
               } else {
                 return 0;
               }
             });
+            emit(HomeReadyState(userList: userList));
           }
-          emit(HomeReadyState(userList: userList, user: userModel));
         });
       }
     });
-  }
-
-  pickImage(ImageSource type) {
-    util.captureImage(type).then((value) {
-      if (value != null) {
-        updateProfile(value);
-      }
-    });
-  }
-
-  updateProfile(XFile? value) {
-    firebaseRepository.uploadFile(value!).then((value) async {
-      userModel.profileURL = value;
-      firebaseRepository
-          .updateUser(firebaseAuth.currentUser!.uid, {"profileURL": value});
-      await firebaseAuth.currentUser!.updatePhotoURL(value);
-      emit(HomeReadyState(userList: userList, user: userModel));
-    });
-  }
-
-  editProfile() {
-    emit(HomeEditProfile());
   }
 
   toSearch() {
     emit(HomeToSearch());
   }
 
-  getCurrentUserData() {
-    emit(HomeReadyState(userList: userList, user: userModel));
+  pauseStream() {
+    userListStream?.pause();
+    chatlistStream?.pause();
   }
 
-  signout() async {
-    emit(HomeScreenLoading());
-    firebaseRepository
-        .updateUser(firebaseAuth.currentUser!.uid, {"fcm": ''}).then((value) {
-      firebaseAuth.signOut().then((value) {
-        emit(HomeSignOut());
-      });
-    });
+  resumeStream() {
+    onInit(true);
+  }
+
+  void stopStream() {
+    userListStream?.cancel();
+    chatlistStream?.cancel();
+  }
+
+  @override
+  Future<void> close() {
+    if (userListStream != null) {
+      userListStream!.cancel();
+    }
+    if (chatlistStream != null) {
+      chatlistStream!.cancel();
+    }
+    return super.close();
   }
 }

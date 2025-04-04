@@ -1,26 +1,26 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chit_chat/model/message_model.dart';
 
 class UserData {
   String? userName;
   String? userEmail;
   String? uid;
-  int? batch;
-  Timestamp? timestamp;
-  String? time;
-  String? lastMessage;
+  MessageModel? lastMessage;
   String? fCM;
   String? profileURL;
+
+  String? password;
+
+  String? phoneNumber;
 
   UserData(
       {this.userName,
       this.userEmail,
       this.uid,
-      this.batch,
       this.lastMessage,
-      this.time,
-      this.timestamp,
       this.fCM,
-      this.profileURL});
+      this.profileURL,
+      this.password,
+      this.phoneNumber});
 
   UserData.fromJson(Map<String, dynamic> json) {
     userName = json['userName'];
@@ -28,6 +28,7 @@ class UserData {
     uid = json['uid'];
     fCM = json['fcm'];
     profileURL = json['profileURL'];
+    phoneNumber = json['mobileNumber'];
   }
 
   Map<String, dynamic> toJson() {
@@ -37,6 +38,7 @@ class UserData {
     data['uid'] = uid;
     data['fcm'] = fCM;
     data['profileURL'] = profileURL;
+    data['mobileNumber'] = phoneNumber;
     return data;
   }
 }

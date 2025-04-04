@@ -11,36 +11,31 @@ class SearchCubit extends Cubit<SearchState> {
   List<UserData> userList = [];
   List<UserData> chatList = [];
   final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   onInit(List<UserData> list) {
     chatList = list;
     emit(SearchReadyState(userList: const [], chatList: chatList));
   }
 
   List<UserData> newUserList = [];
-  getUserList() {
-    firebaseFirestore.collection('users').snapshots().listen((event) {
-      newUserList = [];
-      for (var element in event.docs) {
-        if (element.data()['uid'] != FirebaseAuth.instance.currentUser!.uid) {
-          newUserList.add(UserData.fromJson(element.data()));
-        }
-      }
-      emit(SearchTest(userList: newUserList));
-    });
-  }
 
   onSearch(String email) async {
-    userList = [];
     List<UserData> list = [];
+    userList = [];
+
     list = chatList
         .where((element) =>
             (element.userEmail!.toLowerCase().contains(email.toLowerCase()) ||
                 element.userName!.toLowerCase().contains(email.toLowerCase())))
         .toList();
+
     await firebaseFirestore
         .collection('users')
-        .where('userEmail', isEqualTo: email)
+        .where(
+          'userEmail',
+          isEqualTo: email,
+          isNotEqualTo: firebaseAuth.currentUser!.email,
+        )
         .get()
         .then((value) {
       for (var element in value.docs) {
@@ -49,11 +44,10 @@ class SearchCubit extends Cubit<SearchState> {
           userList.add(user);
         }
       }
-      emit(SearchReadyState(userList: userList, chatList: list));
+      emit(SearchReadyState(
+        userList: userList,
+        chatList: list,
+      ));
     });
   }
-
-  // navTochat(UserData user) {
-  //   emit(SearchToChatState(user: user));
-  // }
 }

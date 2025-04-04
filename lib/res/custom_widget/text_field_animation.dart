@@ -1,7 +1,9 @@
+import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/svg_icon.dart';
-import 'package:chit_chat/res/fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:popover/popover.dart';
 
 class TextFieldAnimation extends StatefulWidget {
   final Color color;
@@ -12,6 +14,7 @@ class TextFieldAnimation extends StatefulWidget {
   final bool? isPassword;
   final bool? isPassWordVisible;
   final Function()? onSufClick;
+  final bool? issignUpEmail;
   const TextFieldAnimation({
     required this.controller,
     required this.color,
@@ -22,6 +25,7 @@ class TextFieldAnimation extends StatefulWidget {
     isPassword,
     this.isPassWordVisible,
     this.onSufClick,
+    this.issignUpEmail,
   }) : isPassword = isPassword ?? false;
 
   @override
@@ -33,14 +37,8 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
   late AnimationController animationController = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 200));
   late Animation animation;
-  late AnimationController sufficIconController;
-  late Animation sufficIconanimation;
   @override
   void initState() {
-    sufficIconController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    sufficIconanimation =
-        Tween<double>(begin: 22, end: 0).animate(sufficIconController);
     super.initState();
     animation = Tween<double>(begin: 0, end: 1).animate(animationController);
     animate();
@@ -63,11 +61,6 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isPassWordVisible ?? false) {
-      sufficIconController.forward();
-    } else {
-      sufficIconController.reverse();
-    }
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
@@ -83,10 +76,7 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
               children: [
                 Text(
                   widget.text,
-                  // textScaler:
-                  //     TextScaler.linear(ScaleSize.textScaleFactor(context)),
-                  style:
-                      TextStyle(color: widget.color, fontSize: AppFontSize.xs),
+                  style: style.text.regular.copyWith(color: widget.color),
                 ),
                 TextFormField(
                   inputFormatters: [
@@ -107,57 +97,81 @@ class _TextFieldAnimationState extends State<TextFieldAnimation>
                   style: TextStyle(color: widget.color),
                   controller: widget.controller,
                   decoration: InputDecoration(
-                      suffixIcon: !(widget.isPassword ?? false)
-                          ? null
-                          : InkWell(
-                              onTap: () {
-                                if (widget.onSufClick != null) {
-                                  widget.onSufClick!();
-                                }
-                              },
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Stack(
-                                    children: [
-                                      Container(
-                                          alignment: Alignment.center,
-                                          child: SVGIcon(
-                                            name: 'svg/eye.svg',
-                                            color: widget.color,
-                                            size: 16.0,
-                                          )),
-                                      AnimatedBuilder(
-                                        animation: sufficIconanimation,
-                                        builder: (context, child) {
-                                          return Transform(
-                                            alignment: Alignment.topLeft,
-                                            transform: Matrix4.identity()
-                                              ..rotateZ(-3.14 * 0.25),
-                                            child: Container(
-                                              color: widget.color,
-                                              height: sufficIconanimation.value,
-                                              width: 2,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                    isDense: true,
+                    contentPadding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
+                    suffixIconConstraints: BoxConstraints(minWidth: 0),
+                    suffixIcon: (widget.isPassword ?? false)
+                        ? InkWell(
+                            splashFactory: NoSplash.splashFactory,
+                            onTap: () {
+                              if (widget.onSufClick != null) {
+                                widget.onSufClick!();
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              width: style.icon.sm,
+                              height: style.icon.sm,
+                              child: SVGIcon(
+                                name: widget.isPassWordVisible ?? false
+                                    ? 'eye'
+                                    : 'hide-eye',
+                                color: widget.color,
                               ),
                             ),
-                      enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: widget.color)),
-                      focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: widget.color))),
+                          )
+                        : widget.issignUpEmail ?? false
+                            ? const EmailNotePopoverBtn()
+                            : null,
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: widget.color),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: widget.color),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class EmailNotePopoverBtn extends StatelessWidget {
+  const EmailNotePopoverBtn({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        showPopover(
+          context: context,
+          direction: PopoverDirection.top,
+          backgroundColor: Theme.of(context).colorScheme.inverseSurface,
+          width: MediaQuery.sizeOf(context).width * 0.8,
+          bodyBuilder: (context) => Container(
+            padding: const EdgeInsets.all(20),
+            child: const Text(
+                'Please note:Provide a valid email, you will need to verify your email address before logging in.'),
+          ),
+        );
+      },
+      child: SizedBox(
+        width: style.icon.sm,
+        height: style.icon.sm,
+        child: Icon(
+          Icons.info,
+          color: AppColor.white,
+          size: style.icon.xs,
+        ),
+      ),
     );
   }
 }

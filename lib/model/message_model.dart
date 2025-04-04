@@ -13,20 +13,45 @@ class MessageModel {
   String? date;
   String? time;
   String? messageType;
-
-  MessageModel({
-    this.senderID,
-    this.receiverID,
-    this.senderEmail,
-    this.message,
-    this.timestamp,
-    this.status,
-    this.batch,
-    this.time,
-    this.date,
-    this.messageType,
-    this.id,
-  });
+  String? thumbnail;
+  String? audioUrl;
+  List<double>? audioFormData;
+  bool? isAudioDownloaded;
+  bool? isAudioDownloading;
+  bool? isAudioUploading;
+  String? audioDuration = '0.00';
+  String? audioCurrentDuration = '0.00';
+  double? imageHeight;
+  double? imageWidth;
+  bool? isSelected;
+  String? fileName;
+  String? thumbnailName;
+  String? deletedBy;
+  MessageModel(
+      {this.senderID,
+      this.receiverID,
+      this.senderEmail,
+      this.message,
+      this.timestamp,
+      this.status,
+      this.batch,
+      this.time,
+      this.date,
+      this.messageType,
+      this.id,
+      this.thumbnail,
+      this.audioUrl,
+      this.audioFormData,
+      this.audioDuration,
+      this.audioCurrentDuration,
+      this.isAudioUploading,
+      this.isAudioDownloading,
+      this.isAudioDownloaded,
+      this.imageHeight,
+      this.imageWidth,
+      this.isSelected,
+      this.fileName,
+      this.thumbnailName});
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
     id = docID;
@@ -35,6 +60,7 @@ class MessageModel {
     senderEmail = json['senderEmail'];
     message = json['message'];
     messageType = json['messageType'];
+    thumbnail = json['thumbnail'];
     if (json['status'] != null) {
       status = json['status'];
     } else {
@@ -67,6 +93,16 @@ class MessageModel {
       time = DateFormat('dd/MM/yyyy').format(jsonDate);
       date = DateFormat('MMM dd, yyyy').format(jsonDate);
     }
+    audioUrl = json['audiourl'];
+    if (json['audioFormData'] != null) {
+      audioFormData = List.from(json['audioFormData']);
+    }
+    audioDuration = json['audioDuration'];
+    imageHeight = json['imageHeight'];
+    imageWidth = json['imageWidth'];
+    fileName = json['fileName'];
+    thumbnailName = json['thumbnailName'];
+    deletedBy = json['deletedBy'];
   }
 
   Map<String, dynamic> toJson() {
@@ -79,6 +115,15 @@ class MessageModel {
     data['status'] = status;
     data['batch'] = batch;
     data['messageType'] = messageType;
+    data['thumbnail'] = thumbnail;
+    data['audiourl'] = audioUrl;
+    data['audioFormData'] = audioFormData;
+    data['audioDuration'] = audioDuration;
+    data['imageHeight'] = imageHeight;
+    data['imageWidth'] = imageWidth;
+    data['fileName'] = fileName;
+    data['thumbnailName'] = thumbnailName;
+    data['deletedBy'] = deletedBy ?? '';
     return data;
   }
 }

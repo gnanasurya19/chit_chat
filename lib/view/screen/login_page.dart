@@ -1,19 +1,19 @@
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
-import 'package:chit_chat/model/user_model.dart';
+import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/custom_widget/animated_button.dart';
 import 'package:chit_chat/res/custom_widget/loading_widget.dart';
 import 'package:chit_chat/res/custom_widget/text_field_animation.dart';
-import 'package:chit_chat/res/fonts.dart';
-import 'package:chit_chat/utils/util.dart';
+import 'package:chit_chat/view/screen/register_page.dart';
 import 'package:chit_chat/view/widget/animated_widget.dart';
+import 'package:chit_chat/view/widget/forgot_password_dialog.dart';
+import 'package:chit_chat/view/widget/logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rive/rive.dart';
-
-import '../widget/forgot_password_dialog.dart';
-import '../widget/logo.dart';
+import 'package:gap/gap.dart';
+// import 'package:rive/rive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,14 +23,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  //bear animation
-  late StateMachineController bearAnimationController;
-  late SMIInput<bool> isFocusEmail;
-  late SMIInput<int> charLook;
-  late SMIInput<bool> isFocusPassword;
-  late SMIInput<bool> isSuccess;
-  late SMIInput<bool> isFail;
-
   //textfields
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -39,24 +31,15 @@ class _LoginPageState extends State<LoginPage> {
   final FocusNode passwordfocus = FocusNode();
   bool isPasswordVisible = false;
   double buttonPosition = 0;
+  late final AuthCubit authCotroller;
 
   @override
   void initState() {
     super.initState();
-    BlocProvider.of<AuthCubit>(context).onInit();
-    emailfocus.addListener(emailfocusListener);
-    passwordfocus.addListener(passwordfocusListener);
+    // BlocProvider.of<AuthCubit>(context).onInit();
+    authCotroller = BlocProvider.of<AuthCubit>(context);
+    authCotroller.loginInizialize();
   }
-
-  void emailfocusListener() {
-    isFocusEmail.change(emailfocus.hasFocus);
-  }
-
-  void passwordfocusListener() {
-    isFocusPassword.change(passwordfocus.hasFocus && !isPasswordVisible);
-  }
-
-  Util util = Util();
 
   forgotPassword() {
     util.slideInDialog(
@@ -72,353 +55,193 @@ class _LoginPageState extends State<LoginPage> {
     emailController.dispose();
     passwordController.dispose();
     forgotPasswordController.dispose();
-    bearAnimationController.dispose();
-    emailfocus.removeListener(emailfocusListener);
-    passwordfocus.removeListener(passwordfocusListener);
   }
 
   @override
   Widget build(BuildContext context) {
-    final authCotroller = BlocProvider.of<AuthCubit>(context);
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        authCotroller.goBack();
+      },
       child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          body: AnnotatedRegion(
-            value: SystemUiOverlayStyle(
-                statusBarColor:
-                    Theme.of(context).colorScheme.surface.withOpacity(0.5)),
-            child: SafeArea(
-                child: SingleChildScrollView(
-                    child: Container(
-                        padding: const EdgeInsets.all(20),
-                        child: BlocConsumer<AuthCubit, AuthState>(
-                          listenWhen: (previous, current) =>
-                              current is AuthActionState,
-                          listener: (context, state) {
-                            if (state is AuthToast) {
-                              util.showSnackbar(
-                                  context, state.text, state.type);
-                              setState(() {
-                                isFail.change(true);
-                              });
-                            } else if (state is AuthAlert) {
-                              util.doAlert(context, state.text, state.type);
-                            } else if (state is AuthUserNotFound) {
-                              userNotFound();
-                            } else if (state is AuthPasswordResetMailSent) {
-                              Navigator.pop(context);
-                              resetMailsent(context);
-                            } else if (state is AuthUserLoginSuccess) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                'home',
-                                (route) => false,
-                              );
-                            } else if (state is AuthLoading) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => const LoadingScreen(),
-                              );
-                            } else if (state is AuthCancelLoading) {
-                              Navigator.pop(context);
-                            }
-                          },
-                          buildWhen: (previous, current) =>
-                              current is! AuthActionState,
-                          builder: (context, state) {
-                            if (state is AuthViewState) {
-                              return SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.9,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Logo(),
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.2,
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.2,
-                                          child: RiveAnimation.asset(
-                                              "assets/rivfiles/animated_bear.riv",
-                                              fit: BoxFit.fitHeight,
-                                              stateMachines: const [
-                                                "Login Machine"
-                                              ], onInit: (Artboard artboard) {
-                                            bearAnimationController =
-                                                StateMachineController
-                                                    .fromArtboard(artboard,
-                                                        'Login Machine')!;
-                                            artboard.addController(
-                                                bearAnimationController);
-                                            isFocusEmail =
-                                                bearAnimationController
-                                                    .findInput('isChecking')!;
-                                            isFocusPassword =
-                                                bearAnimationController
-                                                    .findInput('isHandsUp')!;
-                                            isSuccess = bearAnimationController
-                                                .findInput('trigSuccess')!;
-                                            isFail = bearAnimationController
-                                                .findInput('trigFail')!;
-                                          }),
-                                        ),
-                                        const SizedBox(
-                                          height: 15,
-                                        ),
-                                        Text(
-                                          'Connect with your loved ones',
-                                          textScaler: TextScaler.linear(
-                                              ScaleSize.textScaleFactor(
-                                                  context)),
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .tertiary,
-                                              fontSize: AppFontSize.sm),
-                                        ),
-                                        Text(
-                                          'Let\'s Talk',
-                                          textScaler: TextScaler.linear(
-                                              ScaleSize.textScaleFactor(
-                                                  context)),
-                                          style: TextStyle(
-                                            fontFamily: Roboto.bold,
-                                            fontSize: 40,
-                                            height: 1,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: AnnotatedRegion(
+          value: SystemUiOverlayStyle(
+              statusBarColor:
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.5)),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: BlocConsumer<AuthCubit, AuthState>(
+                  listenWhen: (previous, current) => current is AuthActionState,
+                  listener: (context, state) {
+                    _listener(state, context);
+                  },
+                  buildWhen: (previous, current) => current is! AuthActionState,
+                  builder: (context, state) {
+                    if (state is AuthViewState) {
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.9,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Logo(),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                //Rive animation
+                                Text(
+                                  'Connect with your loved ones',
+                                  style: style.text.regularSmall.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                  ),
+                                ),
+                                Text(
+                                  'Let\'s Talk',
+                                  style: style.text.loginTitle.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                      height: 1),
+                                ),
+                                const Gap(10),
+                                AnimateHeight(
+                                  isOpen: state.status == PageStatus.notSignedIn
+                                      ? false
+                                      : true,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.25,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (state.status ==
+                                          PageStatus.signIn) ...[
+                                        TextFieldAnimation(
+                                            focus: emailfocus,
+                                            controller: emailController,
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .secondary,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 10,
-                                        ),
-                                        AnimateHeight(
-                                          isOpen: state.status ==
-                                                  PageStatus.notSignedIn
-                                              ? false
-                                              : true,
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.25,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (state.status ==
-                                                  PageStatus.signIn) ...[
-                                                TextFieldAnimation(
-                                                    focus: emailfocus,
-                                                    controller: emailController,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .tertiaryContainer,
-                                                    text: 'Email'),
-                                                TextFieldAnimation(
-                                                    focus: passwordfocus,
-                                                    controller:
-                                                        passwordController,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .tertiaryContainer,
-                                                    isPassWordVisible:
-                                                        isPasswordVisible,
-                                                    onSufClick: () {
-                                                      setState(() {
-                                                        isPasswordVisible =
-                                                            !isPasswordVisible;
-                                                      });
-                                                      passwordfocusListener();
-                                                    },
-                                                    isPassword: true,
-                                                    text: 'Password'),
-                                              ]
-                                            ],
-                                          ),
-                                        ),
-                                        Stack(
-                                          clipBehavior: Clip.none,
-                                          alignment: Alignment.centerLeft,
-                                          children: [
-                                            const SizedBox(
-                                              width: double.infinity,
-                                              height: 60,
-                                            ),
-                                            AnimatedButton(
-                                              isLogin: true,
-                                              visible: state.status ==
-                                                      PageStatus.notSignedIn
-                                                  ? true
-                                                  : false,
-                                              onClick: () {
-                                                if (state.status ==
-                                                    PageStatus.notSignedIn) {
-                                                  Navigator.pushNamed(
-                                                      context, 'register');
-                                                }
-                                              },
-                                              onInit: (value) {
-                                                setState(() {
-                                                  buttonPosition = value + 20;
-                                                });
-                                              },
-                                            ),
-                                            Positioned(
-                                              right: 0,
-                                              child: AnimatedOpacity(
-                                                duration: const Duration(
-                                                    milliseconds: 600),
-                                                opacity: state.status ==
-                                                        PageStatus.signIn
-                                                    ? 1
-                                                    : 0,
-                                                child: TextButton(
-                                                  style: ButtonStyle(
-                                                      surfaceTintColor:
-                                                          const WidgetStatePropertyAll(
-                                                              AppColor.blue),
-                                                      foregroundColor:
-                                                          WidgetStatePropertyAll(
-                                                        Theme.of(context)
-                                                            .colorScheme
-                                                            .tertiaryContainer,
-                                                      )),
-                                                  onPressed: state.status ==
-                                                          PageStatus.signIn
-                                                      ? () {
-                                                          forgotPassword();
-                                                        }
-                                                      : null,
-                                                  child: Text(
-                                                    'Forgot password?',
-                                                    textScaler: TextScaler
-                                                        .linear(ScaleSize
-                                                            .textScaleFactor(
-                                                                context)),
-                                                    style: const TextStyle(
-                                                        fontSize:
-                                                            AppFontSize.xs,
-                                                        fontFamily:
-                                                            Roboto.medium),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            AnimatedPositioned(
-                                              duration: const Duration(
-                                                  milliseconds: 400),
-                                              left: state.status ==
-                                                      PageStatus.signIn
-                                                  ? 0
-                                                  : buttonPosition,
-                                              child: Column(
-                                                children: [
-                                                  ElevatedButton(
-                                                    style: ButtonStyle(
-                                                        overlayColor:
-                                                            WidgetStatePropertyAll(
-                                                                AppColor.black
-                                                                    .withOpacity(
-                                                                        0.05)),
-                                                        foregroundColor:
-                                                            const WidgetStatePropertyAll(
-                                                                AppColor.black),
-                                                        side: const WidgetStatePropertyAll(
-                                                            BorderSide(
-                                                                color: AppColor
-                                                                    .greyText)),
-                                                        padding: const WidgetStatePropertyAll(
-                                                            EdgeInsets.all(15)),
-                                                        elevation:
-                                                            const WidgetStatePropertyAll(
-                                                                0),
-                                                        backgroundColor:
-                                                            const WidgetStatePropertyAll(AppColor.white)),
-                                                    onPressed: () {
-                                                      FocusManager.instance.primaryFocus?.unfocus();
-                                                        authCotroller.doSignIn(
-                                                            state.status,
-                                                            UserModel(
-                                                                email:
-                                                                    emailController
-                                                                        .text,
-                                                                password:
-                                                                    passwordController
-                                                                        .text));
-
-                                                    },
-                                                    child: Text(
-                                                      "SIGN IN",
-                                                      textScaler: TextScaler
-                                                          .linear(ScaleSize
-                                                              .textScaleFactor(
-                                                                  context)),
-                                                      style: const TextStyle(
-                                                          fontSize:
-                                                              AppFontSize.xs,
-                                                          fontFamily:
-                                                              Roboto.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        AnimatedOpacity(
-                                          duration:
-                                              const Duration(milliseconds: 400),
-                                          opacity:
-                                              state.status == PageStatus.signIn
-                                                  ? 1
-                                                  : 0,
-                                          child: TextButton(
-                                              onPressed: () {
-                                                authCotroller.goBack();
-                                                emailController.clear();
-                                                passwordController.clear();
-                                                isPasswordVisible = false;
-                                                isFocusPassword.change(false);
-                                                isFocusEmail.change(false);
-                                              },
-                                              child: Text(
-                                                'GO BACK',
-                                                textScaler: TextScaler.linear(
-                                                    ScaleSize.textScaleFactor(
-                                                        context)),
-                                                style: TextStyle(
-                                                    fontSize: AppFontSize.xxs,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .tertiaryContainer,
-                                                    fontFamily: Roboto.medium),
-                                              )),
-                                        ),
-                                      ],
+                                                .tertiaryContainer,
+                                            text: 'Email'),
+                                        TextFieldAnimation(
+                                            focus: passwordfocus,
+                                            controller: passwordController,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .tertiaryContainer,
+                                            isPassWordVisible:
+                                                isPasswordVisible,
+                                            onSufClick: () {
+                                              setState(() {
+                                                isPasswordVisible =
+                                                    !isPasswordVisible;
+                                              });
+                                            },
+                                            isPassword: true,
+                                            text: 'Password'),
+                                      ]
+                                    ],
+                                  ),
+                                ),
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  alignment: Alignment.centerLeft,
+                                  children: [
+                                    const SizedBox(
+                                      width: double.infinity,
+                                      height: 60,
+                                    ),
+                                    AnimatedButton(
+                                      isLogin: true,
+                                      visible:
+                                          state.status == PageStatus.notSignedIn
+                                              ? true
+                                              : false,
+                                      onClick: () {
+                                        emailController.clear();
+                                        passwordController.clear();
+                                        if (state.status ==
+                                            PageStatus.notSignedIn) {
+                                          Navigator.push(
+                                              context,
+                                              util.pageTransition(
+                                                  const RegisterPage()));
+                                        }
+                                      },
+                                      onInit: (value) {
+                                        setState(() {
+                                          buttonPosition = value + 20;
+                                        });
+                                      },
+                                    ),
+                                    ForgotPWBtn(
+                                      ontap: () {
+                                        forgotPassword();
+                                      },
+                                      state: state,
+                                    ),
+                                    SignInBtn(
+                                      state: state,
+                                      buttonPosition: buttonPosition,
+                                      authCotroller: authCotroller,
+                                      emailController: emailController,
+                                      passwordController: passwordController,
                                     ),
                                   ],
                                 ),
-                              );
-                            } else {
-                              return Container();
-                            }
-                          },
-                        )))),
-          )),
+                                GoBackBtn(
+                                  state: state,
+                                  onTap: () {
+                                    authCotroller.goBack();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return Container();
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+  }
+
+  void _listener(AuthState state, BuildContext context) {
+    if (state is AuthToast) {
+      util.showSnackbar(context, state.text, state.type);
+    } else if (state is AuthAlert) {
+      util.doAlert(context, state.text, state.type);
+    } else if (state is AuthUserNotFound) {
+      userNotFound();
+    } else if (state is AuthPasswordResetMailSent) {
+      Navigator.pop(context);
+      resetMailsent(context);
+    } else if (state is AuthUserLoginSuccess) {
+      Navigator.pushNamedAndRemoveUntil(context, 'home', (route) => false);
+    } else if (state is AuthLoading) {
+      showDialog(
+        context: context,
+        builder: (context) => const LoadingScreen(),
+      );
+    } else if (state is AuthCancelLoading) {
+      Navigator.pop(context);
+    } else if (state is AuthVerifyUserEmail) {
+      emailController.clear();
+      passwordController.clear();
+      Navigator.pushNamedAndRemoveUntil(context, 'email', (route) => false);
+    }
   }
 
   userNotFound() {
@@ -443,29 +266,24 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 20.0, horizontal: 35),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 20.0, horizontal: 35),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'User not found',
-                          style: TextStyle(
-                              color: AppColor.blue,
-                              fontFamily: Roboto.bold,
-                              fontSize: 20),
+                          style: style.text.boldLarge.copyWith(
+                            color: AppColor.blue,
+                          ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        const Gap(10),
                         Text(
                           'The email you entered is not linked with any account.Please check your email or sign up',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: AppColor.greyText,
-                              fontSize: 14,
-                              height: 1.7),
+                          style: style.text.regular
+                              .copyWith(color: AppColor.greyText, height: 1.7),
                         ),
                       ],
                     ),
@@ -498,9 +316,10 @@ class _LoginPageState extends State<LoginPage> {
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 15),
-                              child: const Text(
+                              child: Text(
                                 'Sign Up',
                                 textAlign: TextAlign.center,
+                                style: style.text.regular,
                               ),
                             ),
                           ),
@@ -526,5 +345,111 @@ class _LoginPageState extends State<LoginPage> {
             child: Text('Reset password email sent!.Please check your email'),
           ),
         ));
+  }
+}
+
+class GoBackBtn extends StatelessWidget {
+  const GoBackBtn({
+    super.key,
+    required this.state,
+    required this.onTap,
+  });
+  final AuthViewState state;
+  final Function() onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 400),
+      opacity: state.status == PageStatus.signIn ? 1 : 0,
+      child: TextButton(
+        onPressed: onTap,
+        child: Text('GO BACK',
+            style: style.text.regularSmall.copyWith(
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+            )),
+      ),
+    );
+  }
+}
+
+class SignInBtn extends StatelessWidget {
+  const SignInBtn({
+    super.key,
+    required this.buttonPosition,
+    required this.authCotroller,
+    required this.emailController,
+    required this.passwordController,
+    required this.state,
+  });
+
+  final double buttonPosition;
+  final AuthCubit authCotroller;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final AuthViewState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 400),
+      left: state.status == PageStatus.signIn ? 0 : buttonPosition,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+            overlayColor: AppColor.black.withValues(alpha: 0.05),
+            foregroundColor: AppColor.black,
+            side: const BorderSide(color: AppColor.greyText),
+            padding: const EdgeInsets.all(15),
+            elevation: 0,
+            backgroundColor: AppColor.white),
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          authCotroller.doSignIn(
+            state.status,
+            UserData(
+              userEmail: emailController.text,
+              password: passwordController.text,
+            ),
+          );
+        },
+        child: Text(
+          "SIGN IN",
+          style: style.text.bold,
+        ),
+      ),
+    );
+  }
+}
+
+class ForgotPWBtn extends StatelessWidget {
+  final Function() ontap;
+  final AuthViewState state;
+  const ForgotPWBtn({
+    super.key,
+    required this.ontap,
+    required this.state,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      right: 0,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 600),
+        opacity: state.status == PageStatus.signIn ? 1 : 0,
+        child: TextButton(
+          style: ButtonStyle(
+              surfaceTintColor: const WidgetStatePropertyAll(AppColor.blue),
+              foregroundColor: WidgetStatePropertyAll(
+                Theme.of(context).colorScheme.tertiaryContainer,
+              )),
+          onPressed: state.status == PageStatus.signIn ? ontap : null,
+          child: Text(
+            'Forgot password?',
+            style: style.text.semiBold,
+          ),
+        ),
+      ),
+    );
   }
 }

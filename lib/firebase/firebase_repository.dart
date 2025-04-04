@@ -1,41 +1,53 @@
 import 'dart:io';
 import 'package:chit_chat/model/message_model.dart';
-import 'package:chit_chat/utils/util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 class FirebaseRepository {
-  final Util util = Util();
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FirebaseStorage firebaseStorage = FirebaseStorage.instance;
 
-  Future sendMessage(
+  Future<String> sendMessage(
       String chatRoomID, MessageModel newMessage, List<String> chatIds) async {
     try {
-      firebaseFirestore
-          .collection('chatrooms')
-          .doc(chatRoomID)
-          .collection('message')
-          .add(newMessage.toJson());
-
+      DocumentReference<Map<String, dynamic>> msgDocRef =
+          await firebaseFirestore
+              .collection('chatrooms')
+              .doc(chatRoomID)
+              .collection('message')
+              .add(newMessage.toJson());
       DocumentReference documentRef =
           firebaseFirestore.collection('chatrooms').doc(chatRoomID);
 
-      documentRef.set({"roomid": chatIds});
+      await documentRef.set({"roomid": chatIds});
+
+      return msgDocRef.id;
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+      rethrow;
     }
   }
 
-  Future<String> uploadFile(XFile file) async {
-    final ref = firebaseStorage.ref('users/profile').child(file.name);
-    await ref.putFile(File(file.path));
+  Future deleteMessage(String chatRoomID, String id) async {
+    DocumentReference<Map<String, dynamic>> msgDocRef = firebaseFirestore
+        .collection('chatrooms')
+        .doc(chatRoomID)
+        .collection('message')
+        .doc(id);
+    await msgDocRef.delete();
+  }
+
+  Future<String> uploadFile(XFile file, String path, [String? fileType]) async {
+    final ref = firebaseStorage.ref('users/$path').child(file.name);
+    // final String contentType = "$fileType/${file.path.split('.').last}";
+    await ref.putFile(File(file.path), SettableMetadata(contentType: fileType));
     final url = await ref.getDownloadURL();
     return url;
+  }
+
+  deleteMedia(String path) async {
+    final ref = firebaseStorage.ref('users/chat_media/$path');
+    await ref.delete();
   }
 
   Future updateUser(String userId, Map<String, String> json) async {

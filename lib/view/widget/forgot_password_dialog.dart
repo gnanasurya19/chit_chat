@@ -1,7 +1,9 @@
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/res/colors.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gap/gap.dart';
 
 class ForgotPasswordDialog extends StatefulWidget {
   final TextEditingController emailController;
@@ -32,18 +34,16 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Enter your email we will send you a password reset link',
-              style: TextStyle(fontSize: 16),
+              style: style.text.regularMedium,
             ),
-            const SizedBox(
-              height: 10,
-            ),
+            const Gap(10),
             TextFormField(
               decoration: InputDecoration(
                   hintText: 'Please enter email',
                   filled: true,
-                  fillColor: AppColor.blue.withOpacity(0.05),
+                  fillColor: AppColor.blue.withValues(alpha: 0.05),
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                   enabled: true,
@@ -53,13 +53,12 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                       borderSide: BorderSide(color: AppColor.greyline))),
               controller: widget.emailController,
             ),
-            const SizedBox(
-              height: 25,
-            ),
+            const Gap(25),
             ElevatedButton(
                 style: ButtonStyle(
                   foregroundColor: const WidgetStatePropertyAll(AppColor.white),
-                  backgroundColor: WidgetStatePropertyAll(AppColor.darkBlue),
+                  backgroundColor:
+                      const WidgetStatePropertyAll(AppColor.darkBlue),
                   shape: WidgetStatePropertyAll(ContinuousRectangleBorder(
                       borderRadius: BorderRadius.circular(10))),
                 ),
@@ -67,7 +66,10 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                   BlocProvider.of<AuthCubit>(context)
                       .forgotPassword(widget.emailController.text);
                 },
-                child: const Text("Reset password"))
+                child: Text(
+                  "Reset password",
+                  style: style.text.regular,
+                ))
           ],
         ),
       ),

@@ -1,0 +1,2 @@
+D:/Flutter/Firebase/chit_chat_/android/app/.cxx/RelWithDebInfo/35591j5d/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/Flutter/Firebase/chit_chat_/android/app/.cxx/RelWithDebInfo/35591j5d/arm64-v8a/CMakeFiles/rebuild_cache.dir

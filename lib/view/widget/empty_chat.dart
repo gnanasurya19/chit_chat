@@ -1,5 +1,5 @@
 import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:lottie/lottie.dart';
@@ -52,24 +52,25 @@ class _EmptyChatState extends State<EmptyChat>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
-              BoxShadow(color: AppColor.white.withOpacity(0.5)),
+              BoxShadow(color: AppColor.white.withValues(alpha: 0.5)),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Chat is Empty',
-                style: TextStyle(fontSize: AppFontSize.md),
+                style: style.text.semiBold,
               ),
-              const Text(
+              Text(
                 "Click here to say 'HI' to your friend",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: AppFontSize.xs),
+                style: style.text.regular,
               ),
               ScaleTransition(
                 scale: animation,
                 child: LottieBuilder.asset(
+                  repeat: false,
                   'assets/lottie/greeting_animated.json',
                   width: MediaQuery.of(context).size.width * 0.4,
                 ),

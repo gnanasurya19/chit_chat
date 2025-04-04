@@ -1,3 +1,4 @@
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -15,7 +16,7 @@ class LoadingScreen extends StatelessWidget {
           alignment: Alignment.center,
           child: Center(
             child: Lottie.asset('assets/lottie/loading_animation.json',
-                width: MediaQuery.of(context).size.width * 0.5),
+                width: 200 * style.scale),
           ),
         ),
       ),

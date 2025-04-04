@@ -1,21 +1,23 @@
+import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/search_cubit/search_cubit.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
-import 'package:chit_chat/res/fonts.dart';
+import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/view/screen/chat_page.dart';
 import 'package:chit_chat/view/widget/user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class UserSearch extends StatefulWidget {
+class SearchPage extends StatefulWidget {
   final List<UserData> chatList;
-  const UserSearch({super.key, required this.chatList});
+  const SearchPage({super.key, required this.chatList});
 
   @override
-  State<UserSearch> createState() => _UserSearchState();
+  State<SearchPage> createState() => _SearchPageState();
 }
 
-class _UserSearchState extends State<UserSearch> {
+class _SearchPageState extends State<SearchPage> {
+  TextEditingController searchEditingCtl = TextEditingController();
   @override
   void initState() {
     BlocProvider.of<SearchCubit>(context).onInit(widget.chatList);
@@ -29,22 +31,14 @@ class _UserSearchState extends State<UserSearch> {
       backgroundColor: Theme.of(context).colorScheme.inverseSurface,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        leadingWidth: MediaQuery.of(context).size.width * 0.1,
-        leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppColor.white,
-            )),
-        automaticallyImplyLeading: false,
         titleSpacing: 0,
+        iconTheme: const IconThemeData(color: AppColor.white),
         title: TextField(
           style: const TextStyle(color: AppColor.white),
           autofocus: true,
           cursorColor: AppColor.white,
           autocorrect: true,
+          controller: searchEditingCtl,
           onChanged: (value) {
             searchProvider.onSearch(value);
           },
@@ -58,9 +52,9 @@ class _UserSearchState extends State<UserSearch> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               '*You have to enter your receiver email address completly(who is not in your chat list) to get result. This is to protect the receivers email from intruders',
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  fontSize: AppFontSize.xxs),
+              style: style.text.regularXS.copyWith(
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
             ),
           ),
           BlocConsumer<SearchCubit, SearchState>(
@@ -78,6 +72,8 @@ class _UserSearchState extends State<UserSearch> {
                       itemBuilder: (context, index) => UserCard(
                         user: state.userList[index],
                         onTap: (user) {
+                          BlocProvider.of<ChatCubit>(context)
+                              .onInit(state.userList[index].uid!, user);
                           Navigator.pop(context);
                           Navigator.push(context, PageRouteBuilder(
                             pageBuilder:
@@ -100,11 +96,11 @@ class _UserSearchState extends State<UserSearch> {
                       Container(
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.all(8.0),
-                        child: const Text(
+                        child: Text(
                           'Your chat list',
-                          style: TextStyle(
-                              color: AppColor.greyText,
-                              fontFamily: Roboto.medium),
+                          style: style.text.semiBold.copyWith(
+                            color: AppColor.greyText,
+                          ),
                         ),
                       ),
                     ListView.builder(
@@ -114,6 +110,8 @@ class _UserSearchState extends State<UserSearch> {
                       itemBuilder: (context, index) => UserCard(
                         user: state.chatList[index],
                         onTap: (user) {
+                          BlocProvider.of<ChatCubit>(context)
+                              .onInit(state.chatList[index].uid!, user);
                           Navigator.pop(context);
                           Navigator.push(context, PageRouteBuilder(
                             pageBuilder:
@@ -132,6 +130,16 @@ class _UserSearchState extends State<UserSearch> {
                         },
                       ),
                     ),
+                    if (state.chatList.isEmpty &&
+                        state.userList.isEmpty &&
+                        searchEditingCtl.text.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.only(top: 30),
+                        child: const Text(
+                          'No Result Found',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
                   ],
                 );
               } else {
