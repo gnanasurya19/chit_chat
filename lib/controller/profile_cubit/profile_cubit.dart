@@ -1,5 +1,5 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:chit_chat/firebase/firebase_repository.dart';
+import 'package:chit_chat/repositories/firebase_repository.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';

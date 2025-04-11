@@ -33,13 +33,29 @@ class ChatCubit extends Cubit<ChatState> {
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   List<MessageModel> messageList = [];
+  List<MessageModel> pendingMessageList = [];
   String chatRoomID = '';
   String receiverID = '';
   DocumentSnapshot<Map<String, dynamic>>? lastDocument;
   StreamSubscription? chatStream;
   String? thumbnailUrl;
   String? thumbnailName;
+  String? thumbnailPath;
   late UserData user;
+
+  List<MediaDataModel> mediaList = [];
+  MediaType? mediaType;
+
+  final record = AudioRecorder();
+
+  String? activeAudioId;
+  final Map<String, PlayerController> audioPlayers = {};
+  final Map<String, bool> isPrepared = {};
+
+  int selectedMsgCount = 0;
+  bool get isMsgSelected => selectedMsgCount != 0;
+
+  List<MessageModel>? selectedMsgs;
 
   Future onInit(String receiverID, UserData user) async {
     // To display notification properly
@@ -64,15 +80,24 @@ class ChatCubit extends Cubit<ChatState> {
         .doc(chatRoomID)
         .collection('message')
         .where('deletedBy', isNotEqualTo: senderID)
-        .orderBy('timestamp', descending: true)
-        .limit(20)
+        .orderBy('deletedBy')
+        .orderBy('timestamp')
+        .limitToLast(20)
         .get();
 
     await query.then((element) async {
-      populateList(element.docs.reversed.toList());
+      sortMessageDocs(element);
+      populateList(element.docs.toList());
     });
 
     listenNewmsg();
+  }
+
+  void sortMessageDocs(QuerySnapshot<Map<String, dynamic>> element) {
+    element.docs.sort(
+      (a, b) =>
+          (b.data()['timestamp'] as Timestamp).compareTo(a.data()['timestamp']),
+    );
   }
 
   listenNewmsg() {
@@ -94,6 +119,7 @@ class ChatCubit extends Cubit<ChatState> {
     }
 
     chatStream = query.snapshots().listen((element) {
+      pendingMessageList = hiveRepository.getSingleUserPendings(receiverID);
       populateList(element.docs.toList());
     });
   }
@@ -123,7 +149,7 @@ class ChatCubit extends Cubit<ChatState> {
         .doc(chatRoomID)
         .collection('message')
         .where('deletedBy', isNotEqualTo: currentUserId)
-        .orderBy('deletedBy')
+        .orderBy('deletedBy', descending: true)
         .orderBy('timestamp', descending: true)
         .limit(20)
         .startAfterDocument(lastDocument!)
@@ -142,12 +168,7 @@ class ChatCubit extends Cubit<ChatState> {
       }
       emit(ChatReady(messageList: messageList, loadingOldchat: false));
     });
-    listenNewmsg();
-  }
-
-  justEmit() {
-    messageList.add(messageList.last);
-    emit(ChatReady(messageList: messageList));
+    // listenNewmsg();
   }
 
   void populateList(List<QueryDocumentSnapshot<Map<String, dynamic>>> element) {
@@ -156,14 +177,15 @@ class ChatCubit extends Cubit<ChatState> {
     } else {
       lastDocument = element.first;
 
-      // messageList = [];
       messageList = element
           .map((e) => MessageModel.fromJson(e.data(), e.id))
           .toList()
           .reversed
           .toList();
 
-      messageList.sort((a, b) => b.timestamp!.compareTo(a.timestamp!));
+      // messageList.addAll(pendingMessageList);
+
+      // messageList.sort((a, b) => b.timestamp!.compareTo(a.timestamp!));
 
       audioPlayerInitialilze();
 
@@ -228,7 +250,6 @@ class ChatCubit extends Cubit<ChatState> {
       newList.add(message);
     }
 
-    // messageList = newList.toList();
     messageList = newList.reversed.toList();
     emit(ChatReady(messageList: messageList));
 
@@ -241,33 +262,39 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Future uploadFileToFirebase() async {
-    emit(
-      UploadFile(
-        mediaType: mediaType!,
-        fileData: mediaList.map((e) => e.filePath).toList(),
-        fileStatus: FileStatus.uploading,
-      ),
-    );
-    await Future.forEach(mediaList, (media) async {
-      final String url = await firebaseRepository.uploadFile(
-          XFile(media.filePath), 'chat_media');
-      media.fileUrl = url;
+    for (var media in mediaList) {
       media.fileName = media.filePath.split(Platform.pathSeparator).last;
       if (mediaType == MediaType.video) {
-        String? thumbnailPath = await VideoThumbnail.thumbnailFile(
+        thumbnailPath = await VideoThumbnail.thumbnailFile(
           video: media.filePath,
           imageFormat: ImageFormat.JPEG,
           quality: 100,
         );
         thumbnailName = thumbnailPath?.split(Platform.pathSeparator).last;
-        thumbnailUrl = await firebaseRepository.uploadFile(
-            XFile(thumbnailPath!), 'chat_media');
-        final size = getMediaSize(thumbnailPath);
-        mediaList[0].height = size.height;
-        mediaList[0].width = size.width;
       }
+    }
+    util.checkNetwork().then((value) async {
+      emit(
+        UploadFile(
+          mediaType: mediaType!,
+          fileData: mediaList.map((e) => e.filePath).toList(),
+          fileStatus: FileStatus.uploading,
+        ),
+      );
+      await Future.forEach(mediaList, (media) async {
+        final String url = await firebaseRepository.uploadFile(
+            XFile(media.filePath), 'chat_media');
+        media.fileUrl = url;
+        if (mediaType == MediaType.video) {
+          final thumbnailFile = XFile(thumbnailPath!);
+          thumbnailUrl =
+              await firebaseRepository.uploadFile(thumbnailFile, 'chat_media');
+        }
+      });
+      emit(FileUploaded());
+    }).catchError((err) {
+      addToLocal();
     });
-    emit(FileUploaded());
   }
 
   Future sendMessage(String message, UserData receiver, String msgType,
@@ -319,29 +346,29 @@ class ChatCubit extends Cubit<ChatState> {
       );
 
       //posting to firebase
-      firebaseRepository
-          .sendMessage(chatRoomID, newMessage, chatIds)
-          .then((msgId) async {
-        // accessing receiver fcm;
-        await firebaseFirestore
-            .collection('users')
-            .where('uid', isEqualTo: receiverID)
-            .limit(1)
-            .get()
-            .then((value) {
-          if (value.docs.isNotEmpty) {
-            receiver.fCM = value.docs.first.data()['fcm'];
-          }
-        });
+      final msgId =
+          await firebaseRepository.sendMessage(chatRoomID, newMessage, chatIds);
 
-        if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
-          networkApiService
-              .sendNotification(receiver, newMessage, msgId, chatRoomID)
-              .catchError((e) {
-            // Do nothing
-          });
-        }
-      });
+      receiver.fCM = await getReceiverFCM();
+
+      if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {
+        networkApiService
+            .sendNotification(receiver, newMessage, msgId, chatRoomID)
+            .catchError((e) {
+          // Do nothing
+        });
+      }
+    }
+  }
+
+  Future<String?> getReceiverFCM() async {
+    var userCollection = firebaseFirestore.collection('users');
+    final value =
+        await userCollection.where('uid', isEqualTo: receiverID).limit(1).get();
+    if (value.docs.isNotEmpty) {
+      return value.docs.first.data()['fcm'];
+    } else {
+      return null;
     }
   }
 
@@ -368,9 +395,6 @@ class ChatCubit extends Cubit<ChatState> {
     // remove
   }
 
-  List<MediaDataModel> mediaList = [];
-  MediaType? mediaType;
-
   Future openGallery() async {
     util.captureMultiImage().then((value) async {
       if (value != null) {
@@ -387,6 +411,39 @@ class ChatCubit extends Cubit<ChatState> {
         mediaType = MediaType.image;
       }
     }).catchError((e) {});
+  }
+
+  addToLocal() {
+    List<MessageModel> pendingMessages = [];
+    for (var i = 0; i < mediaList.length; i++) {
+      final media = mediaList[i];
+
+      String mediaID =
+          "${DateFormat('yyyyMMddHHmmssS').format(DateTime.now())}$i";
+
+      final message = MessageModel(
+        mediaID: mediaID,
+        message: media.filePath,
+        fileName: media.fileName,
+        messageType: mediaType == MediaType.image ? 'image' : 'video',
+        receiverID: receiverID,
+        imageHeight: media.height!.toDouble(),
+        imageWidth: media.width!.toDouble(),
+        status: 'pending',
+        senderID: currentUserId,
+        timestampAsDateTime: Timestamp.now().toDate(),
+        timestamp: Timestamp.now(),
+        thumbnail: thumbnailPath,
+        thumbnailName: thumbnailName,
+      );
+
+      message.getDateTime();
+
+      print(message.toString());
+
+      pendingMessages.add(message);
+    }
+    hiveRepository.addToPending(pendingMessages);
   }
 
   Size getMediaSize(String filepath) {
@@ -408,7 +465,16 @@ class ChatCubit extends Cubit<ChatState> {
   Future openVideoGallery() async {
     util.captureVideo().then((value) async {
       if (value != null) {
-        mediaList = [MediaDataModel(filePath: value.path)];
+        mediaList.clear();
+        final size = getMediaSize(value.path);
+        mediaList.add(
+          MediaDataModel(
+            filePath: value.path,
+            fileName: value.path.split(Platform.pathSeparator).last,
+            height: size.height,
+            width: size.width,
+          ),
+        );
         emit(OpenUploadFileDialog());
         mediaType = MediaType.video;
       }
@@ -424,7 +490,6 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   // recording
-  final record = AudioRecorder();
   checkMicPermission() async {
     final hasPermission = await record.hasPermission();
 
@@ -503,10 +568,6 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  String? activeAudioId;
-  final Map<String, PlayerController> audioPlayers = {};
-  final Map<String, bool> isPrepared = {};
-
   PlayerController getPlayerController(String audioID) {
     if (!audioPlayers.containsKey(audioID)) {
       audioPlayers[audioID] = PlayerController();
@@ -580,8 +641,6 @@ class ChatCubit extends Cubit<ChatState> {
     emit(ChatReady(messageList: messageList));
   }
 
-  int selectedMsgCount = 0;
-  bool get isMsgSelected => selectedMsgCount != 0;
   selectMessages(MessageModel message) {
     if (message.isSelected == true) {
       message.isSelected = false;
@@ -599,10 +658,7 @@ class ChatCubit extends Cubit<ChatState> {
           selectedMsgCount: selectedMsgCount));
     }
 
-    emit(ChatReady(
-      messageList: messageList,
-      isMsgsSelected: isMsgSelected,
-    ));
+    emit(ChatReady(messageList: messageList, isMsgsSelected: isMsgSelected));
   }
 
   deSelectAllMsg() {
@@ -610,14 +666,10 @@ class ChatCubit extends Cubit<ChatState> {
       element.isSelected = false;
     }
     selectedMsgCount = 0;
-    emit(ChatReady(
-      messageList: messageList,
-      isMsgsSelected: isMsgSelected,
-    ));
+    emit(ChatReady(messageList: messageList, isMsgsSelected: isMsgSelected));
     emit(ChatMessgesDeselectedState());
   }
 
-  List<MessageModel>? selectedMsgs;
   showDeleteAlert() {
     final currentUserID = firebaseAuth.currentUser?.uid;
 

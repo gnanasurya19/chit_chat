@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:chit_chat/firebase/firebase_repository.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/repositories/firebase_repository.dart';
 import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/network/network_api_service.dart';
 import 'package:chit_chat/notification/notification_service.dart';
+import 'package:chit_chat/repositories/hive_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +14,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:chit_chat/main.dart';
@@ -24,7 +27,7 @@ AppStyle get style => MainApp.style;
 FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 String get currentUserId => firebaseAuth.currentUser!.uid;
 NetworkApiService networkApiService = NetworkApiService();
-
+HiveRepository hiveRepository = HiveRepository();
 final notificationService = NotificationService();
 FirebaseRepository firebaseRepository = FirebaseRepository();
 
@@ -32,6 +35,9 @@ UserData? userDataFromTerminated;
 
 FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
 FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+
+// Hive
+late Box<MessageModel> hivebox;
 
 Future<void> refreshToken() async {
   // get device token

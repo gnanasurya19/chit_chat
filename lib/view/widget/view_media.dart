@@ -7,6 +7,7 @@ import 'package:chit_chat/controller/media_cubit/media_cubit.dart';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/download_upload_callback.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +43,7 @@ class _ViewMediaPageState extends State<ViewMediaPage> {
   void initState() {
     controller = BlocProvider.of<MediaCubit>(context);
     controller.onInit();
+    setContext = context;
     if (widget.message!.messageType == 'video') {
       final String filepath = widget.message!.message!;
 

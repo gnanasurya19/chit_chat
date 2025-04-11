@@ -210,75 +210,87 @@ class ProfileImage extends StatelessWidget {
     Navigator.push(
         context,
         HeroDialogRoute(
-          builder: (context) => Dialog(
-            alignment: const Alignment(0, -0.5),
-            shape: ContinuousRectangleBorder(
-                borderRadius: BorderRadius.circular(style.radius.lg)),
-            clipBehavior: Clip.hardEdge,
-            insetPadding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.sizeOf(context).width * 0.15,
-                vertical: 0),
-            child: SizedBox(
-              height: MediaQuery.sizeOf(context).width * 0.7,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          builder: (context) => ProfileModal(user: user),
+        ));
+  }
+}
+
+class ProfileModal extends StatelessWidget {
+  const ProfileModal({
+    super.key,
+    required this.user,
+  });
+
+  final UserData user;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      alignment: const Alignment(0, -0.5),
+      shape: ContinuousRectangleBorder(
+          borderRadius: BorderRadius.circular(style.radius.lg)),
+      clipBehavior: Clip.hardEdge,
+      insetPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.sizeOf(context).width * 0.15, vertical: 0),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).width * 0.7,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewMediaPage(
+                      message: MessageModel(
+                          message: user.profileURL, messageType: 'image'),
+                    ),
+                  ),
+                );
+              },
+              child: Hero(
+                tag: user.userName!,
+                child: ProfileImageSquare(
+                  image: user.profileURL!,
+                ),
+              ),
+            ),
+            Flexible(
+              fit: FlexFit.loose,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  GestureDetector(
-                    onTap: () {
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
                       Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViewMediaPage(
-                            message: MessageModel(
-                                message: user.profileURL, messageType: 'image'),
-                          ),
-                        ),
-                      );
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChatPage(
+                                    userData: user,
+                                  )));
                     },
-                    child: Hero(
-                      tag: user.userName!,
-                      child: ProfileImageSquare(
-                        image: user.profileURL!,
-                      ),
-                    ),
+                    icon: const Icon(Icons.message),
                   ),
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ChatPage(
-                                          userData: user,
-                                        )));
-                          },
-                          icon: const Icon(Icons.message),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            await util
-                                .downloadMedia(
-                                    user.profileURL!, 'image', context)
-                                .then((v) {
-                              Navigator.pop(context);
-                            });
-                          },
-                          icon: const Icon(Icons.download_rounded),
-                        )
-                      ],
-                    ),
-                  ),
+                  IconButton(
+                    onPressed: () async {
+                      await util
+                          .downloadFromCache(user.profileURL!, 'image', context)
+                          .then((v) {
+                        Navigator.pop(context);
+                      });
+                    },
+                    icon: const Icon(Icons.download_rounded),
+                  )
                 ],
               ),
             ),
-          ),
-        ));
+          ],
+        ),
+      ),
+    );
   }
 }
 

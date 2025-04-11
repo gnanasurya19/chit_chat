@@ -35,11 +35,11 @@ class Util {
     );
   }
 
-  showSnackbar(context, text, type) {
+  showSnackbar(BuildContext context, text, type) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        duration: const Duration(milliseconds: 1500),
+        duration: const Duration(milliseconds: 2000),
         behavior: SnackBarBehavior.floating,
         backgroundColor: type == 'success' ? AppColor.green : AppColor.white,
         shape:
@@ -295,7 +295,7 @@ class Util {
     throw false;
   }
 
-  Future checkNetwork() async {
+  Future<bool> checkNetwork() async {
     List<ConnectivityResult> result = await Connectivity().checkConnectivity();
     if (result.any((element) => element == ConnectivityResult.none)) {
       throw false;
@@ -304,7 +304,7 @@ class Util {
     }
   }
 
-  Future downloadMedia(String url, String mediaType, context) async {
+  Future downloadFromCache(String url, String mediaType, context) async {
     // get's the cache of the image if not available downloads from network
     final cachedFile = await DefaultCacheManager().getSingleFile(url);
     final cachedFilepath = path.dirname(cachedFile.path);

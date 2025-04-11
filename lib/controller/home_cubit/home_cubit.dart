@@ -1,13 +1,15 @@
 import 'dart:async';
-import 'package:chit_chat/firebase/firebase_repository.dart';
+import 'dart:isolate';
+import 'dart:ui';
 import 'package:chit_chat/model/message_model.dart';
 import 'package:chit_chat/model/user_data.dart';
 import 'package:chit_chat/notification/notification_service.dart';
 import 'package:chit_chat/res/common_instants.dart';
+import 'package:chit_chat/res/download_upload_callback.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 part 'home_state.dart';
@@ -21,12 +23,10 @@ class HomeCubit extends Cubit<HomeState> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? chatlistStream;
   List<UserData> userList = [];
 
-  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  String get currentUserId => firebaseAuth.currentUser!.uid;
-  FirebaseRepository firebaseRepository = FirebaseRepository();
-  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   FlutterLocalNotificationsPlugin localNotification =
       FlutterLocalNotificationsPlugin();
+
+  final ReceivePort _port = ReceivePort();
 
   getLocalInfo() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
@@ -42,13 +42,16 @@ class HomeCubit extends Cubit<HomeState> {
   Future onInit([bool? isRefresh]) async {
     if (isRefresh == null) {
       emit(HomeChatLoading());
-      userList = [];
+      // userList = [];
     }
+
     // Permissions
     util.setUpMediaStore();
 
     // Notification token refresh
     refreshToken();
+
+    checkPendingMessages();
 
     userListStream = firebaseFirestore
         .collection('chatrooms')
@@ -84,6 +87,27 @@ class HomeCubit extends Cubit<HomeState> {
     });
   }
 
+  Future<void> downloadListener() async {
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port1');
+
+    _port.listen(
+      (data) {
+        final taskId = (data as List<dynamic>)[0] as String?;
+        final status = DownloadTaskStatus.fromInt(data[1] as int);
+        final progress = data[2] as int?;
+
+        if (status == DownloadTaskStatus.complete &&
+            progress == 100 &&
+            taskId != null) {
+          onDownloadComplete();
+        }
+      },
+    );
+
+    FlutterDownloader.registerCallback(downloadcallback);
+  }
+
   listernThemeChange(context) {
     // MediaQuery.of(context).platformBrightness.
   }
@@ -99,6 +123,8 @@ class HomeCubit extends Cubit<HomeState> {
             .collection('chatrooms')
             .doc(chatRoomId)
             .collection('message')
+            .where('deletedBy', isNotEqualTo: currentUserId)
+            .orderBy('deletedBy')
             .orderBy('timestamp', descending: true)
             .limit(1)
             .snapshots()
@@ -146,8 +172,13 @@ class HomeCubit extends Cubit<HomeState> {
     chatlistStream?.cancel();
   }
 
+  void checkPendingMessages() {
+    final pendingMessages = hiveRepository.getAllPendings();
+  }
+
   @override
   Future<void> close() {
+    _port.close();
     if (userListStream != null) {
       userListStream!.cancel();
     }

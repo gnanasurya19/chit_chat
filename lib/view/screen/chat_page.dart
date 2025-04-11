@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
@@ -87,119 +88,16 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: BlocBuilder<ChatCubit, ChatState>(
-            buildWhen: (previous, current) => current is ChatSelectionState,
-            builder: (context, state) {
-              if (state is ChatMessageSelectedState) {
-                return IconButton(
-                  splashRadius: 40,
-                  color: AppColor.white,
-                  iconSize: style.icon.md,
-                  icon: Icon(Icons.close_sharp),
-                  onPressed: () {
-                    _chatRoomsCubit.deSelectAllMsg();
-                  },
-                );
-              } else {
-                return IconButton(
-                    splashRadius: 40,
-                    onPressed: () {
-                      _chatRoomsCubit.stopStream();
-                      Navigator.pop(context);
-                    },
-                    icon: SVGIcon(
-                      name: 'arrow-left',
-                      color: AppColor.white,
-                      size: style.icon.sm,
-                    ));
-              }
-            },
-          ),
+          leading: LeadingWidegt(),
           titleSpacing: 0,
-          title: Row(
-            children: [
-              if (widget.userData.profileURL != null)
-                Container(
-                  width: 30,
-                  height: 30,
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  decoration: const BoxDecoration(shape: BoxShape.circle),
-                  child: GestureDetector(
-                    onTap: () {
-                      if (widget.userData.profileURL != null) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => ViewMediaPage(
-                              message: MessageModel(
-                                  message: widget.userData.profileURL,
-                                  messageType: 'image'),
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: CircularProfileImage(
-                      image: widget.userData.profileURL,
-                      isNetworkImage: true,
-                    ),
-                  ),
-                ),
-              const Gap(10),
-              InkWell(
-                onTap: () {
-                  context.read<ChatCubit>().justEmit();
-                },
-                child: Text(
-                    widget.userData.userName!.replaceRange(
-                        0,
-                        1,
-                        widget.userData.userName!
-                            .split('')
-                            .first
-                            .toUpperCase()),
-                    style: style.text.boldMedium.copyWith(
-                      color: AppColor.white,
-                    )),
-              ),
-            ],
+          title: ProfileAndTitle(
+            userName: widget.userData.userName ?? '',
+            profileURL: widget.userData.profileURL,
           ),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           iconTheme: const IconThemeData(color: AppColor.white),
           actions: [
-            BlocBuilder<ChatCubit, ChatState>(
-              buildWhen: (previous, current) => current is ChatSelectionState,
-              builder: (context, state) {
-                if (state is ChatMessageSelectedState) {
-                  return Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(style.insets.xs),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.white,
-                        ),
-                        child: Text(
-                          '${state.selectedMsgCount}',
-                          style: style.text.regular.copyWith(
-                              color:
-                                  Theme.of(context).colorScheme.inversePrimary),
-                        ),
-                      ),
-                      IconButton(
-                        color: AppColor.white,
-                        iconSize: style.icon.rg,
-                        onPressed: () {
-                          _chatRoomsCubit.showDeleteAlert();
-                        },
-                        icon: Icon(Icons.delete),
-                      ),
-                    ],
-                  );
-                } else {
-                  return SizedBox();
-                }
-              },
-            ),
+            ChatActionWidegets(),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -207,94 +105,250 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
           child: Column(
             children: [
-              Expanded(
-                child: BlocConsumer<ChatCubit, ChatState>(
-                  listenWhen: (previous, current) =>
-                      current is ChatActionState ||
-                      current is ChatSelectionState,
-                  listener: listener,
-                  buildWhen: (previous, current) =>
-                      current is! ChatActionState &&
-                      current is! ChatSelectionState,
-                  builder: (context, state) {
-                    if (state is ChatReady) {
-                      return Stack(
-                        alignment: Alignment.bottomCenter,
-                        children: [
-                          ListView.builder(
-                            reverse: true,
-                            // shrinkWrap: true,
-                            controller: listScrollController,
-                            itemCount: state.messageList.length,
-                            itemBuilder: (context, index) {
-                              final MessageModel message =
-                                  state.messageList[index];
-                              return Column(
-                                children: [
-                                  //date
-                                  Builder(builder: (context) {
-                                    if (index < state.messageList.length - 1 &&
-                                        message.date ==
-                                            state.messageList[index + 1].date) {
-                                      return const SizedBox();
-                                    } else {
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0),
-                                        child: Text('${message.date}'),
-                                      );
-                                    }
-                                  }),
-                                  //message bubble
-                                  MessageBubble(
-                                    widget: widget,
-                                    message: message,
-                                    isMsgsSelected: state.isMsgsSelected,
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-
-                          // load more progress indicator
-                          if (state.loadingOldchat ?? false)
-                            Positioned(
-                              top: 10,
-                              child: Container(
-                                height: 30,
-                                width: 30,
-                                padding: const EdgeInsets.all(7),
-                                decoration: const BoxDecoration(
-                                    color: AppColor.white,
-                                    shape: BoxShape.circle),
-                                child: const CircularProgressIndicator(
-                                  color: AppColor.blue,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                        ],
-                      );
-                    } else if (state is ChatListEmpty) {
-                      return EmptyChat(
-                        onPress: () async {
-                          context
-                              .read<ChatCubit>()
-                              .sendMessage('Hi', widget.userData, 'text');
-                        },
-                      );
-                    } else {
-                      return const SizedBox();
-                    }
-                  },
-                ),
-              ),
+              ChatListWidget(
+                  userData: widget.userData,
+                  listScrollController: listScrollController),
               //chat field
               ChatTextField(
                   messageController: messageController, widget: widget),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ProfileAndTitle extends StatelessWidget {
+  const ProfileAndTitle({
+    super.key,
+    this.profileURL,
+    required this.userName,
+  });
+
+  final String? profileURL;
+  final String userName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        if (profileURL != null) ChatProfileImage(profileUrl: profileURL!),
+        const Gap(10),
+        // User name
+        Text(
+          userName.replaceRange(0, 1, userName.split('').first.toUpperCase()),
+          style: style.text.boldMedium.copyWith(
+            color: AppColor.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class LeadingWidegt extends StatelessWidget {
+  const LeadingWidegt({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ChatCubit, ChatState>(
+      buildWhen: (previous, current) => current is ChatSelectionState,
+      builder: (context, state) {
+        if (state is ChatMessageSelectedState) {
+          return IconButton(
+            splashRadius: 40,
+            color: AppColor.white,
+            iconSize: style.icon.md,
+            icon: Icon(Icons.close_sharp),
+            onPressed: () {
+              context.read<ChatCubit>().deSelectAllMsg();
+            },
+          );
+        } else {
+          return IconButton(
+              splashRadius: 40,
+              onPressed: () {
+                context.read<ChatCubit>().stopStream();
+                Navigator.pop(context);
+              },
+              icon: SVGIcon(
+                name: 'arrow-left',
+                color: AppColor.white,
+                size: style.icon.sm,
+              ));
+        }
+      },
+    );
+  }
+}
+
+class ChatActionWidegets extends StatelessWidget {
+  const ChatActionWidegets({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ChatCubit, ChatState>(
+      buildWhen: (previous, current) => current is ChatSelectionState,
+      builder: (context, state) {
+        if (state is ChatMessageSelectedState) {
+          return Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(style.insets.xs),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColor.white,
+                ),
+                child: Text(
+                  '${state.selectedMsgCount}',
+                  style: style.text.regular.copyWith(
+                      color: Theme.of(context).colorScheme.inversePrimary),
+                ),
+              ),
+              IconButton(
+                color: AppColor.white,
+                iconSize: style.icon.rg,
+                onPressed: () {
+                  context.read<ChatCubit>().showDeleteAlert();
+                },
+                icon: Icon(Icons.delete),
+              ),
+            ],
+          );
+        } else {
+          return SizedBox();
+        }
+      },
+    );
+  }
+}
+
+class ChatProfileImage extends StatelessWidget {
+  const ChatProfileImage({
+    super.key,
+    required this.profileUrl,
+  });
+
+  final String profileUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 30,
+      height: 30,
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ViewMediaPage(
+                message:
+                    MessageModel(message: profileUrl, messageType: 'image'),
+              ),
+            ),
+          );
+        },
+        child: CircularProfileImage(
+          image: profileUrl,
+          isNetworkImage: true,
+        ),
+      ),
+    );
+  }
+}
+
+class ChatListWidget extends StatelessWidget {
+  const ChatListWidget({
+    super.key,
+    required this.userData,
+    required this.listScrollController,
+  });
+
+  final UserData userData;
+  final ScrollController listScrollController;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: BlocConsumer<ChatCubit, ChatState>(
+        listenWhen: (previous, current) =>
+            current is ChatActionState || current is ChatSelectionState,
+        listener: listener,
+        buildWhen: (previous, current) =>
+            current is! ChatActionState && current is! ChatSelectionState,
+        builder: (context, state) {
+          if (state is ChatReady) {
+            return Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                ListView.builder(
+                  reverse: true,
+                  shrinkWrap: true,
+                  controller: listScrollController,
+                  itemCount: state.messageList.length,
+                  itemBuilder: (context, index) {
+                    final MessageModel message = state.messageList[index];
+                    return Column(
+                      children: [
+                        //date
+                        Builder(builder: (context) {
+                          if (index < state.messageList.length - 1 &&
+                              message.date ==
+                                  state.messageList[index + 1].date) {
+                            return const SizedBox();
+                          } else {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Text('${message.date}'),
+                            );
+                          }
+                        }),
+                        //message bubble
+                        MessageBubble(
+                          userData: userData,
+                          message: message,
+                          isMsgsSelected: state.isMsgsSelected,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                // load more progress indicator
+                if (state.loadingOldchat ?? false)
+                  Positioned(
+                    top: 10,
+                    child: Container(
+                      height: 30,
+                      width: 30,
+                      padding: const EdgeInsets.all(7),
+                      decoration: const BoxDecoration(
+                          color: AppColor.white, shape: BoxShape.circle),
+                      child: const CircularProgressIndicator(
+                        color: AppColor.blue,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+              ],
+            );
+          } else if (state is ChatListEmpty) {
+            return EmptyChat(
+              onPress: () async {
+                context.read<ChatCubit>().sendMessage('Hi', userData, 'text');
+              },
+            );
+          } else {
+            return const SizedBox();
+          }
+        },
       ),
     );
   }
@@ -310,11 +364,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       );
     } else if (state is FileUploaded) {
       Navigator.pop(context);
-      context.read<ChatCubit>().sendMediaMessages(widget.userData);
+      context.read<ChatCubit>().sendMediaMessages(userData);
     } else if (state is ChatMessageSelectedState) {
-      setState(() => canPop = false);
+      // setState(() => canPop = false);
     } else if (state is ChatMessgesDeselectedState) {
-      setState(() => canPop = true);
+      // setState(() => canPop = true);
     } else if (state is ChatDeleteDialogState) {
       util.showDeleteConfirmation(context, state.msgCount, state.isDeleteForAll,
           state.deleteForAll, state.deleteOnlyForMe);
@@ -325,12 +379,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
     super.key,
-    required this.widget,
+    required this.userData,
     required this.message,
     this.isMsgsSelected,
   });
 
-  final ChatPage widget;
+  final UserData userData;
   final MessageModel message;
   final bool? isMsgsSelected;
 
@@ -351,7 +405,7 @@ class MessageBubble extends StatelessWidget {
         children: [
           Container(
             color: Colors.transparent,
-            alignment: widget.userData.uid == message.senderID
+            alignment: userData.uid == message.senderID
                 ? Alignment.centerLeft
                 : Alignment.centerRight,
             child: Container(
@@ -364,7 +418,7 @@ class MessageBubble extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
-                crossAxisAlignment: widget.userData.uid == message.senderID
+                crossAxisAlignment: userData.uid == message.senderID
                     ? CrossAxisAlignment.start
                     : CrossAxisAlignment.end,
                 children: [
@@ -374,28 +428,19 @@ class MessageBubble extends StatelessWidget {
                       style: style.text.regular,
                     ),
                   if (message.messageType == 'image') ...[
-                    Container(
-                      width: MediaQuery.sizeOf(context).width * 0.7,
-                      constraints: BoxConstraints(
-                          maxHeight: MediaQuery.sizeOf(context).height * 0.45),
-                      child: AspectRatio(
-                        aspectRatio: (message.imageWidth ?? 1) /
-                            (message.imageHeight ?? 1),
-                        child: InkWell(
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => ViewMediaPage(
-                                message: message,
-                              ),
-                            ),
-                          ),
-                          child: CachedNetworkImage(
-                            imageUrl: message.message!,
-                            placeholder: _loader,
-                            errorWidget: _error,
-                            fit: BoxFit.cover,
+                    InkWell(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => ViewMediaPage(
+                            message: message,
                           ),
                         ),
+                      ),
+                      child: ChatImageContainer(
+                        image: message.message!,
+                        isLocal: message.mediaID != null,
+                        imageHeight: message.imageHeight,
+                        imageWidth: message.imageWidth,
                       ),
                     ),
                     const Gap(5)
@@ -410,22 +455,11 @@ class MessageBubble extends StatelessWidget {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          Container(
-                            width: MediaQuery.sizeOf(context).width * 0.7,
-                            margin: const EdgeInsets.only(bottom: 5),
-                            constraints: BoxConstraints(
-                                maxHeight:
-                                    MediaQuery.sizeOf(context).height * 0.45),
-                            child: AspectRatio(
-                              aspectRatio: (message.imageWidth ?? 1) /
-                                  (message.imageHeight ?? 1),
-                              child: CachedNetworkImage(
-                                imageUrl: message.thumbnail!,
-                                placeholder: _loader,
-                                errorWidget: _error,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                          ChatImageContainer(
+                            image: message.thumbnail!,
+                            isLocal: message.mediaID != null,
+                            imageHeight: message.imageHeight,
+                            imageWidth: message.imageWidth,
                           ),
                           //play button
                           Positioned(
@@ -444,6 +478,7 @@ class MessageBubble extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const Gap(5)
                   ],
                   if (message.messageType == 'audio') ...[
                     AudioMsgBubble(
@@ -452,7 +487,6 @@ class MessageBubble extends StatelessWidget {
                       message: message,
                     ),
                   ],
-
                   // message info
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -464,7 +498,7 @@ class MessageBubble extends StatelessWidget {
                         style: style.text.regularSmall,
                       ),
                       const Gap(3),
-                      if (widget.userData.uid != message.senderID)
+                      if (userData.uid != message.senderID)
                         if (message.status == 'unread')
                           SVGIcon(
                             name: "check",
@@ -477,13 +511,18 @@ class MessageBubble extends StatelessWidget {
                             size: style.icon.xs,
                             color: AppColor.greyText,
                           )
-                        else ...[
+                        else if (message.status == 'read')
                           SVGIcon(
                             name: "read",
                             size: style.icon.xs,
                             color: AppColor.blue,
-                          ),
-                        ]
+                          )
+                        else
+                          Icon(
+                            Icons.access_time,
+                            size: style.icon.xs,
+                            color: AppColor.greyText,
+                          )
                     ],
                   ),
                 ],
@@ -499,6 +538,45 @@ class MessageBubble extends StatelessWidget {
                   color: AppColor.blue.withValues(alpha: 0.3),
                 ))
         ],
+      ),
+    );
+  }
+}
+
+class ChatImageContainer extends StatelessWidget {
+  const ChatImageContainer({
+    super.key,
+    required this.image,
+    required this.isLocal,
+    double? imageWidth,
+    double? imageHeight,
+  })  : imageHeight = imageHeight ?? 1,
+        imageWidth = imageWidth ?? 1;
+
+  final String image;
+  final bool isLocal;
+  final double imageWidth;
+  final double imageHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: MediaQuery.sizeOf(context).width * 0.7,
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.45),
+      child: AspectRatio(
+        aspectRatio: (imageWidth) / (imageHeight),
+        child: isLocal
+            ? Image.file(
+                File(image),
+                fit: BoxFit.cover,
+              )
+            : CachedNetworkImage(
+                imageUrl: image,
+                placeholder: _loader,
+                errorWidget: _error,
+                fit: BoxFit.cover,
+              ),
       ),
     );
   }

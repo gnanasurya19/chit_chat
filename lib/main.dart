@@ -1,11 +1,18 @@
+import 'dart:async';
+
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
-import 'package:chit_chat/view/screen/profile_edit_page.dart';
+import 'package:chit_chat/model/message_model.dart';
+import 'package:chit_chat/res/download_upload_callback.dart';
+import 'package:chit_chat/res/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
 import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
@@ -17,22 +24,33 @@ import 'package:chit_chat/firebase_options.dart';
 import 'package:chit_chat/res/colors.dart';
 import 'package:chit_chat/res/common_instants.dart';
 import 'package:chit_chat/res/style.dart';
-import 'package:chit_chat/view/screen/auth_page.dart';
-import 'package:chit_chat/view/screen/email_verification_page.dart';
-import 'package:chit_chat/view/screen/home_page.dart';
-import 'package:chit_chat/view/screen/login_page.dart';
-import 'package:chit_chat/view/screen/profile_page.dart';
-import 'package:chit_chat/view/screen/register_page.dart';
+import 'package:workmanager/workmanager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
+
+  // Hive
+  Hive.registerAdapter(MessageModelAdapter());
+  Hive.init((await getDownloadsDirectory())?.path);
+  hivebox = await Hive.openBox('pendingMessages');
+
+  // background audio support
   // await JustAudioBackground.init(
   //   androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
   //   androidNotificationChannelName: 'Audio playback',
   //   androidNotificationOngoing: true,
   // );
+
+  // background download support
+  await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
+
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true,
+  );
+
   runApp(const MainApp());
 }
 
@@ -56,27 +74,45 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => SearchCubit()),
         BlocProvider(create: (context) => UpdateCubit()),
       ],
-      child: ThemeChanger(
-        builder: (context, myTheme) {
-          return MaterialApp(
-            title: 'ChitChat',
-            navigatorKey: navigationKey,
-            themeMode: ThemeMode.system,
-            theme: myTheme,
-            debugShowCheckedModeBanner: false,
-            initialRoute: 'auth',
-            routes: {
-              "login": (context) => const LoginPage(),
-              "auth": (context) => const AuthPage(),
-              "register": (context) => const RegisterPage(),
-              "home": (context) => const HomePage(),
-              "email": (context) => const EmailVerificationPage(),
-              "profile": (context) => const ProfilePage(),
-              "profile-edit": (context) => const ProfileEditPage(),
-            },
-          );
-        },
-      ),
+      child: MyApp(),
+    );
+  }
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({
+    super.key,
+  });
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ThemeChanger(
+      builder: (context, myTheme) {
+        return MaterialApp(
+          title: 'ChitChat',
+          navigatorKey: navigationKey,
+          themeMode: ThemeMode.system,
+          theme: myTheme,
+          debugShowCheckedModeBanner: false,
+          initialRoute: AppRoute.initialRoute,
+          routes: AppRoute.routes,
+        );
+      },
     );
   }
 }

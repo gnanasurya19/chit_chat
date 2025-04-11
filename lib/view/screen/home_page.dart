@@ -1,6 +1,5 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:animations/animations.dart';
-import 'package:chit_chat/controller/chat_cubit/chat_cubit.dart';
 import 'package:chit_chat/controller/home_cubit/home_cubit.dart';
 import 'package:chit_chat/controller/profile_cubit/profile_cubit.dart';
 import 'package:chit_chat/controller/update_cubit/update_cubit.dart';
@@ -28,11 +27,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   late HomeCubit _homeCubit;
   @override
   void initState() {
-    BlocProvider.of<HomeCubit>(context).onInit().then((v) {
-      if (mounted) {
-        BlocProvider.of<ProfileCubit>(context).getProfile();
-      }
-    });
+    BlocProvider.of<HomeCubit>(context).onInit();
+    BlocProvider.of<HomeCubit>(context).downloadListener();
+    BlocProvider.of<ProfileCubit>(context).getProfile();
+
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((target) {
       BlocProvider.of<HomeCubit>(context).checkNotificationStack();
@@ -168,8 +166,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       closedBuilder: (context, action) => UserCard(
                         user: state.userList[index],
                         onTap: (userData) {
-                          BlocProvider.of<ChatCubit>(context)
-                              .onInit(state.userList[index].uid!, userData);
+                          // BlocProvider.of<ChatCubit>(context)
+                          //     .onInit(state.userList[index].uid!, userData);
                           action.call();
                         },
                       ),

@@ -1,32 +1,92 @@
+import 'package:hive/hive.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+part 'message_model.g.dart';
 
+@HiveType(typeId: 0)
 class MessageModel {
+  @HiveField(0)
   String? id;
+
+  @HiveField(1)
   String? senderID;
+
+  @HiveField(2)
   String? receiverID;
+
+  @HiveField(3)
   String? senderEmail;
+
+  @HiveField(4)
   String? message;
+
+  @HiveField(5)
   int? batch;
+
+  @HiveField(6)
   String? status;
+
   Timestamp? timestamp;
+
+  @HiveField(7)
+  DateTime? timestampAsDateTime;
+
+  @HiveField(8)
   String? date;
+
+  @HiveField(9)
   String? time;
+
+  @HiveField(10)
   String? messageType;
+
+  @HiveField(11)
   String? thumbnail;
+
+  @HiveField(12)
   String? audioUrl;
+
+  @HiveField(13)
   List<double>? audioFormData;
+
+  @HiveField(14)
   bool? isAudioDownloaded;
+
+  @HiveField(15)
   bool? isAudioDownloading;
+
+  @HiveField(16)
   bool? isAudioUploading;
+
+  @HiveField(17)
   String? audioDuration = '0.00';
+
+  @HiveField(18)
   String? audioCurrentDuration = '0.00';
+
+  @HiveField(19)
   double? imageHeight;
+
+  @HiveField(20)
   double? imageWidth;
+
+  @HiveField(21)
   bool? isSelected;
+
+  @HiveField(22)
   String? fileName;
+
+  @HiveField(23)
   String? thumbnailName;
+
+  @HiveField(24)
   String? deletedBy;
+
+  @HiveField(25)
+  String? mediaStatus;
+
+  @HiveField(26)
+  String? mediaID;
   MessageModel(
       {this.senderID,
       this.receiverID,
@@ -51,7 +111,40 @@ class MessageModel {
       this.imageWidth,
       this.isSelected,
       this.fileName,
-      this.thumbnailName});
+      this.thumbnailName,
+      this.mediaID,
+      this.timestampAsDateTime});
+
+  @override
+  String toString() {
+    return '''MessageModel{id: $id,
+     senderID: $senderID,
+     receiverID: $receiverID,
+     senderEmail: $senderEmail,
+     message: $message,
+     batch: $batch,
+     status: $status,
+     timestamp: $timestamp,
+     date: $date,
+     time: $time,
+     messageType: $messageType,
+     thumbnail: $thumbnail,
+     audioUrl: $audioUrl,
+     audioFormData: $audioFormData,
+     isAudioDownloaded: $isAudioDownloaded,
+     isAudioDownloading: $isAudioDownloading,
+     isAudioUploading: $isAudioUploading,
+     audioDuration: $audioDuration,
+     audioCurrentDuration: $audioCurrentDuration,
+     imageHeight: $imageHeight,
+     imageWidth: $imageWidth,
+     isSelected: $isSelected,
+     fileName: $fileName,
+     thumbnailName: $thumbnailName,
+     deletedBy: $deletedBy,
+     mediaStatus: $mediaStatus,
+     mediaID: $mediaID}''';
+  }
 
   MessageModel.fromJson(Map<String, dynamic> json, docID) {
     id = docID;
@@ -72,6 +165,20 @@ class MessageModel {
       batch = 0;
     }
     timestamp = json['timestamp'];
+    getDateTime();
+    audioUrl = json['audiourl'];
+    if (json['audioFormData'] != null) {
+      audioFormData = List.from(json['audioFormData']);
+    }
+    audioDuration = json['audioDuration'];
+    imageHeight = json['imageHeight'];
+    imageWidth = json['imageWidth'];
+    fileName = json['fileName'];
+    thumbnailName = json['thumbnailName'];
+    deletedBy = json['deletedBy'];
+  }
+
+  void getDateTime() {
     DateTime jsonDate = timestamp!.toDate();
     DateTime today = DateTime.now();
     if (jsonDate.day == today.day &&
@@ -93,16 +200,6 @@ class MessageModel {
       time = DateFormat('dd/MM/yyyy').format(jsonDate);
       date = DateFormat('MMM dd, yyyy').format(jsonDate);
     }
-    audioUrl = json['audiourl'];
-    if (json['audioFormData'] != null) {
-      audioFormData = List.from(json['audioFormData']);
-    }
-    audioDuration = json['audioDuration'];
-    imageHeight = json['imageHeight'];
-    imageWidth = json['imageWidth'];
-    fileName = json['fileName'];
-    thumbnailName = json['thumbnailName'];
-    deletedBy = json['deletedBy'];
   }
 
   Map<String, dynamic> toJson() {
