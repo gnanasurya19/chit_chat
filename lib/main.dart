@@ -4,6 +4,7 @@ import 'package:chit_chat/view/screen/profile_edit_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chit_chat/controller/auth_cubit/auth_cubit.dart';
@@ -29,7 +30,7 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService().initialize();
   FirebaseMessaging.onBackgroundMessage(onBackgroundMsg);
-
+  // debugRepaintRainbowEnabled = true;
   runApp(const MainApp());
 }
 

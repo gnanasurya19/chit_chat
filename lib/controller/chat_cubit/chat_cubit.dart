@@ -265,6 +265,8 @@ class ChatCubit extends Cubit<ChatState> {
           if (value.docs.isNotEmpty) {
             receiver.fCM = value.docs.first.data()['fcm'];
           }
+        }).catchError((e) {
+          print('Sending Notification Error $e');
         });
 
         if (receiver.fCM != null && receiver.fCM != '' && msgId != '') {

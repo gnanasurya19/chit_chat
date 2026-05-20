@@ -11,34 +11,34 @@ dependencies:
   animated_toggle_switch: ^0.8.3
   animations: ^2.0.11
   cached_network_image: ^3.4.1
-  cloud_firestore: ^5.5.0
-  connectivity_plus: ^6.0.5
+  cloud_firestore: ^6.4.1
+  connectivity_plus: ^7.1.1
   dio: ^5.7.0
-  firebase_auth: ^5.3.3
-  firebase_core: ^3.8.0
-  firebase_messaging: ^15.1.5
-  firebase_storage: ^12.3.6
+  firebase_auth: ^6.5.1
+  firebase_core: ^4.9.0
+  firebase_messaging: ^16.2.2
+  firebase_storage: ^13.4.1
   flutter:
     sdk: flutter
   # flutter_app_badger: ^1.5.0 
   # flutter_app_icon_badge: ^2.0.0
   # flutter_app_badge_control: ^0.0.2
-  flutter_bloc: ^8.1.6
+  flutter_bloc: ^9.1.1
   flutter_cache_manager: ^3.4.1
   # flutter_dynamic_icon: ^2.1.0
-  flutter_local_notifications: ^18.0.1
+  flutter_local_notifications: ^21.0.0
   flutter_svg: ^2.0.10+1
   gap: ^3.0.1
-  googleapis_auth: ^1.6.0
+  googleapis_auth: ^2.3.1
   http: ^1.2.2
   image_picker: ^1.1.2
-  intl: ^0.19.0
+  intl: ^0.20.2
   lottie: ^3.1.2
-  open_file_plus: ^3.4.1+1
-  package_info_plus: ^8.0.2
+  open_filex: ^4.7.0
+  package_info_plus: ^10.1.0
   photo_view: ^0.15.0
-  popover: ^0.3.0+1
-  share_plus: ^10.1.2
+  popover: ^0.4.0
+  share_plus: ^13.1.0
   shared_preferences: ^2.3.2
   timer_count_down: ^2.2.2
   video_player: ^2.9.1
@@ -48,9 +48,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_native_splash: 
   flutter_launcher_icons: 
+  change_package_name: ^1.1.1
 
 flutter_native_splash:
   web: false

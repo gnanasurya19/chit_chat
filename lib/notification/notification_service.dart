@@ -21,11 +21,11 @@ class NotificationService {
     await localNotification.initialize(
       onDidReceiveNotificationResponse: onClickLocalNotification,
       onDidReceiveBackgroundNotificationResponse: onNotificationAction,
-      const InitializationSettings(
-        android: AndroidInitializationSettings(
-          '@mipmap/launcher_icon',
-        ),
-      ),
+      settings: const InitializationSettings(
+          android: AndroidInitializationSettings(
+            '@mipmap/launcher_icon',
+          ),
+          iOS: DarwinInitializationSettings()),
     );
 
     FirebaseMessaging.onMessage.listen(onArriveForegroundMsg);
@@ -63,20 +63,21 @@ class NotificationService {
     var platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     localNotification.show(
-        id, 'CC9023029320.jpg', "$i/100", platformChannelSpecifics,
+        id: id,
+        notificationDetails: platformChannelSpecifics,
         payload: 'item x');
   }
 
-  cancelNotification(int id) {
-    localNotification.cancel(id);
+  void cancelNotification(int id) {
+    localNotification.cancel(id: id);
   }
 
-  cancelGroupNotification(String userId) {
+  void cancelGroupNotification(String userId) {
     RegExp regExp = RegExp(r'\d+');
     final integer =
         regExp.allMatches(userId).map((match) => match.group(0)).join();
     int notificationId = int.parse(integer);
-    localNotification.cancel(notificationId);
+    localNotification.cancel(id: notificationId);
   }
 }
 

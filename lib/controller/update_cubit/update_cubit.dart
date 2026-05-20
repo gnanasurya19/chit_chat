@@ -5,7 +5,7 @@ import 'package:chit_chat/res/common_instants.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 part 'update_state.dart';
@@ -70,7 +70,7 @@ class UpdateCubit extends Cubit<UpdateState> {
             "${path.path}${Platform.pathSeparator}chit_chat$latestVersion.apk")
         .exists();
     if (isExists) {
-      OpenFile.open(downloadPath);
+      OpenFilex.open(downloadPath);
     } else {
       await util.checkNetwork().then((value) async {
         Dio dio = Dio();
@@ -94,7 +94,7 @@ class UpdateCubit extends Cubit<UpdateState> {
           },
         ).then((value) {
           emit(DownloadState(state: UpdateStatus.downloaded, progress: 1));
-          OpenFile.open(
+          OpenFilex.open(
               "${path.path}${Platform.pathSeparator}chit_chat$latestVersion.apk");
           isFileDownloaded = true;
         });

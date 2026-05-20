@@ -255,10 +255,11 @@ Future<void> groupNotification(
       regExp.allMatches(userId).map((match) => match.group(0)).join();
 
   await notificationService.localNotification.show(
-    int.parse(integer),
-    userName.toUpperCase(),
-    messages.last.data['body'],
+    id: int.parse(integer),
+    title: userName.toUpperCase(),
+    body: messages.last.data['body'],
     payload: jsonEncode(messages.first.data),
-    NotificationDetails(android: summaryNotificationDetails),
+    notificationDetails:
+        NotificationDetails(android: summaryNotificationDetails),
   );
 }
